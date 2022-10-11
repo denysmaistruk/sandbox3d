@@ -3,7 +3,8 @@
 
 #include "raymath.h"
 
-#include "utils/gameobject.h"
+#include "game_scene/game_scene.h"
+
 #include "utils/graphics/lights.h"
 #include "utils/imgui_impl_physbox.h"
 #include "utils/raylib_utils.h"
@@ -34,33 +35,8 @@ int main(int argc, char const** argv)
 
     // Creating models, materials, shaders and lights
     //--------------------------------------------------------------------------------------
-    Image checked = GenImageChecked(100, 100, 1, 1, GRAY, LIGHTGRAY);
-    Texture2D checkersTexture = LoadTextureFromImage(checked);
-    UnloadImage(checked);
-
-    // Creating models
-    std::vector<GameObject> gameObjects;
-
-    // Checkers floor
-    gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshPlane(100.0f, 100.0f, 1, 1)), Vector3Zero() });
-    gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = checkersTexture;
-
-    // Sphere
-    gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshSphere(0.25f, 32, 32)), Vector3Zero()});
-    gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
-    gameObjects.back().updateFunc = [](GameObject& obj) {
-        obj.position = Vector3{ 5.f * sin((float)GetTime()), 5.f, 5.f * sin((float)GetTime()) };
-    };
-
-    // Torus
-    gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshTorus(0.3f, 2.f, 20.f, 20.f)), Vector3{0.f, 5.f, 0.f} });
-    gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
-    Vector3 rotPhase = Vector3Zero();
-    gameObjects.back().updateFunc = [&rotPhase](GameObject& obj) {
-        rotPhase = Vector3Add(rotPhase, Vector3{ 0.01f, 0.02f, 0.03f });
-        obj.model.transform = MatrixRotateXYZ(rotPhase);
-    };
-
+    GameScene::instance().init();
+    GameScene::instance().update(0);
     //--------------------------------------------------------------------------------------
 
     // Imgui initialization
@@ -119,16 +95,17 @@ int main(int argc, char const** argv)
     lights[2] = CreateLight(shGeometry, LIGHT_POINT, Vector3{2, 1, 2}, Vector3Zero(), YELLOW, 0.f);
 
     auto const drawScene = [&] (Shader const& shader) {
-        for (auto& obj : gameObjects)
+        
+        if (!ImGui_ImplPhysbox_Config::pause) {
+            GameScene::instance().update(GetFrameTime());
+        }
+        
+        for (auto& obj : GameScene::instance().getObjects())
         {
             obj.model.materials[0].shader = shader;
             obj.model.materials[0].maps[MATERIAL_MAP_SHADOW].texture = shadow.depth;
-
-            if (!ImGui_ImplPhysbox_Config::pause) {
-                obj.update();
-            }
-
-            DrawModel(obj.model, obj.position, 1.f, WHITE);
+            
+            DrawModel(obj.model, Vector3Zero(), 1.f, WHITE);
         }
     };
 
@@ -235,7 +212,7 @@ int main(int argc, char const** argv)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     // Unload models and shaders
-    for (const auto& obj : gameObjects)
+    for (const auto& obj : GameScene::instance().getObjects())
     {
         UnloadModel(obj.model);
     }

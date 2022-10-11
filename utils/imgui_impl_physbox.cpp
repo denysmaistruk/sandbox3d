@@ -9,7 +9,7 @@ bool ImGui_ImplPhysbox_Config::drawDebugLights = false;
 
 bool ImGui_ImplPhysbox_Config::lights[MAX_LIGHTS] = { true, false, false, false };
 
-bool ImGui_ImplPhysbox_Config::pause = false;
+bool ImGui_ImplPhysbox_Config::pause = true/*false*/;
 
 void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
 {
