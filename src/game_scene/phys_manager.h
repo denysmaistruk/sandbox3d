@@ -20,6 +20,12 @@ public:
     void update(float dt);
 
     void setUpdateRate(int fps);
+    void setSubsteps(int substeps);
+    void setSleepEpsilon(float epsilon);
+
+    float getUpdateRate() { return m_updateRate; }
+    int getSubsteps() { return m_substeps; }
+    float getSleepEpsilon() { cyclone::getSleepEpsilon(); }
 
     void setCollisionFriction(const float friction);
     void setCollisionRestitution(const float restitution);
@@ -32,6 +38,12 @@ public:
     void removeSphere(const cyclone::CollisionSphere* sphere);
     void removeBox(const cyclone::CollisionBox* box);
     void removePlane(const cyclone::CollisionPlane* plane);
+
+    const cyclone::Contact* getContacts() const { return m_contacts; }
+    unsigned getContactCount() const;
+    unsigned getRigidBodiesCount() const;
+    unsigned getStaticBodiesCount() const;
+    unsigned getSleepingCount() const;
 
 protected:
     PhysManager();
@@ -55,4 +67,7 @@ private:
 
     // Update rate
     float m_updateRate;
+
+    // Substepping
+    int m_substeps;
 };

@@ -3,19 +3,32 @@
 
 #include "imgui.h"
 
-bool ImGui_ImplPhysbox_Config::drawDebugDepth = false;
+#include "..\src\game_scene\phys_manager.h"
 
-bool ImGui_ImplPhysbox_Config::drawDebugLights = false;
+bool ImGui_ImplPhysbox_Config::drawDepthTexture = false;
+
+bool ImGui_ImplPhysbox_Config::drawLightsDebug = false;
 
 bool ImGui_ImplPhysbox_Config::lights[MAX_LIGHTS] = { true, false, false, false };
 
-bool ImGui_ImplPhysbox_Config::pause = true/*false*/;
+bool ImGui_ImplPhysbox_Config::pauseSimulation = false;
+
+bool ImGui_ImplPhysbox_Config::drawSceneBorders = false;
+
+bool ImGui_ImplPhysbox_Config::drawContacts = false;
+
+bool ImGui_ImplPhysbox_Config::steppingMode = false;
+
+int ImGui_ImplPhysbox_Config::substeps = 1;
+
+float ImGui_ImplPhysbox_Config::sleepEpsilon = 0.3f;
 
 void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
 {
     using namespace ImGui;
 
     ImGuiIO& io = GetIO();
+    auto& physManager = PhysManager::instance();
     
     if (!Begin("Physbox/Debugger", p_open))
     {
@@ -24,35 +37,48 @@ void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
     }
 
     Text("%.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+    Text("%d:contacts", physManager.getContactCount());
+    Text("%d:rigid,%d:static(bodies)", physManager.getRigidBodiesCount(), physManager.getStaticBodiesCount());
+    Text("%d:sleeping", physManager.getSleepingCount());
     
     Separator();
 
-    Checkbox("Pause", &ImGui_ImplPhysbox_Config::pause);
-
-    Separator();
-
-    // Render debug
-    if (TreeNode("RenderDebug"))
+    // Render
+    if (TreeNode("Render"))
     {
-        Checkbox("DrawDebugDepth", &ImGui_ImplPhysbox_Config::drawDebugDepth);
-        Checkbox("DrawDebugLights", &ImGui_ImplPhysbox_Config::drawDebugLights);
+        Checkbox("DrawDepthTexture", &ImGui_ImplPhysbox_Config::drawDepthTexture);
+        Checkbox("DrawLightsDebug", &ImGui_ImplPhysbox_Config::drawLightsDebug);
 
-        TreePop();
-    }
-
-    Separator();
-
-    // Lights
-    if (TreeNode("SceneLights"))
-    {
-        char lightStr[32] = "Light@\0";
-        for (int i = 0; i < MAX_LIGHTS; ++i)
+        // Lights
+        if (TreeNode("SceneLightsSettings"))
         {
-            lightStr[5] = '0' + i;
-            Checkbox(lightStr, &ImGui_ImplPhysbox_Config::lights[i]);
+            char lightStr[32] = "Light@\0";
+            for (int i = 0; i < MAX_LIGHTS; ++i)
+            {
+                lightStr[5] = '0' + i;
+                Checkbox(lightStr, &ImGui_ImplPhysbox_Config::lights[i]);
+            }
+
+            TreePop();
         }
 
         TreePop();
     }
+    Separator();
+
+    // Physics
+    if (TreeNode("Physics"))
+    {
+        Checkbox("PauseSimulation", &ImGui_ImplPhysbox_Config::pauseSimulation);
+        Checkbox("DrawSceneBorders", &ImGui_ImplPhysbox_Config::drawSceneBorders);
+        Checkbox("DrawContacts", &ImGui_ImplPhysbox_Config::drawContacts);
+        Checkbox("SteppingMode", &ImGui_ImplPhysbox_Config::steppingMode);
+        InputInt("SubstepsNum", &ImGui_ImplPhysbox_Config::substeps);
+        InputFloat("SleepEpsilon", &ImGui_ImplPhysbox_Config::sleepEpsilon);
+
+        TreePop();
+    }
+    Separator();
+
     End();
 }

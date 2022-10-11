@@ -37,7 +37,7 @@ out vec4 finalColor;
 
 // Fog 
 const vec4 fogColor = vec4(0.8, 0.8, 0.8, 0.5);
-const float fogDensity = 0.010;
+const float fogDensity = 0.005;
 
 float ShadowCalc(vec4 p, float bias)
 {

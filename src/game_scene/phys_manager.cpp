@@ -35,23 +35,38 @@ void PhysManager::update(float dt)
         dt = m_updateRate;
     }
 
-    // Update the objects
-    updateObjects(dt);
+    for (int i = 0; i < m_substeps; ++i) {
 
-    // Perform the contact generation
-    generateContacts();
+        float dtStepped = dt / float(m_substeps);
+        // Update the objects
+        updateObjects(dtStepped);
 
-    // Resolve detected contacts
-    m_contactResolver.resolveContacts(
-        m_collisionData->contactArray,
-        m_collisionData->contactCount,
-        dt
-    );
+        // Perform the contact generation
+        generateContacts();
+
+        // Resolve detected contacts
+        m_contactResolver.resolveContacts(
+            m_collisionData->contactArray,
+            m_collisionData->contactCount,
+            dtStepped
+        );
+
+    }
 }
 
 void PhysManager::setUpdateRate(int fps)
 {
     m_updateRate = 1.f / fps;
+}
+
+void PhysManager::setSubsteps(int substeps)
+{
+    m_substeps = substeps;
+}
+
+void PhysManager::setSleepEpsilon(float epsilon)
+{
+    cyclone::setSleepEpsilon(epsilon);
 }
 
 void PhysManager::setCollisionFriction(const float friction)
@@ -115,15 +130,50 @@ void PhysManager::removePlane(const cyclone::CollisionPlane* plane)
     }
 }
 
+unsigned PhysManager::getContactCount() const
+{
+    return m_collisionData->contactCount;
+}
+
+unsigned PhysManager::getRigidBodiesCount() const
+{
+    return m_spheres.size() + m_boxes.size();
+}
+
+unsigned PhysManager::getStaticBodiesCount() const
+{
+    return m_planes.size();
+}
+
+unsigned PhysManager::getSleepingCount() const
+{
+    unsigned count = 0;
+    for (auto* sphere : m_spheres) {
+        if (sphere && sphere->body && !sphere->body->getAwake()) {
+            ++count;
+        }
+    }
+
+    for (auto* box : m_boxes) {
+        if (box && box->body && !box->body->getAwake()) {
+            ++count;
+        }
+    }
+
+    return count;
+}
+
 PhysManager::PhysManager()
     : m_contactResolver(maxContacts * 8)
     , m_collisionData(new cyclone::CollisionData())
     , m_updateRate(0.033f)
+    , m_substeps(8)
 {
     m_collisionData->contactArray = m_contacts;
     m_collisionData->friction = 0.5;
     m_collisionData->restitution = 0.3;
     m_collisionData->tolerance = 0.1;
+    setSleepEpsilon(0.4f);
 }
 
 void PhysManager::generateContacts()

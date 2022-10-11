@@ -4,11 +4,16 @@
 #include "phys_manager.h"
 
 #include "../utils/raylib_cyclone_adapter.h"
+#include "../utils/imgui_impl_physbox.h"
 
 #include "raymath.h"
 
 GameScene::GameScene()
+    : m_groundPlaneWidth(100.f)
 {
+    auto& physManager = PhysManager::instance(); // construct phys manager
+    ImGui_ImplPhysbox_Config::substeps = physManager.getSubsteps();
+    ImGui_ImplPhysbox_Config::sleepEpsilon = cyclone::getSleepEpsilon();
 }
 
 GameScene& GameScene::instance()
@@ -23,9 +28,13 @@ GameScene::~GameScene()
 
 void GameScene::init()
 {
-    spawnBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
+    spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); // 
+    spawnBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); // stack of 3 - ss - 10
+    spawnBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); // stack of two boxes 3 substeps is
+    spawnBox(Vector3{ 0, 7, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
     spawnBall(Vector3{ 0.f, 8.f, 0.f }, Vector3{ 0.f, 100.f, 1.f }, 0.25f, 1.0f);
     spawnGroundPlane();
+    spawnBorderPlanes();
 }
 
 void GameScene::update(float dt)
@@ -44,6 +53,26 @@ void GameScene::update(float dt)
             obj.model.transform = toRaylib(obj.physBody->body->getTransform());
         }
     }
+}
+
+void GameScene::OnThrowBallFromCamera(const Camera3D& camera)
+{
+    Vector3 velocity = Vector3Subtract(camera.target, camera.position);
+    velocity = Vector3Normalize(velocity);
+    velocity = Vector3Scale(velocity, 40.f);
+
+    spawnBall(camera.position, velocity, 0.25f, 1.f);
+    update(0);
+}
+
+void GameScene::OnThrowBoxFromCamera(const Camera3D& camera)
+{
+    Vector3 velocity = Vector3Subtract(camera.target, camera.position);
+    velocity = Vector3Normalize(velocity);
+    velocity = Vector3Scale(velocity, 40.f);
+
+    spawnBox(camera.position, velocity, Vector3{ 0.5, 0.5, 0.5 }, 10.f);
+    update(0);
 }
 
 void GameScene::spawnBox(const Vector3& pos, const Vector3& velocity, const Vector3& halfSize, const float mass)
@@ -73,8 +102,9 @@ void GameScene::spawnBox(const Vector3& pos, const Vector3& velocity, const Vect
     m_gameObjects.back().physBody = box;
     m_gameObjects.back().updateCallBack = [](GameObject& obj)
     {
-        if (obj.physBody && !obj.physBody->body->getAwake()) {
-            obj.model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = PURPLE;
+        if (obj.physBody) {
+            auto color = obj.physBody->body->getAwake() ? RED : PURPLE;
+            obj.model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = color;
         }
     };
 
@@ -107,8 +137,9 @@ void GameScene::spawnBall(const Vector3& pos, const Vector3& velocity, const flo
     m_gameObjects.back().physBody = sphere;
     m_gameObjects.back().updateCallBack = [](GameObject& obj)
     {
-        if (obj.physBody && !obj.physBody->body->getAwake()) {
-            obj.model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = PURPLE;
+        if (obj.physBody) {
+            auto color = obj.physBody->body->getAwake() ? RED : PURPLE;
+            obj.model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = color;
         }
     };
 
@@ -121,14 +152,71 @@ void GameScene::spawnGroundPlane()
     plane->direction = cyclone::Vector3(0, 1, 0);
     plane->offset = 0;
 
-    Image checked = GenImageChecked(100, 100, 1, 1, GRAY, LIGHTGRAY);
+    Image checked = GenImageChecked(m_groundPlaneWidth, m_groundPlaneWidth, 1, 1, GRAY, LIGHTGRAY);
     Texture2D checkersTexture = LoadTextureFromImage(checked);
     UnloadImage(checked);
-    m_gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshPlane(100.0f, 100.0f, 1, 1)) });
+    m_gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshPlane(m_groundPlaneWidth, m_groundPlaneWidth, 1, 1)) });
     m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = checkersTexture;
     m_gameObjects.back().physBody = nullptr;
 
     PhysManager::instance().addPlane(plane);
+}
+
+void GameScene::spawnBorderPlanes()
+{
+    cyclone::CollisionPlane* plane = new cyclone::CollisionPlane();
+    plane->direction = cyclone::Vector3(1, 0, 0);
+    plane->offset = m_groundPlaneWidth / -2.f;
+    PhysManager::instance().addPlane(plane);
+
+    plane = new cyclone::CollisionPlane();
+    plane->direction = cyclone::Vector3(-1, 0, 0);
+    plane->offset = m_groundPlaneWidth / -2.f;
+    PhysManager::instance().addPlane(plane);
+
+    plane = new cyclone::CollisionPlane();
+    plane->direction = cyclone::Vector3(0, 0, 1);
+    plane->offset = m_groundPlaneWidth / -2.f;
+    PhysManager::instance().addPlane(plane);
+
+    plane = new cyclone::CollisionPlane();
+    plane->direction = cyclone::Vector3(0, 0, -1);
+    plane->offset = m_groundPlaneWidth / -2.f;
+    PhysManager::instance().addPlane(plane);
+}
+
+void GameScene::drawCantacts() const
+{
+    auto& physManager = PhysManager::instance();
+
+    auto* contacts = physManager.getContacts();
+    for (int i = 0; i < physManager.getContactCount(); ++i) {
+        // Inter body contacts are in green, floor contacts are red
+        auto color = contacts[i].body[1] ? GREEN : RED;
+
+        Vector3 pos = toRaylib(contacts[i].contactPoint);
+        Vector3 normal = toRaylib(contacts[i].contactNormal);
+        DrawLine3D(pos, Vector3Add(pos, normal), color);
+    }
+}
+
+void GameScene::drawSceneBorders() const
+{
+    float w = getGroundPlaneWidth(), t = 0.1f, h = 25.f;
+    auto color = WHITE;
+
+    DrawCubeWires(Vector3{ 0.5f * w + 0.5f * t , 0.5f * h, 0.f }, t, h, w, color); // +x
+    DrawCubeWires(Vector3{ -0.5f * w - 0.5f * t , 0.5f * h, 0.f }, t, h, w, color); // -x
+    DrawCubeWires(Vector3{ 0.f, 0.5f * h, 0.5f * w + 0.5f * t }, w, h, t, color); // +z
+    DrawCubeWires(Vector3{ 0.f, 0.5f * h, -0.5f * w - 0.5f * t }, w, h, t, color); // -z   
+}
+
+void GameScene::syncImGuiInput()
+{
+    auto& physManager = PhysManager::instance();
+
+    physManager.setSubsteps(ImGui_ImplPhysbox_Config::substeps);
+    physManager.setSleepEpsilon(ImGui_ImplPhysbox_Config::sleepEpsilon);
 }
 
 void GameScene::spawnRotatingTorus(const Vector3& pos, const Vector3& rotVelocity, float radius, float size)

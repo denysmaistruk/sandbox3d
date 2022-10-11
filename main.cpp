@@ -36,7 +36,7 @@ int main(int argc, char const** argv)
     // Creating models, materials, shaders and lights
     //--------------------------------------------------------------------------------------
     GameScene::instance().init();
-    GameScene::instance().update(0);
+    GameScene::instance().update(0); // synchronize models and rigid bodies
     //--------------------------------------------------------------------------------------
 
     // Imgui initialization
@@ -94,13 +94,24 @@ int main(int argc, char const** argv)
     lights[1] = CreateLight(shGeometry, LIGHT_SPOT, Vector3{ -2, 2, -2 }, Vector3Zero(), WHITE, cosf(DEG2RAD * shadowCaster.fovy * 0.46f));
     lights[2] = CreateLight(shGeometry, LIGHT_POINT, Vector3{2, 1, 2}, Vector3Zero(), YELLOW, 0.f);
 
-    auto const drawScene = [&] (Shader const& shader) {
-        
-        if (!ImGui_ImplPhysbox_Config::pause) {
-            GameScene::instance().update(GetFrameTime());
+    bool stepped = false;
+
+    auto const updateScene = [&](Shader const& shader) {
+
+        auto& gameScene = GameScene::instance();
+
+        gameScene.syncImGuiInput();
+
+        if (!ImGui_ImplPhysbox_Config::pauseSimulation) {
+            gameScene.update(GetFrameTime());
+        }
+
+        if (ImGui_ImplPhysbox_Config::steppingMode && !stepped) {
+            gameScene.update(GetFrameTime());
+            stepped = true;
         }
         
-        for (auto& obj : GameScene::instance().getObjects())
+        for (auto& obj : gameScene.getObjects())
         {
             obj.model.materials[0].shader = shader;
             obj.model.materials[0].maps[MATERIAL_MAP_SHADOW].texture = shadow.depth;
@@ -115,8 +126,41 @@ int main(int argc, char const** argv)
         // Update
         //----------------------------------------------------------------------------------
         UpdateCamera(&camera);          // Update camera
+        
+        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+            GameScene::instance().OnThrowBallFromCamera(camera);
+        }
 
-        if (IsKeyDown('Z')) camera.target = Vector3{ 0.0f, 0.0f, 0.0f };
+        if (IsKeyPressed(KEY_SPACE)) {
+            GameScene::instance().OnThrowBoxFromCamera(camera);
+        }
+        
+        if (IsKeyDown(KEY_Z)) camera.target = Vector3{ 0.0f, 0.0f, 0.0f };
+
+        // Camera movement
+        Vector3 moveFront = Vector3Scale(Vector3Normalize(Vector3Subtract(camera.target, camera.position)), 0.5f);
+        Vector3 moveSide = Vector3Scale(Vector3Normalize(Vector3CrossProduct(moveFront, camera.up)), 0.5f);
+        if (IsKeyDown(KEY_W)) {
+            camera.target = Vector3Add(camera.target, moveFront);
+        }
+        if (IsKeyDown(KEY_S)) {
+            camera.target = Vector3Subtract(camera.target, moveFront);
+        }
+        if (IsKeyDown(KEY_D)) {
+            camera.position = Vector3Add(camera.position, moveSide);
+            camera.target = Vector3Add(camera.target, moveSide);
+        }
+        if (IsKeyDown(KEY_A)) {
+            camera.position = Vector3Subtract(camera.position, moveSide);
+            camera.target = Vector3Subtract(camera.target, moveSide);
+        }
+        if (IsKeyDown(KEY_N)) {
+            stepped = false;
+        }
+        if (IsKeyPressed(KEY_P)) {
+            ImGui_ImplPhysbox_Config::pauseSimulation = !ImGui_ImplPhysbox_Config::pauseSimulation;
+        }
+
         //----------------------------------------------------------------------------------
 
         // Imgui start drawing
@@ -142,7 +186,7 @@ int main(int argc, char const** argv)
         //----------------------------------------------------------------------------------
         ShadowMapBegin(shadow);
         BeginShadowCaster(shadowCaster);
-            drawScene(shShadow);
+            updateScene(shShadow);
         EndShadowCaster();
         ShadowMapEnd();
         //----------------------------------------------------------------------------------
@@ -163,10 +207,10 @@ int main(int argc, char const** argv)
                 SetShaderValue(shPreview, shPreview.locs[SHADER_LOC_ORTHO_SHADOW_CAST], &orthoShadowCast, SHADER_UNIFORM_INT);
               
                 // Draw scene geometry
-                drawScene(shGeometry);
+                updateScene(shGeometry);
   
                 // Draw debug geometry
-                if (ImGui_ImplPhysbox_Config::drawDebugLights)
+                if (ImGui_ImplPhysbox_Config::drawLightsDebug)
                 {   
                     for (int i = 0; i < MAX_LIGHTS; ++i)
                     {
@@ -177,6 +221,16 @@ int main(int argc, char const** argv)
                         }
                     }
                 }
+
+                if (ImGui_ImplPhysbox_Config::drawSceneBorders)
+                {
+                    GameScene::instance().drawSceneBorders();
+                }
+
+                if (ImGui_ImplPhysbox_Config::drawContacts) {
+                    GameScene::instance().drawCantacts();
+                }
+
                 // Draw basis vector
                 DrawLine3D(Vector3Zero(), Vector3{ 1.f, 0.f, 0.f }, RED);   // x
                 DrawLine3D(Vector3Zero(), Vector3{ 0.f, 1.f, 0.f }, GREEN); // y
@@ -184,7 +238,7 @@ int main(int argc, char const** argv)
                 
                 EndMode3D();
 
-                if (ImGui_ImplPhysbox_Config::drawDebugDepth)
+                if (ImGui_ImplPhysbox_Config::drawDepthTexture)
                 {
                     BeginShaderMode(shPreview);
                         DrawTextureEx(shadow.depth, Vector2{ 0, 0 }, 0.0f, 0.125/*0.0625f*/, WHITE);
@@ -195,7 +249,7 @@ int main(int argc, char const** argv)
             // Imgui widgets
             //--------------------------------------------------------------------------------------
             bool p_open = true;
-            //ImGui::ShowMetricsWindow(&p_open); // use it as an example
+            //ImGui::ShowDemoWindow(&p_open); // use it as an example
             ImGui_ImplPhysbox_ShowDebugWindow(&p_open);
             //--------------------------------------------------------------------------------------
           

@@ -4,12 +4,18 @@
 
 struct ImGui_ImplPhysbox_Config
 {
-    static bool drawDebugDepth;
-    static bool drawDebugLights;
-
+    // Render
+    static bool drawDepthTexture;
+    static bool drawLightsDebug;
     static bool lights[MAX_LIGHTS];
 
-    static bool pause;
+    // Physics
+    static bool pauseSimulation;
+    static bool drawSceneBorders;
+    static bool drawContacts;
+    static bool steppingMode;
+    static int substeps;
+    static float sleepEpsilon;
 };
 
 void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open);
