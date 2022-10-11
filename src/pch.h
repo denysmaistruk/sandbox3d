@@ -1,13 +1,13 @@
 #pragma once
 
-#include <iostream>
 #include <algorithm>
 #include <array>
-#include <vector>
-#include <map>
-#include <iostream>
+#include <assert.h>
 #include <cstring>
-#include <stdio.h>
-#include <sstream>
+#include <iostream>
+#include <map>
 #include <math.h>
 #include <numeric>
+#include <stdio.h>
+#include <sstream>
+#include <vector>

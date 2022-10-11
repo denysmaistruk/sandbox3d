@@ -19,13 +19,18 @@ public:
 
     void update(float dt);
 
+    void setUpdateRate(int fps);
+
+    void setCollisionFriction(const float friction);
+    void setCollisionRestitution(const float restitution);
+    void setCollisionTolerance(const float tolerance);
+
     void addSphere(cyclone::CollisionSphere* sphere);
-    void removeSphere(const cyclone::CollisionSphere* sphere);
-
     void addBox(cyclone::CollisionBox* box);
-    void removeBox(const cyclone::CollisionBox* box);
-
     void addPlane(cyclone::CollisionPlane* plane);
+    
+    void removeSphere(const cyclone::CollisionSphere* sphere);
+    void removeBox(const cyclone::CollisionBox* box);
     void removePlane(const cyclone::CollisionPlane* plane);
 
 protected:
@@ -47,4 +52,7 @@ private:
 
     // Collision data
     cyclone::CollisionData* m_collisionData;
+
+    // Update rate
+    float m_updateRate;
 };

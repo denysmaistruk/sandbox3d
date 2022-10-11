@@ -11,10 +11,12 @@ PhysManager& PhysManager::instance()
 PhysManager::~PhysManager()
 {
     for (auto* sphere : m_spheres) {
+        delete sphere->body;
         delete sphere;
     }
 
     for (auto* box : m_boxes) {
+        delete box->body;
         delete box;
     }
 
@@ -29,8 +31,8 @@ void PhysManager::update(float dt)
         return;
     }
 
-    if (dt > 0.05f) {
-        dt = 0.05f;
+    if (dt > m_updateRate) {
+        dt = m_updateRate;
     }
 
     // Update the objects
@@ -47,6 +49,31 @@ void PhysManager::update(float dt)
     );
 }
 
+void PhysManager::setUpdateRate(int fps)
+{
+    m_updateRate = 1.f / fps;
+}
+
+void PhysManager::setCollisionFriction(const float friction)
+{
+    assert(m_collisionData);
+    m_collisionData->friction = friction;
+}
+
+void PhysManager::setCollisionRestitution(const float restitution)
+{
+    assert(m_collisionData);
+    m_collisionData->restitution = restitution;
+
+}
+
+void PhysManager::setCollisionTolerance(const float tolerance)
+{
+    assert(m_collisionData);
+    m_collisionData->tolerance = tolerance;
+
+}
+
 void PhysManager::addSphere(cyclone::CollisionSphere* sphere)
 {
     m_spheres.push_back(sphere);
@@ -55,6 +82,7 @@ void PhysManager::addSphere(cyclone::CollisionSphere* sphere)
 void PhysManager::removeSphere(const cyclone::CollisionSphere* sphere)
 {
     if (auto it = std::find(m_spheres.begin(), m_spheres.end(), sphere); it != m_spheres.end()) {
+        delete (*it)->body;
         delete *it;
         m_spheres.erase(it);
     }
@@ -68,6 +96,7 @@ void PhysManager::addBox(cyclone::CollisionBox* box)
 void PhysManager::removeBox(const cyclone::CollisionBox* box)
 {
     if (auto it = std::find(m_boxes.begin(), m_boxes.end(), box); it != m_boxes.end()) {
+        delete (*it)->body;
         delete* it;
         m_boxes.erase(it);
     }
@@ -89,16 +118,17 @@ void PhysManager::removePlane(const cyclone::CollisionPlane* plane)
 PhysManager::PhysManager()
     : m_contactResolver(maxContacts * 8)
     , m_collisionData(new cyclone::CollisionData())
+    , m_updateRate(0.033f)
 {
     m_collisionData->contactArray = m_contacts;
+    m_collisionData->friction = 0.5;
+    m_collisionData->restitution = 0.3;
+    m_collisionData->tolerance = 0.1;
 }
 
 void PhysManager::generateContacts()
 {
     m_collisionData->reset(maxContacts);
-    m_collisionData->friction = 0.5;
-    m_collisionData->restitution = 0.3;
-    m_collisionData->tolerance = 0.1;
 
     // boxes
     for (auto* box : m_boxes)
