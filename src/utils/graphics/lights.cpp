@@ -5,7 +5,7 @@
 #include "rlgl.h"
 #include "raymath.h"
 
-#define SHADER_PATH "../utils/shaders/"
+#define SHADER_PATH "../src/utils/shaders/"
 #define SHADOW_PATH SHADER_PATH "lights/"
 
 ShadowMap LoadShadowMap(int width, int height) {

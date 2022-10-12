@@ -28,10 +28,8 @@ list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/src"
 
 file(GLOB_RECURSE SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp
                                ${PROJECT_SOURCE_DIR}/src/*.h
-                               ${PROJECT_SOURCE_DIR}/utils/*.cpp
-                               ${PROJECT_SOURCE_DIR}/utils/*.h
-                               ${PROJECT_SOURCE_DIR}/utils/*.vs
-                               ${PROJECT_SOURCE_DIR}/utils/*.fs
+                               ${PROJECT_SOURCE_DIR}/src/*.vs
+                               ${PROJECT_SOURCE_DIR}/src/*.fs
                                )
 
 list(APPEND SOURCE_FILES ${PROJECT_SOURCE_DIR}/main.cpp )

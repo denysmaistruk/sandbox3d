@@ -98,8 +98,7 @@ int main(int argc, char const** argv)
     lights[1] = CreateLight(shGeometry, LIGHT_SPOT, Vector3{ -2, 2, -2 }, Vector3Zero(), WHITE, cosf(DEG2RAD * shadowCaster.fovy * 0.46f));
     lights[2] = CreateLight(shGeometry, LIGHT_POINT, Vector3{2, 1, 2}, Vector3Zero(), YELLOW, 0.f);
 
-    
-
+    // Update method
     auto const updateScene = [&](Shader const& shader) {
         sceneManager.syncImGuiInput();
 
@@ -243,7 +242,24 @@ int main(int argc, char const** argv)
                 DrawLine3D(Vector3Zero(), Vector3{ 1.f, 0.f, 0.f }, RED);   // x
                 DrawLine3D(Vector3Zero(), Vector3{ 0.f, 1.f, 0.f }, GREEN); // y
                 DrawLine3D(Vector3Zero(), Vector3{ 0.f, 0.f, 1.f }, BLUE);  // z
+
+                // Draw camera target
+                DrawLine3D(camera.target, Vector3Add(camera.target, Vector3{ 1.f, 0.f, 0.f }), RED);   // x
+                DrawLine3D(camera.target, Vector3Add(camera.target, Vector3{ 0.f, 1.f, 0.f }), GREEN); // y
+                DrawLine3D(camera.target, Vector3Add(camera.target, Vector3{ 0.f, 0.f, 1.f }), BLUE);  // z
                 
+                // Update camera collision with environment
+                //Ray ray{camera.position, Vector3Normalize(Vector3Subtract(camera.target, camera.position))};
+                //RayCollision result{ false, Vector3Length(Vector3Subtract(camera.target, camera.position)), Vector3Zero(), Vector3Zero() };
+                //for (const auto& obj : sceneManager.getObjects()) {
+                //    RayCollision trace = GetRayCollisionMesh(ray, obj.model.meshes[0], obj.model.transform);
+                //    if (trace.hit) {
+                //        result = trace;
+                //    }
+                //}
+                //camera.target = Vector3Add(camera.position, Vector3Scale(Vector3Normalize(Vector3Subtract(ca*/mera.target, camera.position)), result.distance));
+
+
                 EndMode3D();
 
                 if (ImGui_ImplPhysbox_Config::drawDepthTexture)
