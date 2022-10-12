@@ -15,11 +15,11 @@ struct GameObject
     void update() { updateCallBack(*this); }
 };
 
-class GameScene
+class SceneManager
 {
 public:
-    static GameScene& instance();
-    ~GameScene();
+    static SceneManager& instance();
+    ~SceneManager();
 
     void init();
     void update(float dt);
@@ -44,7 +44,7 @@ public:
     void syncImGuiInput();
 
 protected:
-    GameScene();
+    SceneManager();
 
 private:
     std::vector<GameObject> m_gameObjects;

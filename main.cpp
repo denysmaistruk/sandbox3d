@@ -3,7 +3,7 @@
 
 #include "raymath.h"
 
-#include "game_scene/game_scene.h"
+#include "scene/scene_manager.h"
 
 #include "utils/graphics/lights.h"
 #include "utils/imgui_impl_physbox.h"
@@ -35,8 +35,12 @@ int main(int argc, char const** argv)
 
     // Creating models, materials, shaders and lights
     //--------------------------------------------------------------------------------------
-    GameScene::instance().init();
-    GameScene::instance().update(0); // synchronize models and rigid bodies
+    auto& sceneManager = SceneManager::instance();
+    
+    sceneManager.init();
+    sceneManager.update(0);
+
+    bool stepped = false;
     //--------------------------------------------------------------------------------------
 
     // Imgui initialization
@@ -94,24 +98,21 @@ int main(int argc, char const** argv)
     lights[1] = CreateLight(shGeometry, LIGHT_SPOT, Vector3{ -2, 2, -2 }, Vector3Zero(), WHITE, cosf(DEG2RAD * shadowCaster.fovy * 0.46f));
     lights[2] = CreateLight(shGeometry, LIGHT_POINT, Vector3{2, 1, 2}, Vector3Zero(), YELLOW, 0.f);
 
-    bool stepped = false;
+    
 
     auto const updateScene = [&](Shader const& shader) {
-
-        auto& gameScene = GameScene::instance();
-
-        gameScene.syncImGuiInput();
+        sceneManager.syncImGuiInput();
 
         if (!ImGui_ImplPhysbox_Config::pauseSimulation) {
-            gameScene.update(GetFrameTime());
+            sceneManager.update(GetFrameTime());
         }
 
         if (ImGui_ImplPhysbox_Config::steppingMode && !stepped) {
-            gameScene.update(GetFrameTime());
+            sceneManager.update(GetFrameTime());
             stepped = true;
         }
         
-        for (auto& obj : gameScene.getObjects())
+        for (auto& obj : sceneManager.getObjects())
         {
             obj.model.materials[0].shader = shader;
             obj.model.materials[0].maps[MATERIAL_MAP_SHADOW].texture = shadow.depth;
@@ -128,11 +129,11 @@ int main(int argc, char const** argv)
         UpdateCamera(&camera);          // Update camera
         
         if (IsKeyPressed(KEY_E)) {
-            GameScene::instance().OnThrowBallFromCamera(camera);
+            sceneManager.OnThrowBallFromCamera(camera);
         }
 
         if (IsKeyPressed(KEY_R)) {
-            GameScene::instance().OnThrowBoxFromCamera(camera);
+            sceneManager.OnThrowBoxFromCamera(camera);
         }
         
         if (IsKeyDown(KEY_Z)) camera.target = Vector3{ 0.0f, 0.0f, 0.0f };
@@ -231,11 +232,11 @@ int main(int argc, char const** argv)
 
                 if (ImGui_ImplPhysbox_Config::drawSceneBorders)
                 {
-                    GameScene::instance().drawSceneBorders();
+                    sceneManager.drawSceneBorders();
                 }
 
                 if (ImGui_ImplPhysbox_Config::drawContacts) {
-                    GameScene::instance().drawCantacts();
+                    sceneManager.drawCantacts();
                 }
 
                 // Draw basis vector
@@ -273,7 +274,7 @@ int main(int argc, char const** argv)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     // Unload models and shaders
-    for (const auto& obj : GameScene::instance().getObjects())
+    for (const auto& obj : sceneManager.getObjects())
     {
         UnloadModel(obj.model);
     }

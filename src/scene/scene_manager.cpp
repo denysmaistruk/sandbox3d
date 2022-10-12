@@ -1,4 +1,4 @@
-#include "game_scene.h"
+#include "scene_manager.h"
 
 #include "cyclone/collide_fine.h"
 #include "phys_manager.h"
@@ -8,7 +8,7 @@
 
 #include "raymath.h"
 
-GameScene::GameScene()
+SceneManager::SceneManager()
     : m_groundPlaneWidth(100.f)
 {
     auto& physManager = PhysManager::instance(); // construct phys manager
@@ -16,17 +16,17 @@ GameScene::GameScene()
     ImGui_ImplPhysbox_Config::sleepEpsilon = cyclone::getSleepEpsilon();
 }
 
-GameScene& GameScene::instance()
+SceneManager& SceneManager::instance()
 {
-    static GameScene scene;
+    static SceneManager scene;
     return scene;
 }
 
-GameScene::~GameScene()
+SceneManager::~SceneManager()
 {
 }
 
-void GameScene::init()
+void SceneManager::init()
 {
     spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); // 
     spawnBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); // stack of 3 - ss - 10
@@ -37,7 +37,7 @@ void GameScene::init()
     spawnBorderPlanes();
 }
 
-void GameScene::update(float dt)
+void SceneManager::update(float dt)
 {
     // Update physics
     PhysManager::instance().update(dt);
@@ -55,7 +55,7 @@ void GameScene::update(float dt)
     }
 }
 
-void GameScene::OnThrowBallFromCamera(const Camera3D& camera)
+void SceneManager::OnThrowBallFromCamera(const Camera3D& camera)
 {
     Vector3 velocity = Vector3Subtract(camera.target, camera.position);
     velocity = Vector3Normalize(velocity);
@@ -65,7 +65,7 @@ void GameScene::OnThrowBallFromCamera(const Camera3D& camera)
     update(0);
 }
 
-void GameScene::OnThrowBoxFromCamera(const Camera3D& camera)
+void SceneManager::OnThrowBoxFromCamera(const Camera3D& camera)
 {
     Vector3 velocity = Vector3Subtract(camera.target, camera.position);
     velocity = Vector3Normalize(velocity);
@@ -75,7 +75,7 @@ void GameScene::OnThrowBoxFromCamera(const Camera3D& camera)
     update(0);
 }
 
-void GameScene::spawnBox(const Vector3& pos, const Vector3& velocity, const Vector3& halfSize, const float mass)
+void SceneManager::spawnBox(const Vector3& pos, const Vector3& velocity, const Vector3& halfSize, const float mass)
 {
     // Create and set the test box
     cyclone::CollisionBox* box = new cyclone::CollisionBox();
@@ -111,7 +111,7 @@ void GameScene::spawnBox(const Vector3& pos, const Vector3& velocity, const Vect
     PhysManager::instance().addBox(box);
 }
 
-void GameScene::spawnBall(const Vector3& pos, const Vector3& velocity, const float radius, const float mass)
+void SceneManager::spawnBall(const Vector3& pos, const Vector3& velocity, const float radius, const float mass)
 {
     cyclone::CollisionSphere* sphere = new cyclone::CollisionSphere();
     sphere->radius = radius;
@@ -146,7 +146,7 @@ void GameScene::spawnBall(const Vector3& pos, const Vector3& velocity, const flo
     PhysManager::instance().addSphere(sphere);
 }
 
-void GameScene::spawnGroundPlane()
+void SceneManager::spawnGroundPlane()
 {
     cyclone::CollisionPlane* plane = new cyclone::CollisionPlane();
     plane->direction = cyclone::Vector3(0, 1, 0);
@@ -162,7 +162,7 @@ void GameScene::spawnGroundPlane()
     PhysManager::instance().addPlane(plane);
 }
 
-void GameScene::spawnBorderPlanes()
+void SceneManager::spawnBorderPlanes()
 {
     cyclone::CollisionPlane* plane = new cyclone::CollisionPlane();
     plane->direction = cyclone::Vector3(1, 0, 0);
@@ -185,7 +185,7 @@ void GameScene::spawnBorderPlanes()
     PhysManager::instance().addPlane(plane);
 }
 
-void GameScene::drawCantacts() const
+void SceneManager::drawCantacts() const
 {
     auto& physManager = PhysManager::instance();
 
@@ -200,7 +200,7 @@ void GameScene::drawCantacts() const
     }
 }
 
-void GameScene::drawSceneBorders() const
+void SceneManager::drawSceneBorders() const
 {
     float w = getGroundPlaneWidth(), t = 0.1f, h = 25.f;
     auto color = WHITE;
@@ -211,7 +211,7 @@ void GameScene::drawSceneBorders() const
     DrawCubeWires(Vector3{ 0.f, 0.5f * h, -0.5f * w - 0.5f * t }, w, h, t, color); // -z   
 }
 
-void GameScene::syncImGuiInput()
+void SceneManager::syncImGuiInput()
 {
     auto& physManager = PhysManager::instance();
 
@@ -219,7 +219,7 @@ void GameScene::syncImGuiInput()
     physManager.setSleepEpsilon(ImGui_ImplPhysbox_Config::sleepEpsilon);
 }
 
-void GameScene::spawnRotatingTorus(const Vector3& pos, const Vector3& rotVelocity, float radius, float size)
+void SceneManager::spawnRotatingTorus(const Vector3& pos, const Vector3& rotVelocity, float radius, float size)
 {
     m_gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshTorus(radius, size, 20.f, 20.f)) });
     m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;

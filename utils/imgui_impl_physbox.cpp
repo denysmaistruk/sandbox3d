@@ -3,7 +3,7 @@
 
 #include "imgui.h"
 
-#include "..\src\game_scene\phys_manager.h"
+#include "..\src\scene\phys_manager.h"
 
 bool ImGui_ImplPhysbox_Config::drawDepthTexture = false;
 
