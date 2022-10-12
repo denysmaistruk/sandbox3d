@@ -14,6 +14,7 @@ struct ImGui_ImplPhysbox_Config
     static bool drawSceneBorders;
     static bool drawContacts;
     static bool steppingMode;
+    
     static int substeps;
     static float sleepEpsilon;
 };

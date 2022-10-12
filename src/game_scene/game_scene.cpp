@@ -87,7 +87,7 @@ void GameScene::spawnBox(const Vector3& pos, const Vector3& velocity, const Vect
     box->body->setRotation(0, 0, 0);
     box->body->setMass(mass);
     cyclone::Matrix3 it;
-    it.setBlockInertiaTensor(box->halfSize, 100.0f);
+    it.setBlockInertiaTensor(box->halfSize, mass);
     box->body->setInertiaTensor(it);
     box->body->setDamping(0.9f, 0.9f);
     box->body->calculateDerivedData();

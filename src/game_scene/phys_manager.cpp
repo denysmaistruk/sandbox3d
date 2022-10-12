@@ -37,9 +37,9 @@ void PhysManager::update(float dt)
 
     for (int i = 0; i < m_substeps; ++i) {
 
-        float dtStepped = dt / float(m_substeps);
+        float step = dt / float(m_substeps);
         // Update the objects
-        updateObjects(dtStepped);
+        updateObjects(step);
 
         // Perform the contact generation
         generateContacts();
@@ -48,7 +48,7 @@ void PhysManager::update(float dt)
         m_contactResolver.resolveContacts(
             m_collisionData->contactArray,
             m_collisionData->contactCount,
-            dtStepped
+            step
         );
 
     }

@@ -2,8 +2,6 @@
 
 #include <raylib.h>
 
-#include <functional>
-
 namespace cyclone
 {
     class CollisionPrimitive;

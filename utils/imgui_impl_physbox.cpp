@@ -37,7 +37,7 @@ void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
     }
 
     Text("%.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-    Text("%d:contacts", physManager.getContactCount());
+    Text("%d:contacts(%d)", physManager.getContactCount(), physManager.maxContacts);
     Text("%d:rigid,%d:static(bodies)", physManager.getRigidBodiesCount(), physManager.getStaticBodiesCount());
     Text("%d:sleeping", physManager.getSleepingCount());
     

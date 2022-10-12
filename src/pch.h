@@ -4,6 +4,7 @@
 #include <array>
 #include <assert.h>
 #include <cstring>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <math.h>

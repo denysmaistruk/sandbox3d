@@ -127,11 +127,11 @@ int main(int argc, char const** argv)
         //----------------------------------------------------------------------------------
         UpdateCamera(&camera);          // Update camera
         
-        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+        if (IsKeyPressed(KEY_E)) {
             GameScene::instance().OnThrowBallFromCamera(camera);
         }
 
-        if (IsKeyPressed(KEY_SPACE)) {
+        if (IsKeyPressed(KEY_R)) {
             GameScene::instance().OnThrowBoxFromCamera(camera);
         }
         
@@ -154,11 +154,18 @@ int main(int argc, char const** argv)
             camera.position = Vector3Subtract(camera.position, moveSide);
             camera.target = Vector3Subtract(camera.target, moveSide);
         }
+        // Stepping
         if (IsKeyDown(KEY_N)) {
             stepped = false;
         }
+        if (IsKeyPressed(KEY_M)) {
+            stepped = false;
+        }
+
+        // Pause
         if (IsKeyPressed(KEY_P)) {
             ImGui_ImplPhysbox_Config::pauseSimulation = !ImGui_ImplPhysbox_Config::pauseSimulation;
+            ImGui_ImplPhysbox_Config::steppingMode = ImGui_ImplPhysbox_Config::pauseSimulation;
         }
 
         //----------------------------------------------------------------------------------
