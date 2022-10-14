@@ -55,7 +55,7 @@ void SceneManager::update(float dt)
     }
 }
 
-void SceneManager::OnThrowBallFromCamera(const Camera3D& camera)
+void SceneManager::onThrowBallFromCamera(const Camera3D& camera)
 {
     Vector3 velocity = Vector3Subtract(camera.target, camera.position);
     velocity = Vector3Normalize(velocity);
@@ -65,7 +65,7 @@ void SceneManager::OnThrowBallFromCamera(const Camera3D& camera)
     update(0);
 }
 
-void SceneManager::OnThrowBoxFromCamera(const Camera3D& camera)
+void SceneManager::onThrowBoxFromCamera(const Camera3D& camera)
 {
     Vector3 velocity = Vector3Subtract(camera.target, camera.position);
     velocity = Vector3Normalize(velocity);

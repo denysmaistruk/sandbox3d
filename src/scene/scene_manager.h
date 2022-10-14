@@ -24,8 +24,8 @@ public:
     void init();
     void update(float dt);
 
-    void OnThrowBallFromCamera(const Camera3D& camera);
-    void OnThrowBoxFromCamera(const Camera3D& camera);
+    void onThrowBallFromCamera(const Camera3D& camera);
+    void onThrowBoxFromCamera(const Camera3D& camera);
 
     void spawnBox(const Vector3& pos, const Vector3& velocity, const Vector3& halfSize, const float mass);
     void spawnBall(const Vector3& pos, const Vector3& velocity, const float radius, const float mass);

@@ -105,8 +105,7 @@ int main(int argc, char const** argv)
         if (!ImGui_ImplPhysbox_Config::pauseSimulation) {
             sceneManager.update(GetFrameTime());
         }
-
-        if (ImGui_ImplPhysbox_Config::steppingMode && !stepped) {
+        else if (!stepped) {
             sceneManager.update(GetFrameTime());
             stepped = true;
         }
@@ -116,7 +115,13 @@ int main(int argc, char const** argv)
             obj.model.materials[0].shader = shader;
             obj.model.materials[0].maps[MATERIAL_MAP_SHADOW].texture = shadow.depth;
             
-            DrawModel(obj.model, Vector3Zero(), 1.f, WHITE);
+            if (!ImGui_ImplPhysbox_Config::drawInWiresMode) {
+                DrawModel(obj.model, Vector3Zero(), 1.f, WHITE);
+            }
+            else {
+                DrawModelWires(obj.model, Vector3Zero(), 1.f, WHITE);
+            }
+            
         }
     };
 
@@ -128,14 +133,16 @@ int main(int argc, char const** argv)
         UpdateCamera(&camera);          // Update camera
         
         if (IsKeyPressed(KEY_E)) {
-            sceneManager.OnThrowBallFromCamera(camera);
+            sceneManager.onThrowBallFromCamera(camera);
         }
 
         if (IsKeyPressed(KEY_R)) {
-            sceneManager.OnThrowBoxFromCamera(camera);
+            sceneManager.onThrowBoxFromCamera(camera);
         }
         
-        if (IsKeyDown(KEY_Z)) camera.target = Vector3{ 0.0f, 0.0f, 0.0f };
+        if (IsKeyDown(KEY_Z)) {
+            camera.target = Vector3{ 0.0f, 0.0f, 0.0f };
+        }
 
         // Camera movement
         Vector3 moveFront = Vector3Scale(Vector3Normalize(Vector3Subtract(camera.target, camera.position)), 0.5f);
@@ -161,11 +168,9 @@ int main(int argc, char const** argv)
         if (IsKeyPressed(KEY_M)) {
             stepped = false;
         }
-
         // Pause
         if (IsKeyPressed(KEY_P)) {
             ImGui_ImplPhysbox_Config::pauseSimulation = !ImGui_ImplPhysbox_Config::pauseSimulation;
-            ImGui_ImplPhysbox_Config::steppingMode = ImGui_ImplPhysbox_Config::pauseSimulation;
         }
 
         //----------------------------------------------------------------------------------

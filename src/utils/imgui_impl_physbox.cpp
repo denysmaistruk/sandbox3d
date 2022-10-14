@@ -9,6 +9,8 @@ bool ImGui_ImplPhysbox_Config::drawDepthTexture = false;
 
 bool ImGui_ImplPhysbox_Config::drawLightsDebug = false;
 
+bool ImGui_ImplPhysbox_Config::drawInWiresMode = false;
+
 bool ImGui_ImplPhysbox_Config::lights[MAX_LIGHTS] = { true, false, false, false };
 
 bool ImGui_ImplPhysbox_Config::pauseSimulation = false;
@@ -16,8 +18,6 @@ bool ImGui_ImplPhysbox_Config::pauseSimulation = false;
 bool ImGui_ImplPhysbox_Config::drawSceneBorders = false;
 
 bool ImGui_ImplPhysbox_Config::drawContacts = false;
-
-bool ImGui_ImplPhysbox_Config::steppingMode = false;
 
 int ImGui_ImplPhysbox_Config::substeps = 1;
 
@@ -46,16 +46,17 @@ void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
     // Render
     if (TreeNode("Render"))
     {
-        Checkbox("DrawDepthTexture", &ImGui_ImplPhysbox_Config::drawDepthTexture);
-        Checkbox("DrawLightsDebug", &ImGui_ImplPhysbox_Config::drawLightsDebug);
+        Checkbox("Wires mode", &ImGui_ImplPhysbox_Config::drawInWiresMode);
+        Checkbox("Draw depth texture", &ImGui_ImplPhysbox_Config::drawDepthTexture);
+        Checkbox("Draw lights", &ImGui_ImplPhysbox_Config::drawLightsDebug);
 
         // Lights
-        if (TreeNode("SceneLightsSettings"))
+        if (TreeNode("Scene lights"))
         {
-            char lightStr[32] = "Light@\0";
+            char lightStr[32] = "Light:@\0";
             for (int i = 0; i < MAX_LIGHTS; ++i)
             {
-                lightStr[5] = '0' + i;
+                lightStr[6] = '0' + i;
                 Checkbox(lightStr, &ImGui_ImplPhysbox_Config::lights[i]);
             }
 
@@ -69,12 +70,11 @@ void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
     // Physics
     if (TreeNode("Physics"))
     {
-        Checkbox("PauseSimulation", &ImGui_ImplPhysbox_Config::pauseSimulation);
-        Checkbox("DrawSceneBorders", &ImGui_ImplPhysbox_Config::drawSceneBorders);
-        Checkbox("DrawContacts", &ImGui_ImplPhysbox_Config::drawContacts);
-        Checkbox("SteppingMode", &ImGui_ImplPhysbox_Config::steppingMode);
-        InputInt("SubstepsNum", &ImGui_ImplPhysbox_Config::substeps);
-        InputFloat("SleepEpsilon", &ImGui_ImplPhysbox_Config::sleepEpsilon);
+        Checkbox("Pause simulation", &ImGui_ImplPhysbox_Config::pauseSimulation);
+        Checkbox("Draw scene borders", &ImGui_ImplPhysbox_Config::drawSceneBorders);
+        Checkbox("Draw contacts", &ImGui_ImplPhysbox_Config::drawContacts);
+        InputInt("Substeps", &ImGui_ImplPhysbox_Config::substeps);
+        InputFloat("Sleep epsilon", &ImGui_ImplPhysbox_Config::sleepEpsilon);
 
         TreePop();
     }
