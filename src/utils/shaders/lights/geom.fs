@@ -40,19 +40,26 @@ out vec4 finalColor;
 const vec4 fogColor = vec4(0.8, 0.8, 0.8, 0.5);
 const float fogDensity = 0.005;
 
+// z-fighting
+const float zEpsilon = 0.0025f;
+
 float ShadowCalc(vec4 p, float bias)
 {
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
     vec3 projCoords = p.xyz / p.w;
     projCoords = projCoords * 0.5 + 0.5;
-	float depth = projCoords.z - bias;
-
+	float depth = projCoords.z;
 	float texDepth = texture(shadowMap, projCoords.xy).r;
+
+    if (abs(depth - texDepth) < zEpsilon)
+    {
+        return 0.0f;
+    }
 	
 	float shadow = 0.0;
-	for(int x = -1; x <= 1; ++x)
+	for (int x = -1; x <= 1; ++x)
 	{
-		for(int y = -1; y <= 1; ++y)
+		for (int y = -1; y <= 1; ++y)
 		{
 			float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
 			shadow += depth - bias < pcfDepth ? 0.0 : 1.0;        
