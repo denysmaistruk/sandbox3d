@@ -33,14 +33,17 @@ float ImGui_ImplPhysbox_Config::sleepEpsilon = 0.3f;
 
 float ImGui_ImplPhysbox_Config::timeScale = 1.5f;
 
-static void HelpMarker(const char* desc)
+static void HelpMarker(const char* fmt, ...)
 {
     ImGui::TextDisabled("(?)");
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-        ImGui::TextUnformatted(desc);
+        va_list args;
+        va_start(args, fmt);
+        ImGui::TextV(fmt, args);
+        va_end(args);
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
     }
@@ -135,7 +138,7 @@ void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
         InputInt("Substeps", &ImGui_ImplPhysbox_Config::substeps);
         InputFloat("Sleep epsilon", &ImGui_ImplPhysbox_Config::sleepEpsilon);
         InputFloat("Time scale", &ImGui_ImplPhysbox_Config::timeScale);
-        ImGui::SameLine(); HelpMarker("Maximum dt is 0.033");
+        ImGui::SameLine(); HelpMarker("Maximum dt is %.3f", physManager.getUpdateRate());
 
         TreePop();
     }
