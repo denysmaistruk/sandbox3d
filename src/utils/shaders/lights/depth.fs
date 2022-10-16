@@ -6,10 +6,10 @@ in vec2 fragTexCoord;
 out vec4 finalColor;
 
 uniform sampler2D texture0;
-uniform int orthoShadowCast;
+uniform int casterPerspective;
 
-const float nearClip = 0.1;
-const float farClip = 100.0;
+const float nearClip = 0.01;
+const float farClip = 1000.0;
 
 float LinearizeDepth(float depth)
 {
@@ -22,16 +22,13 @@ void main()
 	vec2 uv = fragTexCoord;
 	uv.y = 1.0 - uv.y;
 
-    if (orthoShadowCast == 1) 
-    {
-        float depth = texture(texture0, uv).r;
-        finalColor.rgb =  vec3(0.2) + vec3(depth) * 5;
-    }
-    else
+    if (bool(casterPerspective)) 
     {
         float depth = LinearizeDepth(texture(texture0, uv).r);
         finalColor.rgb = vec3(depth) / farClip;
     }
+
+    finalColor.rgb = vec3(texture(texture0, uv).r);
 
     finalColor.a = 1.0;
 }

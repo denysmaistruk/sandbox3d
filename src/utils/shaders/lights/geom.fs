@@ -11,6 +11,7 @@ uniform sampler2D shadowMap; // Shadowmap
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
 uniform vec3 viewPos;
+uniform float shadowFactor;
 
 #define     MAX_LIGHTS              4
 #define     LIGHT_DIRECTIONAL       0
@@ -41,7 +42,7 @@ const float fogDensity = 0.005;
 
 float ShadowCalc(vec4 p, float bias)
 {
-    vec2 texelSize = 1.0 / textureSize(shadowMap,0);
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
     vec3 projCoords = p.xyz / p.w;
     projCoords = projCoords * 0.5 + 0.5;
 	float depth = projCoords.z - bias;
@@ -122,18 +123,19 @@ void main()
 
     // HACK: currently shadow casts by one source of directional light, should be changed to account any source
     // Turn off shadows for fragments facing from the light source 
-    for (int i = 0; i < MAX_LIGHTS; i++)
-    {    
-        if (lights[i].type == LIGHT_DIRECTIONAL)
-        {
-            vec3 light = -normalize(lights[i].target - lights[i].position);
-            if (dot(light, fragNormal) < 0.0)
-                shadow = 0.0; 
-        }
-        continue;
-    }
+    //for (int i = 0; i < MAX_LIGHTS; i++)
+    //{    
+    //    if (lights[i].type == LIGHT_DIRECTIONAL)
+    //    {
+    //        vec3 light = -normalize(lights[i].target - lights[i].position);
+    //        if (dot(light, fragNormal) < 0.0)
+    //            shadow = 0.0; 
+    //    }
+    //    continue;
+    //}
 
-    finalColor = (texelColor * ((colDiffuse * (1.0 - shadow) + vec4(specular, 1.0)) * vec4(lightDot, 1.0)));
+    finalColor = (texelColor * ((colDiffuse * (1.0 - shadow * shadowFactor) 
+        + vec4(specular * (1.0 - shadow * shadowFactor * 0.5), 1.0)) * vec4(lightDot, 1.0)));
     finalColor += texelColor * (ambient / 10.0) * colDiffuse;
 
     // Gamma correction

@@ -9,7 +9,7 @@
 #include "raymath.h"
 
 SceneManager::SceneManager()
-    : m_groundPlaneWidth(100.f)
+    : m_groundPlaneWidth(90.f)
 {
     auto& physManager = PhysManager::instance(); // construct phys manager
     ImGui_ImplPhysbox_Config::substeps = physManager.getSubsteps();
@@ -31,7 +31,6 @@ void SceneManager::init()
     spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); // 
     spawnBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); // stack of 3 - ss - 10
     spawnBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); // stack of two boxes 3 substeps is
-    spawnBox(Vector3{ 0, 7, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
     spawnBall(Vector3{ 0.f, 8.f, 0.f }, Vector3{ 0.f, 100.f, 1.f }, 0.25f, 1.0f);
     spawnGroundPlane();
     spawnBorderPlanes();
@@ -100,6 +99,7 @@ void SceneManager::spawnBox(const Vector3& pos, const Vector3& velocity, const V
         LoadModelFromMesh(GenMeshCube(box->halfSize[0] * 2.f, box->halfSize[1] * 2.f, box->halfSize[2] * 2.f)) });
     m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
     m_gameObjects.back().physBody = box;
+    m_gameObjects.back().shadowFactor = 0.1f;
     m_gameObjects.back().updateCallBack = [](GameObject& obj)
     {
         if (obj.physBody) {
@@ -135,6 +135,7 @@ void SceneManager::spawnBall(const Vector3& pos, const Vector3& velocity, const 
     m_gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshSphere(sphere->radius, 32, 32)) });
     m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
     m_gameObjects.back().physBody = sphere;
+    m_gameObjects.back().shadowFactor = 0.1f;
     m_gameObjects.back().updateCallBack = [](GameObject& obj)
     {
         if (obj.physBody) {
@@ -158,8 +159,24 @@ void SceneManager::spawnGroundPlane()
     m_gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshPlane(m_groundPlaneWidth, m_groundPlaneWidth, 1, 1)) });
     m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = checkersTexture;
     m_gameObjects.back().physBody = nullptr;
+    m_gameObjects.back().shadowFactor = 0.5f;
 
     PhysManager::instance().addPlane(plane);
+}
+
+void SceneManager::spawnRotatingTorus(const Vector3& pos, const Vector3& rotVelocity, float radius, float size)
+{
+    m_gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshTorus(radius, size, 20.f, 20.f)) });
+    m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
+    m_gameObjects.back().physBody = nullptr;
+    m_gameObjects.back().shadowFactor = 0.1f;
+    m_gameObjects.back().updateCallBack = [rotVelocity, pos](GameObject& obj) {
+        static Vector3 rotPhase = Vector3Zero();
+        rotPhase = Vector3Add(rotPhase, rotVelocity);
+        Matrix rotation = MatrixRotateXYZ(rotPhase);
+        Matrix translate = MatrixTranslate(pos.x, pos.y, pos.z);
+        obj.model.transform = MatrixMultiply(rotation, translate);
+    };
 }
 
 void SceneManager::spawnBorderPlanes()
@@ -209,27 +226,4 @@ void SceneManager::drawSceneBorders() const
     DrawCubeWires(Vector3{ -0.5f * w - 0.5f * t , 0.5f * h, 0.f }, t, h, w, color); // -x
     DrawCubeWires(Vector3{ 0.f, 0.5f * h, 0.5f * w + 0.5f * t }, w, h, t, color); // +z
     DrawCubeWires(Vector3{ 0.f, 0.5f * h, -0.5f * w - 0.5f * t }, w, h, t, color); // -z   
-}
-
-void SceneManager::syncImGuiInput()
-{
-    auto& physManager = PhysManager::instance();
-
-    physManager.setSubsteps(ImGui_ImplPhysbox_Config::substeps);
-    physManager.setSleepEpsilon(ImGui_ImplPhysbox_Config::sleepEpsilon);
-}
-
-void SceneManager::spawnRotatingTorus(const Vector3& pos, const Vector3& rotVelocity, float radius, float size)
-{
-    m_gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshTorus(radius, size, 20.f, 20.f)) });
-    m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
-    m_gameObjects.back().physBody = nullptr;
-
-    m_gameObjects.back().updateCallBack = [rotVelocity, pos](GameObject& obj) {
-        static Vector3 rotPhase = Vector3Zero();
-        rotPhase = Vector3Add(rotPhase, rotVelocity);
-        Matrix rotation = MatrixRotateXYZ(rotPhase);
-        Matrix translate = MatrixTranslate(pos.x, pos.y, pos.z);
-        obj.model.transform = MatrixMultiply(rotation, translate);
-    };
 }

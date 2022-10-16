@@ -11,6 +11,7 @@ struct GameObject
 {
     Model model;
     cyclone::CollisionPrimitive* physBody;
+    float shadowFactor;
     std::function<void(GameObject&)> updateCallBack = [](GameObject&) {};
     void update() { updateCallBack(*this); }
 };
@@ -41,7 +42,6 @@ public:
     // Debug
     void drawCantacts() const;
     void drawSceneBorders() const;
-    void syncImGuiInput();
 
 protected:
     SceneManager();

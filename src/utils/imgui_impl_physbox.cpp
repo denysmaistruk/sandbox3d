@@ -9,9 +9,17 @@ bool ImGui_ImplPhysbox_Config::drawDepthTexture = false;
 
 bool ImGui_ImplPhysbox_Config::drawLightsDebug = false;
 
-bool ImGui_ImplPhysbox_Config::drawInWiresMode = false;
+bool ImGui_ImplPhysbox_Config::wiresMode = false;
 
 bool ImGui_ImplPhysbox_Config::lights[MAX_LIGHTS] = { true, false, false, false };
+
+Vector3 ImGui_ImplPhysbox_Config::shadowCasterPosition = Vector3{ 20.f, 70.0f, 0.0f };
+
+Vector3 ImGui_ImplPhysbox_Config::shadowCasterTarget = Vector3{ 0.0f, 0.0f, 0.0f };
+
+float ImGui_ImplPhysbox_Config::shadowCasterFOV = 90.9f;
+
+int ImGui_ImplPhysbox_Config::shadowCasterCameraType = 1;
 
 bool ImGui_ImplPhysbox_Config::pauseSimulation = false;
 
@@ -22,6 +30,33 @@ bool ImGui_ImplPhysbox_Config::drawContacts = false;
 int ImGui_ImplPhysbox_Config::substeps = 1;
 
 float ImGui_ImplPhysbox_Config::sleepEpsilon = 0.3f;
+
+static void HelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
+static void fromVector3(const Vector3& vec3, float* arr3)
+{
+    arr3[0] = vec3.x;
+    arr3[1] = vec3.y;
+    arr3[2] = vec3.z;
+}
+
+static void fromArray3(const float* arr3, Vector3& vec3)
+{
+    vec3.x = arr3[0];
+    vec3.y = arr3[1];
+    vec3.z = arr3[2];
+}
 
 void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
 {
@@ -46,10 +81,10 @@ void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
     // Render
     if (TreeNode("Render"))
     {
-        Checkbox("Wires mode", &ImGui_ImplPhysbox_Config::drawInWiresMode);
+        Checkbox("Wires mode", &ImGui_ImplPhysbox_Config::wiresMode);
         Checkbox("Draw depth texture", &ImGui_ImplPhysbox_Config::drawDepthTexture);
         Checkbox("Draw lights", &ImGui_ImplPhysbox_Config::drawLightsDebug);
-
+        
         // Lights
         if (TreeNode("Scene lights"))
         {
@@ -60,6 +95,28 @@ void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
                 Checkbox(lightStr, &ImGui_ImplPhysbox_Config::lights[i]);
             }
 
+            TreePop();
+        }
+
+        // Shadow caster 
+        if (TreeNode("Shadow caster"))
+        {
+            float buf3[3] = { 0 };
+
+            fromVector3(ImGui_ImplPhysbox_Config::shadowCasterPosition, buf3);
+            ImGui::InputFloat3("Position", buf3);
+            fromArray3(buf3, ImGui_ImplPhysbox_Config::shadowCasterPosition);
+
+            fromVector3(ImGui_ImplPhysbox_Config::shadowCasterTarget, buf3);
+            ImGui::InputFloat3("Target", buf3);
+            fromArray3(buf3, ImGui_ImplPhysbox_Config::shadowCasterTarget);
+            
+            const char* cameraTypes[] = { "PERSPECTIVE", "ORTHOGRAPHIC" };
+            ImGui::Combo("Camera type", &ImGui_ImplPhysbox_Config::shadowCasterCameraType, cameraTypes, IM_ARRAYSIZE(cameraTypes));
+            ImGui::SameLine(); HelpMarker("Affects dynamic shadowing.");
+
+            InputFloat("FOV", &ImGui_ImplPhysbox_Config::shadowCasterFOV);
+            
             TreePop();
         }
 

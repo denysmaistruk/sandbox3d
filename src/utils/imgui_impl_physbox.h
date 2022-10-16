@@ -7,9 +7,14 @@ struct ImGui_ImplPhysbox_Config
     // Render
     static bool drawDepthTexture;
     static bool drawLightsDebug;
-    static bool drawInWiresMode;
+    static bool wiresMode;
 
     static bool lights[MAX_LIGHTS];
+
+    static Vector3 shadowCasterPosition;
+    static Vector3 shadowCasterTarget;
+    static float shadowCasterFOV;
+    static int shadowCasterCameraType;
 
     // Physics
     static bool pauseSimulation;

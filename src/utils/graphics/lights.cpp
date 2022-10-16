@@ -8,6 +8,8 @@
 #define SHADER_PATH "../src/utils/shaders/"
 #define SHADOW_PATH SHADER_PATH "lights/"
 
+#define PB_CULL_DISTANCE_FAR 100
+
 ShadowMap LoadShadowMap(int width, int height) {
 	ShadowMap shadowMap	= {};
 	shadowMap.id		= rlLoadFramebuffer(width, height);
@@ -19,7 +21,7 @@ ShadowMap LoadShadowMap(int width, int height) {
 	shadowMap.depth.id = rlLoadTextureDepth(width, height, false);
 	shadowMap.depth.width = width;
 	shadowMap.depth.height = height;
-	shadowMap.depth.format = 19;
+	shadowMap.depth.format = PIXELFORMAT_COMPRESSED_PVRT_RGBA;
 	shadowMap.depth.mipmaps = 1;
 
 	rlTextureParameters(shadowMap.depth.id, RL_TEXTURE_WRAP_S, RL_TEXTURE_WRAP_CLAMP);
@@ -85,7 +87,7 @@ void BeginShadowCaster(Camera3D camera)
 		double top = camera.fovy / 2.0;
 		double right = top * aspect;
 
-		rlOrtho(-right, right, -top, top, RL_CULL_DISTANCE_NEAR, RL_CULL_DISTANCE_FAR);
+		rlOrtho(-right, right, -top, top, RL_CULL_DISTANCE_NEAR, PB_CULL_DISTANCE_FAR);
 	}
 
 	rlMatrixMode(RL_MODELVIEW);     // Switch back to modelview matrix
@@ -196,16 +198,17 @@ void UpdateLightValues(Shader shader, Light light)
 Shader  LoadDepthPreviewShader() { 
 
 	auto shader = LoadShader(0, SHADOW_PATH"depth.fs");
-	shader.locs[SHADER_LOC_ORTHO_SHADOW_CAST] = GetShaderLocation(shader, "orthoShadowCast");
+	shader.locs[SHADER_LOC_CASTER_PERSPECTIVE] = GetShaderLocation(shader, "casterPerspective");
 	return shader;
 }
 Shader	LoadShadowShader			() { return LoadShader(SHADOW_PATH"shadow.vs", SHADOW_PATH"shadow.fs"); }
 Shader	LoadShadedGeometryShader	() {
 	auto shader = LoadShader(SHADOW_PATH"geom.vs", SHADOW_PATH"geom.fs");
-	shader.locs[SHADER_LOC_VECTOR_VIEW]	= GetShaderLocation(shader, "viewPos");
-	shader.locs[SHADER_LOC_MAP_SHADOW]	= GetShaderLocation(shader, "shadowMap");
-	shader.locs[SHADER_LOC_MAT_LIGHT]	= GetShaderLocation(shader, "matLight");
-	shader.locs[SHADER_LOC_AMBIENT]		= GetShaderLocation(shader, "ambient");
+	shader.locs[SHADER_LOC_VECTOR_VIEW]	  = GetShaderLocation(shader, "viewPos");
+	shader.locs[SHADER_LOC_MAP_SHADOW]	  = GetShaderLocation(shader, "shadowMap");
+	shader.locs[SHADER_LOC_SHADOW_FACTOR] = GetShaderLocation(shader, "shadowFactor");
+	shader.locs[SHADER_LOC_MAT_LIGHT]	  = GetShaderLocation(shader, "matLight");
+	shader.locs[SHADER_LOC_AMBIENT]		  = GetShaderLocation(shader, "ambient");
 	return shader;
 }
 
@@ -222,7 +225,7 @@ Matrix CameraFrustum(Camera3D const& camera) {
 
 Matrix CameraOrtho(Camera3D const& camera) {
 	float aspect		= 1.0f;
-    double const zfar	= RL_CULL_DISTANCE_FAR;
+    double const zfar	= PB_CULL_DISTANCE_FAR;
     double const znear	= RL_CULL_DISTANCE_NEAR;
 	double top			= camera.fovy / 2.0f;
 	double right		= top * aspect;

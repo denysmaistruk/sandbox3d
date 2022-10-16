@@ -4,6 +4,7 @@
 #include "raymath.h"
 
 #include "scene/scene_manager.h"
+#include "scene/phys_manager.h"
 
 #include "utils/graphics/lights.h"
 #include "utils/imgui_impl_physbox.h"
@@ -35,12 +36,13 @@ int main(int argc, char const** argv)
 
     // Creating models, materials, shaders and lights
     //--------------------------------------------------------------------------------------
-    auto& sceneManager = SceneManager::instance();
+    auto& physManager = PhysManager::instance();
     
+    auto& sceneManager = SceneManager::instance();
     sceneManager.init();
     sceneManager.update(0);
 
-    bool stepped = false;
+    bool stepping = false;
     //--------------------------------------------------------------------------------------
 
     // Imgui initialization
@@ -78,7 +80,7 @@ int main(int argc, char const** argv)
     //--------------------------------------------------------------------------------------
 
     Camera3D shadowCaster = {};
-    shadowCaster.position = Vector3{ 12.5f, 100.0f, 0.0f};    // Camera position
+    shadowCaster.position = Vector3{ 50.0f, 50.0f, 50.0f};    // Camera position
     shadowCaster.target = Vector3{ 0.0f, 0.0f, 0.0f };         // Camera looking at point
     shadowCaster.up = Vector3{ 0.0f, 1.0f, 0.0f };             // Camera up vector (rotation towards target)
     shadowCaster.fovy = 90.0f;                                 // Camera field-of-view Y
@@ -98,30 +100,53 @@ int main(int argc, char const** argv)
     lights[1] = CreateLight(shGeometry, LIGHT_SPOT, Vector3{ -2, 2, -2 }, Vector3Zero(), WHITE, cosf(DEG2RAD * shadowCaster.fovy * 0.46f));
     lights[2] = CreateLight(shGeometry, LIGHT_POINT, Vector3{2, 1, 2}, Vector3Zero(), YELLOW, 0.f);
 
-    // Update method
-    auto const updateScene = [&](Shader const& shader) {
-        sceneManager.syncImGuiInput();
+    // Shadow update functor
+    auto const updateShadow = [&](Shader const shader) {
+        for (auto& obj : sceneManager.getObjects()) {
+            obj.model.materials[0].shader = shShadow;
+            DrawModel(obj.model, Vector3Zero(), 1.f, WHITE);
+        }
+    };
 
-        if (!ImGui_ImplPhysbox_Config::pauseSimulation) {
-            sceneManager.update(GetFrameTime());
+    // Main loop update functor
+    auto const updateScene = [&](Shader const& shader) {
+        // Simulation settings
+        physManager.setSubsteps(ImGui_ImplPhysbox_Config::substeps);
+        physManager.setSleepEpsilon(ImGui_ImplPhysbox_Config::sleepEpsilon);
+
+        // Render settings
+        // Shadow caster
+        shadowCaster.position = ImGui_ImplPhysbox_Config::shadowCasterPosition;
+        shadowCaster.target = ImGui_ImplPhysbox_Config::shadowCasterTarget;
+        matLight = MatrixMultiply(GetCameraMatrix(shadowCaster),
+            (shadowCaster.projection == CAMERA_PERSPECTIVE) ? CameraFrustum(shadowCaster) : CameraOrtho(shadowCaster));
+        switch (ImGui_ImplPhysbox_Config::shadowCasterCameraType){
+            case 0: shadowCaster.projection = CAMERA_PERSPECTIVE; break;
+            case 1: shadowCaster.projection = CAMERA_ORTHOGRAPHIC; break;
         }
-        else if (!stepped) {
-            sceneManager.update(GetFrameTime());
-            stepped = true;
-        }
-        
+        shadowCaster.fovy = ImGui_ImplPhysbox_Config::shadowCasterFOV;
+
+        // Render objects
         for (auto& obj : sceneManager.getObjects())
         {
             obj.model.materials[0].shader = shader;
             obj.model.materials[0].maps[MATERIAL_MAP_SHADOW].texture = shadow.depth;
             
-            if (!ImGui_ImplPhysbox_Config::drawInWiresMode) {
-                DrawModel(obj.model, Vector3Zero(), 1.f, WHITE);
-            }
-            else {
+            if (ImGui_ImplPhysbox_Config::wiresMode) {
                 DrawModelWires(obj.model, Vector3Zero(), 1.f, WHITE);
             }
-            
+            else {
+                SetShaderValue(shader, shader.locs[SHADER_LOC_SHADOW_FACTOR], &obj.shadowFactor, SHADER_UNIFORM_FLOAT);
+                DrawModel(obj.model, Vector3Zero(), 1.f, WHITE);
+            }
+        }
+        // Update positions by simulation
+        if (!ImGui_ImplPhysbox_Config::pauseSimulation) {
+            sceneManager.update(GetFrameTime());
+        }
+        else if (!stepping) {
+            sceneManager.update(GetFrameTime());
+            stepping = true;
         }
     };
 
@@ -132,18 +157,17 @@ int main(int argc, char const** argv)
         //----------------------------------------------------------------------------------
         UpdateCamera(&camera);          // Update camera
         
+        // Keyboard input
+        //----------------------------------------------------------------------------------
         if (IsKeyPressed(KEY_E)) {
             sceneManager.onThrowBallFromCamera(camera);
         }
-
         if (IsKeyPressed(KEY_R)) {
             sceneManager.onThrowBoxFromCamera(camera);
         }
-        
         if (IsKeyDown(KEY_Z)) {
             camera.target = Vector3{ 0.0f, 0.0f, 0.0f };
         }
-
         // Camera movement
         Vector3 moveFront = Vector3Scale(Vector3Normalize(Vector3Subtract(camera.target, camera.position)), 0.5f);
         Vector3 moveSide = Vector3Scale(Vector3Normalize(Vector3CrossProduct(moveFront, camera.up)), 0.5f);
@@ -163,15 +187,16 @@ int main(int argc, char const** argv)
         }
         // Stepping
         if (IsKeyDown(KEY_N)) {
-            stepped = false;
+            stepping = false;
         }
         if (IsKeyPressed(KEY_M)) {
-            stepped = false;
+            stepping = false;
         }
         // Pause
         if (IsKeyPressed(KEY_P)) {
             ImGui_ImplPhysbox_Config::pauseSimulation = !ImGui_ImplPhysbox_Config::pauseSimulation;
         }
+        //----------------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------------
 
@@ -191,15 +216,19 @@ int main(int argc, char const** argv)
         // Update light values (actually, only enable / disable them)
         for (int i = 0; i < MAX_LIGHTS; ++i) 
         {
+            if (lights[i].type == LIGHT_DIRECTIONAL) {
+                lights[i].position = shadowCaster.position;
+                lights[i].target = shadowCaster.target;
+            }
             UpdateLightValues(shGeometry, lights[i]);
         }
        
         // Draw to shadow map (z-buffer)
         //----------------------------------------------------------------------------------
         ShadowMapBegin(shadow);
-        BeginShadowCaster(shadowCaster);
-            updateScene(shShadow);
-        EndShadowCaster();
+            BeginShadowCaster(shadowCaster);
+                updateShadow(shShadow);
+            EndShadowCaster();
         ShadowMapEnd();
         //----------------------------------------------------------------------------------
 
@@ -215,8 +244,8 @@ int main(int argc, char const** argv)
                 SetShaderValueMatrix(shGeometry, shGeometry.locs[SHADER_LOC_MAT_LIGHT], matLight);
                 
                 // Update depth preview shader
-                int orthoShadowCast = shadowCaster.projection == CAMERA_ORTHOGRAPHIC;
-                SetShaderValue(shPreview, shPreview.locs[SHADER_LOC_ORTHO_SHADOW_CAST], &orthoShadowCast, SHADER_UNIFORM_INT);
+                int casterPerspective = shadowCaster.projection == CAMERA_ORTHOGRAPHIC;
+                SetShaderValue(shPreview, shPreview.locs[SHADER_LOC_CASTER_PERSPECTIVE], &casterPerspective, SHADER_UNIFORM_INT);
               
                 // Draw scene geometry
                 updateScene(shGeometry);
@@ -278,7 +307,7 @@ int main(int argc, char const** argv)
             // Imgui widgets
             //--------------------------------------------------------------------------------------
             bool p_open = true;
-            //ImGui::ShowDemoWindow(&p_open); // use it as an example
+            // ImGui::ShowDemoWindow(&p_open); // imgui demo example
             ImGui_ImplPhysbox_ShowDebugWindow(&p_open);
             //--------------------------------------------------------------------------------------
           
