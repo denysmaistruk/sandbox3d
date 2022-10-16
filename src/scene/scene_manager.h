@@ -12,8 +12,8 @@ struct GameObject
     Model model;
     cyclone::CollisionPrimitive* physBody;
     float shadowFactor;
-    std::function<void(GameObject&)> updateCallBack = [](GameObject&) {};
-    void update() { updateCallBack(*this); }
+    std::function<void(GameObject&, float dt)> updateCallBack = [](GameObject&, float dt) {};
+    void update(float dt) { updateCallBack(*this, dt); }
 };
 
 class SceneManager

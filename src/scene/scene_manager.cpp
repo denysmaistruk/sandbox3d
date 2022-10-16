@@ -28,12 +28,13 @@ SceneManager::~SceneManager()
 
 void SceneManager::init()
 {
-    spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); // 
-    spawnBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); // stack of 3 - ss - 10
-    spawnBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); // stack of two boxes 3 substeps is
+    spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); 
+    spawnBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
+    spawnBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); 
     spawnBall(Vector3{ 0.f, 8.f, 0.f }, Vector3{ 0.f, 100.f, 1.f }, 0.25f, 1.0f);
     spawnGroundPlane();
     spawnBorderPlanes();
+    spawnRotatingTorus(Vector3{ 5, 20, 0 }, Vector3{ 0.1, 0.2, 0.3 }, 0.3f, 8.f);
 }
 
 void SceneManager::update(float dt)
@@ -45,7 +46,7 @@ void SceneManager::update(float dt)
     for (auto& obj : m_gameObjects) 
     {
         // User update
-        obj.update();
+        obj.update(dt);
 
         if (obj.physBody) {
             // Update transform by phys body
@@ -99,8 +100,8 @@ void SceneManager::spawnBox(const Vector3& pos, const Vector3& velocity, const V
         LoadModelFromMesh(GenMeshCube(box->halfSize[0] * 2.f, box->halfSize[1] * 2.f, box->halfSize[2] * 2.f)) });
     m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
     m_gameObjects.back().physBody = box;
-    m_gameObjects.back().shadowFactor = 0.1f;
-    m_gameObjects.back().updateCallBack = [](GameObject& obj)
+    m_gameObjects.back().shadowFactor = 0.125f;
+    m_gameObjects.back().updateCallBack = [](GameObject& obj, float dt = 0.f)
     {
         if (obj.physBody) {
             auto color = obj.physBody->body->getAwake() ? RED : PURPLE;
@@ -135,8 +136,8 @@ void SceneManager::spawnBall(const Vector3& pos, const Vector3& velocity, const 
     m_gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshSphere(sphere->radius, 32, 32)) });
     m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
     m_gameObjects.back().physBody = sphere;
-    m_gameObjects.back().shadowFactor = 0.1f;
-    m_gameObjects.back().updateCallBack = [](GameObject& obj)
+    m_gameObjects.back().shadowFactor = 0.125f;
+    m_gameObjects.back().updateCallBack = [](GameObject& obj, float dt = 0.f)
     {
         if (obj.physBody) {
             auto color = obj.physBody->body->getAwake() ? RED : PURPLE;
@@ -159,7 +160,7 @@ void SceneManager::spawnGroundPlane()
     m_gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshPlane(m_groundPlaneWidth, m_groundPlaneWidth, 1, 1)) });
     m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = checkersTexture;
     m_gameObjects.back().physBody = nullptr;
-    m_gameObjects.back().shadowFactor = 0.5f;
+    m_gameObjects.back().shadowFactor = 0.75f;
 
     PhysManager::instance().addPlane(plane);
 }
@@ -169,10 +170,10 @@ void SceneManager::spawnRotatingTorus(const Vector3& pos, const Vector3& rotVelo
     m_gameObjects.emplace_back(GameObject{ LoadModelFromMesh(GenMeshTorus(radius, size, 20.f, 20.f)) });
     m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
     m_gameObjects.back().physBody = nullptr;
-    m_gameObjects.back().shadowFactor = 0.1f;
-    m_gameObjects.back().updateCallBack = [rotVelocity, pos](GameObject& obj) {
+    m_gameObjects.back().shadowFactor = 0.125f;
+    m_gameObjects.back().updateCallBack = [rotVelocity, pos](GameObject& obj, float dt) {
         static Vector3 rotPhase = Vector3Zero();
-        rotPhase = Vector3Add(rotPhase, rotVelocity);
+        rotPhase = Vector3Add(rotPhase, Vector3Scale(rotVelocity, dt));
         Matrix rotation = MatrixRotateXYZ(rotPhase);
         Matrix translate = MatrixTranslate(pos.x, pos.y, pos.z);
         obj.model.transform = MatrixMultiply(rotation, translate);
@@ -222,8 +223,8 @@ void SceneManager::drawSceneBorders() const
     float w = getGroundPlaneWidth(), t = 0.1f, h = 25.f;
     auto color = WHITE;
 
-    DrawCubeWires(Vector3{ 0.5f * w + 0.5f * t , 0.5f * h, 0.f }, t, h, w, color); // +x
+    DrawCubeWires(Vector3{ 0.5f * w + 0.5f * t , 0.5f * h, 0.f }, t, h, w, color);  // +x
     DrawCubeWires(Vector3{ -0.5f * w - 0.5f * t , 0.5f * h, 0.f }, t, h, w, color); // -x
-    DrawCubeWires(Vector3{ 0.f, 0.5f * h, 0.5f * w + 0.5f * t }, w, h, t, color); // +z
-    DrawCubeWires(Vector3{ 0.f, 0.5f * h, -0.5f * w - 0.5f * t }, w, h, t, color); // -z   
+    DrawCubeWires(Vector3{ 0.f, 0.5f * h, 0.5f * w + 0.5f * t }, w, h, t, color);   // +z
+    DrawCubeWires(Vector3{ 0.f, 0.5f * h, -0.5f * w - 0.5f * t }, w, h, t, color);  // -z   
 }

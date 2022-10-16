@@ -5,10 +5,12 @@
 #include "rlgl.h"
 #include "raymath.h"
 
+#include "../extern/raylib/src/external/glad.h"
+
 #define SHADER_PATH "../src/utils/shaders/"
 #define SHADOW_PATH SHADER_PATH "lights/"
 
-#define PB_CULL_DISTANCE_FAR 100
+#define PB_ORTHOGRAPHIC_CAMERA_CULL_DISTANCE_FAR 100
 
 ShadowMap LoadShadowMap(int width, int height) {
 	ShadowMap shadowMap	= {};
@@ -59,9 +61,15 @@ void ShadowMapBegin(ShadowMap shadowMap) {
 
 	rlClearColor(255, 255, 255, 255);
 	rlDisableColorBlend();
+
+	glCullFace(GL_FRONT);				// Front faces culling for solving shadow acne problem
 }
 
-void EndShadowCaster() { EndMode3D(); }
+void EndShadowCaster() { 
+	glCullFace(GL_BACK);				// Switch back to back faces culling
+	EndMode3D(); 
+}
+
 void BeginShadowCaster(Camera3D camera)
 {
 	rlDrawRenderBatchActive();      // Update and draw internal render batch
@@ -87,7 +95,7 @@ void BeginShadowCaster(Camera3D camera)
 		double top = camera.fovy / 2.0;
 		double right = top * aspect;
 
-		rlOrtho(-right, right, -top, top, RL_CULL_DISTANCE_NEAR, PB_CULL_DISTANCE_FAR);
+		rlOrtho(-right, right, -top, top, RL_CULL_DISTANCE_NEAR, PB_ORTHOGRAPHIC_CAMERA_CULL_DISTANCE_FAR);
 	}
 
 	rlMatrixMode(RL_MODELVIEW);     // Switch back to modelview matrix
@@ -225,7 +233,7 @@ Matrix CameraFrustum(Camera3D const& camera) {
 
 Matrix CameraOrtho(Camera3D const& camera) {
 	float aspect		= 1.0f;
-    double const zfar	= PB_CULL_DISTANCE_FAR;
+    double const zfar	= PB_ORTHOGRAPHIC_CAMERA_CULL_DISTANCE_FAR;
     double const znear	= RL_CULL_DISTANCE_NEAR;
 	double top			= camera.fovy / 2.0f;
 	double right		= top * aspect;
