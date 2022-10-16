@@ -104,6 +104,7 @@ void main()
     vec3 lightDot = vec3(0.0);
     vec3 specular = vec3(0.0);
     
+    bool directionalLightOnly = false;
     for (int i = 0; i < MAX_LIGHTS; i++)
     {
         if (lights[i].enabled == 1)
@@ -113,11 +114,13 @@ void main()
             if (lights[i].type == LIGHT_DIRECTIONAL)
             {
                 light = -normalize(lights[i].target - lights[i].position);
+                directionalLightOnly = true;
             }
 
             if (lights[i].type == LIGHT_POINT)
             {
                 light = normalize(lights[i].position - fragPosition);
+                directionalLightOnly = false;
             }
 
             if (lights[i].type == LIGHT_SPOT)
@@ -132,6 +135,7 @@ void main()
                 float theta = dot(-light, normalize(lights[i].target - lights[i].position));
                 float epsilon = lights[i].cutoff - lights[i].spotSoftness;
                 spot = clamp((theta - lights[i].cutoff) / epsilon, 0.0, 1.0);
+                directionalLightOnly = false;
             }
 
             float NdotL = max(dot(normal, light), 0.1);
@@ -149,8 +153,12 @@ void main()
     // float NdotLSum = max(dot(normal, lightSum), 0.0);
     // float bias = max(0.0005 * (1.0 - NdotLSum), 0.00005);
     // float bias = 0.00005f * tan(acos(NdotLSum));
-    float bias = -0.0005;
-    float shadow = ShadowCalc(shadowPos, bias);
+    
+    float shadow = 0.0;
+    if (directionalLightOnly) {
+        const float bias = -0.0005;
+        shadow = ShadowCalc(shadowPos, bias);
+    }
 
     // HACK: currently shadow casts by one source of directional light, should be changed to account any source
     // Turn off shadows for fragments facing from the light source 
