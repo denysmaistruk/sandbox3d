@@ -89,6 +89,21 @@ void PhysManager::setCollisionTolerance(const float tolerance)
 
 }
 
+float PhysManager::getCollisionFriction() const
+{
+    return m_collisionData->friction;
+}
+
+float PhysManager::getCollisionRestitution() const
+{
+    return m_collisionData->restitution;
+}
+
+float PhysManager::getCollisionTolerance() const
+{
+    return m_collisionData->tolerance;
+}
+
 void PhysManager::addSphere(cyclone::CollisionSphere* sphere)
 {
     m_spheres.push_back(sphere);

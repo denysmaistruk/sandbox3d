@@ -140,6 +140,24 @@ void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
         InputFloat("Time scale", &ImGui_ImplPhysbox_Config::timeScale);
         ImGui::SameLine(); HelpMarker("Maximum dt is %.3f", physManager.getUpdateRate());
 
+        static float friction = physManager.getCollisionFriction();
+        InputFloat("Collision friction", &friction);
+        if (friction != physManager.getCollisionFriction()) {
+            physManager.setCollisionFriction(friction);
+        }
+
+        static float restitution = physManager.getCollisionRestitution();
+        InputFloat("Collision restitution", &restitution);
+        if (restitution != physManager.getCollisionRestitution()) {
+            physManager.setCollisionRestitution(restitution);
+        }
+
+        static float tolerance = physManager.getCollisionTolerance();
+        InputFloat("Collision tolerance", &tolerance);
+        if (tolerance != physManager.getCollisionTolerance()) {
+            physManager.setCollisionTolerance(tolerance);
+        }
+
         TreePop();
     }
     Separator();

@@ -23,13 +23,17 @@ public:
     void setSubsteps(int substeps);
     void setSleepEpsilon(float epsilon);
 
-    float getUpdateRate() { return m_updateRate; }
-    int getSubsteps() { return m_substeps; }
-    float getSleepEpsilon() { cyclone::getSleepEpsilon(); }
+    float getUpdateRate() const { return m_updateRate; }
+    int getSubsteps() const { return m_substeps; }
+    float getSleepEpsilon() const { cyclone::getSleepEpsilon(); }
 
     void setCollisionFriction(const float friction);
     void setCollisionRestitution(const float restitution);
     void setCollisionTolerance(const float tolerance);
+
+    float getCollisionFriction() const;
+    float getCollisionRestitution() const;
+    float getCollisionTolerance() const;
 
     void addSphere(cyclone::CollisionSphere* sphere);
     void addBox(cyclone::CollisionBox* box);
