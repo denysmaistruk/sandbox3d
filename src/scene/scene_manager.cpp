@@ -39,7 +39,7 @@ void SceneManager::init()
 void SceneManager::update(float dt)
 {
     // Update physics
-    PhysManager::instance().update(dt);
+    PhysManager::instance().update(dt); // speed up simulation
 
     // Update game objects positions
     for (auto& obj : m_gameObjects) 

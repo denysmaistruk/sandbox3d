@@ -142,10 +142,10 @@ int main(int argc, char const** argv)
         }
         // Update positions by simulation
         if (!ImGui_ImplPhysbox_Config::pauseSimulation) {
-            sceneManager.update(GetFrameTime());
+            sceneManager.update(ImGui_ImplPhysbox_Config::timeScale * GetFrameTime());
         }
         else if (!stepping) {
-            sceneManager.update(GetFrameTime());
+            sceneManager.update(ImGui_ImplPhysbox_Config::timeScale * GetFrameTime());
             stepping = true;
         }
     };
@@ -251,20 +251,16 @@ int main(int argc, char const** argv)
                 updateScene(shGeometry);
   
                 // Draw debug geometry
-                if (ImGui_ImplPhysbox_Config::drawLightsDebug)
-                {   
-                    for (int i = 0; i < MAX_LIGHTS; ++i)
-                    {
-                        if (lights[i].enabled)
-                        {
+                if (ImGui_ImplPhysbox_Config::drawLightsDebug) {   
+                    for (int i = 0; i < MAX_LIGHTS; ++i) {
+                        if (lights[i].enabled) {
                             DrawCubeWires(lights[i].position, 0.125f, 0.125f, 0.125f, YELLOW);
                             DrawLine3D(lights[i].position, lights[i].target, LIME);
                         }
                     }
                 }
 
-                if (ImGui_ImplPhysbox_Config::drawSceneBorders)
-                {
+                if (ImGui_ImplPhysbox_Config::drawSceneBorders) {
                     sceneManager.drawSceneBorders();
                 }
 
@@ -293,13 +289,11 @@ int main(int argc, char const** argv)
                 //}
                 //camera.target = Vector3Add(camera.position, Vector3Scale(Vector3Normalize(Vector3Subtract(ca*/mera.target, camera.position)), result.distance));
 
-
                 EndMode3D();
 
-                if (ImGui_ImplPhysbox_Config::drawDepthTexture)
-                {
+                if (ImGui_ImplPhysbox_Config::drawDepthTexture) {
                     BeginShaderMode(shPreview);
-                        DrawTextureEx(shadow.depth, Vector2{ 0, 0 }, 0.0f, 0.125/*0.0625f*/, WHITE);
+                        DrawTextureEx(shadow.depth, Vector2{ 0, 0 }, 0.0f, 0.125, WHITE);
                     EndShaderMode();
                 }
                 
@@ -324,8 +318,7 @@ int main(int argc, char const** argv)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     // Unload models and shaders
-    for (const auto& obj : sceneManager.getObjects())
-    {
+    for (const auto& obj : sceneManager.getObjects()) {
         UnloadModel(obj.model);
     }
     UnloadShader(shPreview);

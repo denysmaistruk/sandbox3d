@@ -31,6 +31,8 @@ int ImGui_ImplPhysbox_Config::substeps = 1;
 
 float ImGui_ImplPhysbox_Config::sleepEpsilon = 0.3f;
 
+float ImGui_ImplPhysbox_Config::timeScale = 1.5f;
+
 static void HelpMarker(const char* desc)
 {
     ImGui::TextDisabled("(?)");
@@ -132,6 +134,8 @@ void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open)
         Checkbox("Draw contacts", &ImGui_ImplPhysbox_Config::drawContacts);
         InputInt("Substeps", &ImGui_ImplPhysbox_Config::substeps);
         InputFloat("Sleep epsilon", &ImGui_ImplPhysbox_Config::sleepEpsilon);
+        InputFloat("Time scale", &ImGui_ImplPhysbox_Config::timeScale);
+        ImGui::SameLine(); HelpMarker("Maximum dt is 0.033");
 
         TreePop();
     }

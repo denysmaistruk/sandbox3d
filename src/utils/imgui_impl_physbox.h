@@ -22,6 +22,7 @@ struct ImGui_ImplPhysbox_Config
     static bool drawContacts;
     static int substeps;
     static float sleepEpsilon;
+    static float timeScale;
 };
 
 void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open);
