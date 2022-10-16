@@ -39,6 +39,20 @@ void SceneManager::init()
 
 void SceneManager::update(float dt)
 {
+    static bool b = false;
+    if (!b)
+    {
+        loadVoxels();
+        b = true;
+    }
+    else
+    {
+        DrawMeshInstanced(m_mesh, m_material, m_transforms, m_instances);
+    }
+
+    
+    return;
+
     // Update physics
     PhysManager::instance().update(dt); // speed up simulation
 
@@ -227,4 +241,50 @@ void SceneManager::drawSceneBorders() const
     DrawCubeWires(Vector3{ -0.5f * w - 0.5f * t , 0.5f * h, 0.f }, t, h, w, color); // -x
     DrawCubeWires(Vector3{ 0.f, 0.5f * h, 0.5f * w + 0.5f * t }, w, h, t, color);   // +z
     DrawCubeWires(Vector3{ 0.f, 0.5f * h, -0.5f * w - 0.5f * t }, w, h, t, color);  // -z   
+}
+
+template<typename T>
+static T sqr(T value) {
+    return value * value;
+}
+
+void SceneManager::loadVoxels()
+{
+    //DrawMeshInstanced(Mesh mesh, Material material, Matrix * transforms, int instances);
+
+    // Draw voxelized torus
+
+    auto insideTorus = [](const Vector3& p, float R, float r)
+    {
+        return sqr(R - sqrt(sqr(p.x) + sqr(p.z))) + sqr(p.y) < sqr(r);
+    };
+
+    float R = 1.f;
+    float r = 0.5;
+    float voxel = 0.025f;
+
+    Model model = LoadModelFromMesh(GenMeshCube(voxel, voxel, voxel));
+    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
+
+    m_mesh = model.meshes[0];
+    m_material = model.materials[0];
+
+    for (float x = -2.f; x <= 2.f; x += voxel) {
+        for (float y = -2.f; y <= 2.f; y += voxel) {
+            for (float z = -2.f; z <= 2.f; z += voxel) {
+                Vector3 point{ x, y, z };
+
+                if (insideTorus(point, R, r)) {
+
+                    m_transforms[m_instances++] = MatrixTranslate(x, y, z);
+                    //m_gameObjects.emplace_back(GameObject{
+        /*LoadModelFromMesh(GenMeshCube(voxel, voxel, voxel)) });
+                    m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
+                    m_gameObjects.back().physBody = nullptr;
+                    m_gameObjects.back().shadowFactor = 0.125f;
+                    m_gameObjects.back().model.transform = MatrixTranslate(x, y, z);*/
+                }
+            }
+        }
+    }
 }

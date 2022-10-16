@@ -39,7 +39,7 @@ int main(int argc, char const** argv)
     auto& physManager = PhysManager::instance();
     
     auto& sceneManager = SceneManager::instance();
-    sceneManager.init();
+    //sceneManager.init();
     sceneManager.update(0);
 
     bool stepping = false;
