@@ -28,18 +28,20 @@ SceneManager::~SceneManager()
 
 void SceneManager::init()
 {
-    spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); 
-    spawnBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
-    spawnBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); 
-    spawnBall(Vector3{ 0.f, 8.f, 0.f }, Vector3{ 0.f, 100.f, 1.f }, 0.25f, 1.0f);
-    spawnGroundPlane();
-    spawnBorderPlanes();
+    //spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); 
+    //spawnBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
+    //spawnBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); 
+    //spawnBall(Vector3{ 0.f, 8.f, 0.f }, Vector3{ 0.f, 100.f, 1.f }, 0.25f, 1.0f);
+    //spawnGroundPlane();
+    //spawnBorderPlanes();
     //spawnRotatingTorus(Vector3{ 5, 20, 0 }, Vector3{ 0.1, 0.2, 0.3 }, 0.3f, 8.f);
+
+    spawnVoxelTorus(0.025, 1, 0.5);
 }
 
 void SceneManager::update(float dt)
 {
-    static bool b = false;
+    /*static bool b = false;
     if (!b)
     {
         loadVoxels();
@@ -50,8 +52,8 @@ void SceneManager::update(float dt)
         DrawMeshInstanced(m_mesh, m_material, m_transforms, m_instances);
     }
 
-    
-    return;
+
+    return;*/
 
     // Update physics
     PhysManager::instance().update(dt); // speed up simulation
@@ -215,6 +217,72 @@ void SceneManager::spawnBorderPlanes()
     plane->direction = cyclone::Vector3(0, 0, -1);
     plane->offset = m_groundPlaneWidth / -2.f;
     PhysManager::instance().addPlane(plane);
+}
+
+void SceneManager::spawnVoxelTorus(float voxelSize, float R, float r)
+{
+    /*float voxelSize;
+    int voxelsCount;
+    Matrix transform;
+
+    Mesh mesh;
+    Material material;
+    Matrix* transforms;*/
+
+
+    auto sqr = [](float value) {
+        return value * value;
+    };
+
+    auto insideTorus = [R, r, sqr](const Vector3& point) {
+        return sqr(R - sqrt(sqr(point.x) + sqr(point.z))) + sqr(point.y) < sqr(r);
+    };
+
+    std::vector<Vector3> points;
+    const float extend = R + r;
+    for (float x = -extend; x <= extend; x += voxelSize) {
+        for (float y = -extend; y <= extend; y += voxelSize) {
+            for (float z = -extend; z <= extend; z += voxelSize) {
+                
+                Vector3 testPoint{ x, y, z };
+                if (insideTorus(testPoint)) {
+                    points.push_back(testPoint);
+
+                    //m_transforms[m_instances++] = MatrixTranslate(x, y, z);
+                    //m_gameObjects.emplace_back(GameObject{
+        /*LoadModelFromMesh(GenMeshCube(voxel, voxel, voxel)) });
+                    m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
+                    m_gameObjects.back().physBody = nullptr;
+                    m_gameObjects.back().shadowFactor = 0.125f;
+                    m_gameObjects.back().model.transform = MatrixTranslate(x, y, z);*/
+                }
+            }
+        }
+    }
+
+    VoxelObject voxelObj;
+    voxelObj.mesh = GenMeshCube(voxelSize, voxelSize, voxelSize);
+    voxelObj.voxelsCount = points.size();
+    voxelObj.transforms = new Matrix[points.size()];
+    voxelObj.voxelSize = voxelSize;
+    for (int i = 0; i < points.size(); ++i) {
+
+        Vector3 a1{ 0, voxelSize, 0 };
+        Vector3 a2{ 0, 0, voxelSize };
+        Vector3 a3{ voxelSize, 0, 0 };
+
+        if(insideTorus(Vector3Add(points[i], a1)) && 
+            insideTorus(Vector3Subtract(points[i], a1)) && insideTorus(Vector3Add(points[i], a2))
+                && insideTorus(Vector3Subtract(points[i], a2)) && insideTorus(Vector3Add(points[i], a3))
+                    && insideTorus(Vector3Subtract(points[i], a3)))
+        {
+            continue;
+        }
+
+        voxelObj.transforms[i] = MatrixTranslate(points[i].x, points[i].y, points[i].z);
+    }
+
+    m_voxelObject.push_back(voxelObj);
 }
 
 void SceneManager::drawCantacts() const

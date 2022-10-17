@@ -155,10 +155,10 @@ void main()
     // float bias = 0.00005f * tan(acos(NdotLSum));
     
     float shadow = 0.0;
-    if (directionalLightOnly) {
-        const float bias = -0.0005;
-        shadow = ShadowCalc(shadowPos, bias);
-    }
+//    if (directionalLightOnly) {
+//        const float bias = -0.0005;
+//        shadow = ShadowCalc(shadowPos, bias);
+//    }
 
     // HACK: currently shadow casts by one source of directional light, should be changed to account any source
     // Turn off shadows for fragments facing from the light source 

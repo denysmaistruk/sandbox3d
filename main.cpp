@@ -12,6 +12,8 @@
 
 #define SHADOW_MAP_RESOLUTION 4096
 
+int enableInst = 1;
+
 int main(int argc, char const** argv)
 {
     // Initialization
@@ -39,7 +41,7 @@ int main(int argc, char const** argv)
     auto& physManager = PhysManager::instance();
     
     auto& sceneManager = SceneManager::instance();
-    //sceneManager.init();
+    sceneManager.init();
     sceneManager.update(0);
 
     bool stepping = false;
@@ -100,11 +102,50 @@ int main(int argc, char const** argv)
     lights[1] = CreateLight(shGeometry, LIGHT_SPOT, Vector3{ -2, 2, -2 }, Vector3Zero(), WHITE, cosf(DEG2RAD * shadowCaster.fovy * 0.46f));
     lights[2] = CreateLight(shGeometry, LIGHT_POINT, Vector3{2, 1, 2}, Vector3Zero(), YELLOW, 0.f);
 
+    // Instancing
+    auto const enableInstancing = [](Shader const& shader, bool enable) {
+        int enableLoc{ enable };
+        SetShaderValue(shader, shader.locs[SHADER_LOC_INSTANCING], &enableLoc, SHADER_UNIFORM_INT);
+    };
+    
+    struct AutoInstancing
+    {
+        AutoInstancing(Shader sh) 
+            : shader(sh) 
+        {
+            int enable = 1;
+            SetShaderValue(shader, shader.locs[SHADER_LOC_INSTANCING], &enable, SHADER_UNIFORM_INT);
+        }
+        ~AutoInstancing()
+        {
+            int enable = 0;
+            SetShaderValue(shader, shader.locs[SHADER_LOC_INSTANCING], &enable, SHADER_UNIFORM_INT);
+        }
+
+        Shader shader;
+    };
+
     // Shadow update functor
     auto const updateShadow = [&](Shader const shader) {
         for (auto& obj : sceneManager.getObjects()) {
-            obj.model.materials[0].shader = shShadow;
+            obj.model.materials[0].shader = shader;
             DrawModel(obj.model, Vector3Zero(), 1.f, WHITE);
+        }
+
+        SetShaderValue(shader, shader.locs[SHADER_LOC_INSTANCING], &enableInst, SHADER_UNIFORM_INT);
+        //enableInstancing(shader, true);
+        //AutoInstancing instguard{ shader };
+        for (auto& obj : sceneManager.getVoxelObjects()) {
+
+            Material material = LoadMaterialDefault();
+            material.shader = shader;
+            material.maps[MATERIAL_MAP_DIFFUSE].color = RED;
+            //material.maps[MATERIAL_MAP_SHADOW].texture = shadow.depth;
+            //DrawMeshInstanced(obj.mesh, material, obj.transforms, obj.voxelsCount);
+            /*for (int i = 0; i < obj.voxelsCount; ++i) {
+                Vector3 pos{ obj.transforms[i].m12, obj.transforms[i].m13, obj.transforms[i].m14 };
+                DrawCube(pos, obj.voxelSize, obj.voxelSize, obj.voxelSize, RED);
+            }*/
         }
     };
 
@@ -140,6 +181,26 @@ int main(int argc, char const** argv)
                 DrawModel(obj.model, Vector3Zero(), 1.f, WHITE);
             }
         }
+
+        {
+            SetShaderValue(shader, shader.locs[SHADER_LOC_INSTANCING], &enableInst, SHADER_UNIFORM_INT);
+            //enableInstancing(shader, true);
+            //AutoInstancing instguard{ shader };
+            for (auto& obj : sceneManager.getVoxelObjects()) {
+
+                Material material = LoadMaterialDefault();
+                material.shader = shader;
+                material.maps[MATERIAL_MAP_DIFFUSE].color = RED;
+                material.maps[MATERIAL_MAP_SHADOW].texture = shadow.depth;
+                DrawMeshInstanced(obj.mesh, material, obj.transforms, obj.voxelsCount);
+                /*for (int i = 0; i < obj.voxelsCount; ++i) {
+                    Vector3 pos{ obj.transforms[i].m12, obj.transforms[i].m13, obj.transforms[i].m14 };
+                    DrawCube(pos, obj.voxelSize, obj.voxelSize, obj.voxelSize, RED);
+                }*/
+            }
+        }
+
+
         // Update positions by simulation
         if (!ImGui_ImplPhysbox_Config::pauseSimulation) {
             sceneManager.update(ImGui_ImplPhysbox_Config::timeScale * GetFrameTime());
@@ -238,7 +299,6 @@ int main(int argc, char const** argv)
             ClearBackground(RAYWHITE);
             BeginMode3D(camera);
                 // Update geometry shader
-                auto    const casterDir = Vector3Normalize(Vector3Subtract(shadowCaster.target, shadowCaster.position));
                 SetShaderValue(shGeometry, shGeometry.locs[SHADER_LOC_VECTOR_VIEW], (float*)&camera.position, SHADER_UNIFORM_VEC3);
                 SetShaderValue(shGeometry, shGeometry.locs[SHADER_LOC_AMBIENT], new float[4] { 0.4f, 0.4f, 0.4f, 1.0f }, SHADER_UNIFORM_VEC4);
                 SetShaderValueMatrix(shGeometry, shGeometry.locs[SHADER_LOC_MAT_LIGHT], matLight);
