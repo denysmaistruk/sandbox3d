@@ -217,8 +217,10 @@ Shader	LoadShadedGeometryShader	() {
 	shader.locs[SHADER_LOC_SHADOW_FACTOR] = GetShaderLocation(shader, "shadowFactor");
 	shader.locs[SHADER_LOC_MAT_LIGHT]	  = GetShaderLocation(shader, "matLight");
 	shader.locs[SHADER_LOC_AMBIENT]		  = GetShaderLocation(shader, "ambient");
-	shader.locs[SHADER_LOC_INSTANCING]  = GetShaderLocation(shader, "instancing");
+	shader.locs[SHADER_LOC_INSTANCING]    = GetShaderLocation(shader, "instancing");
+#if INSTACING_ENABLED == 1
 	shader.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocationAttrib(shader, "instanceTransform");
+#endif
 	return shader;
 }
 
@@ -241,4 +243,18 @@ Matrix CameraOrtho(Camera3D const& camera) {
 	double right		= top * aspect;
 
 	return MatrixOrtho(-right, right, -top, top, znear, zfar);
+}
+
+static Shader shaderCached;
+void BeginInstacing(Shader shader)
+{
+	int enable = 1;
+	SetShaderValue(shader, shader.locs[SHADER_LOC_INSTANCING], &enable, SHADER_UNIFORM_INT);
+    shaderCached = shader;
+}
+
+void EndInstancing()
+{
+    int enable = 0;
+    SetShaderValue(shaderCached, shaderCached.locs[SHADER_LOC_INSTANCING], &enable, SHADER_UNIFORM_INT);
 }

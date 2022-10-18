@@ -28,33 +28,21 @@ SceneManager::~SceneManager()
 
 void SceneManager::init()
 {
+    // Regular objects
     //spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); 
     //spawnBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
     //spawnBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); 
     //spawnBall(Vector3{ 0.f, 8.f, 0.f }, Vector3{ 0.f, 100.f, 1.f }, 0.25f, 1.0f);
-    //spawnGroundPlane();
+    spawnGroundPlane();
     //spawnBorderPlanes();
-    //spawnRotatingTorus(Vector3{ 5, 20, 0 }, Vector3{ 0.1, 0.2, 0.3 }, 0.3f, 8.f);
+    spawnRotatingTorus(Vector3{ 5, 20, 0 }, Vector3{ 0.1, 0.2, 0.3 }, 0.3f, 8.f);
 
-    spawnVoxelTorus(0.025, 1, 0.5);
+    // Voxel objects
+    spawnVoxelTorus(0.1, 2, 0.5);
 }
 
 void SceneManager::update(float dt)
 {
-    /*static bool b = false;
-    if (!b)
-    {
-        loadVoxels();
-        b = true;
-    }
-    else
-    {
-        DrawMeshInstanced(m_mesh, m_material, m_transforms, m_instances);
-    }
-
-
-    return;*/
-
     // Update physics
     PhysManager::instance().update(dt); // speed up simulation
 
@@ -219,70 +207,69 @@ void SceneManager::spawnBorderPlanes()
     PhysManager::instance().addPlane(plane);
 }
 
-void SceneManager::spawnVoxelTorus(float voxelSize, float R, float r)
+void SceneManager::spawnVoxelTorus(float voxel, float radius, float size) // radius - R, size - r
 {
-    /*float voxelSize;
-    int voxelsCount;
-    Matrix transform;
-
-    Mesh mesh;
-    Material material;
-    Matrix* transforms;*/
-
-
     auto sqr = [](float value) {
         return value * value;
     };
 
-    auto insideTorus = [R, r, sqr](const Vector3& point) {
-        return sqr(R - sqrt(sqr(point.x) + sqr(point.z))) + sqr(point.y) < sqr(r);
+    auto insideTorus = [radius, size, sqr](const Vector3& point) {
+        return sqr(radius - sqrt(sqr(point.x) + sqr(point.z))) + sqr(point.y) < sqr(size);
     };
 
-    std::vector<Vector3> points;
-    const float extend = R + r;
-    for (float x = -extend; x <= extend; x += voxelSize) {
-        for (float y = -extend; y <= extend; y += voxelSize) {
-            for (float z = -extend; z <= extend; z += voxelSize) {
+    // All tested points inside torus
+    std::vector<Vector3> allPoints;
+    const float bboxHalfSize = radius + size;
+    for (float x = -bboxHalfSize; x <= bboxHalfSize; x += voxel) {
+        for (float y = -bboxHalfSize; y <= bboxHalfSize; y += voxel) {
+            for (float z = -bboxHalfSize; z <= bboxHalfSize; z += voxel) {
                 
-                Vector3 testPoint{ x, y, z };
-                if (insideTorus(testPoint)) {
-                    points.push_back(testPoint);
-
-                    //m_transforms[m_instances++] = MatrixTranslate(x, y, z);
-                    //m_gameObjects.emplace_back(GameObject{
-        /*LoadModelFromMesh(GenMeshCube(voxel, voxel, voxel)) });
-                    m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
-                    m_gameObjects.back().physBody = nullptr;
-                    m_gameObjects.back().shadowFactor = 0.125f;
-                    m_gameObjects.back().model.transform = MatrixTranslate(x, y, z);*/
+                Vector3 point{ x, y, z };
+                if (insideTorus(point)) {
+                    allPoints.push_back(point);
                 }
             }
         }
     }
 
-    VoxelObject voxelObj;
-    voxelObj.mesh = GenMeshCube(voxelSize, voxelSize, voxelSize);
-    voxelObj.voxelsCount = points.size();
-    voxelObj.transforms = new Matrix[points.size()];
-    voxelObj.voxelSize = voxelSize;
-    for (int i = 0; i < points.size(); ++i) {
+    // All tested points optimized
+    std::vector<Vector3> surfacePoints;
+    for (int i = 0; i < allPoints.size(); ++i) {
 
-        Vector3 a1{ 0, voxelSize, 0 };
-        Vector3 a2{ 0, 0, voxelSize };
-        Vector3 a3{ voxelSize, 0, 0 };
+        const Vector3 dx{ voxel, 0, 0 };
+        const Vector3 dy{ 0, voxel, 0 };
+        const Vector3 dz{ 0, 0, voxel };
 
-        if(insideTorus(Vector3Add(points[i], a1)) && 
-            insideTorus(Vector3Subtract(points[i], a1)) && insideTorus(Vector3Add(points[i], a2))
-                && insideTorus(Vector3Subtract(points[i], a2)) && insideTorus(Vector3Add(points[i], a3))
-                    && insideTorus(Vector3Subtract(points[i], a3)))
-        {
+        const Vector3 point = allPoints[i];
+        if (insideTorus(Vector3Add(point, dy)) && insideTorus(Vector3Subtract(point, dy)) 
+            && insideTorus(Vector3Add(point, dz)) && insideTorus(Vector3Subtract(point, dz)) 
+            && insideTorus(Vector3Add(point, dx)) && insideTorus(Vector3Subtract(point, dx))) {
+            // Surrounded by 6 voxels
             continue;
         }
-
-        voxelObj.transforms[i] = MatrixTranslate(points[i].x, points[i].y, points[i].z);
+        surfacePoints.push_back(point);
     }
 
-    m_voxelObject.push_back(voxelObj);
+    VoxelObject torus;
+    torus.voxel = voxel;
+    torus.transform = MatrixMultiply(MatrixIdentity(), MatrixTranslate(5, 5, -5));
+    torus.mesh = GenMeshCube(voxel, voxel, voxel);
+    torus.material = LoadMaterialDefault();
+    torus.material.maps[MATERIAL_MAP_DIFFUSE].color = RED;
+    torus.instances = surfacePoints.size();
+    torus.transforms = new Matrix[surfacePoints.size()];
+    for (int i = 0; i < surfacePoints.size(); ++i) {
+        torus.transforms[i] = MatrixTranslate(surfacePoints[i].x, surfacePoints[i].y, surfacePoints[i].z);
+    }
+    torus.onTransformChanged();
+    
+    VoxelObject torus2;
+    torus2 = torus;
+    torus2.transform = MatrixMultiply(MatrixIdentity(), MatrixTranslate(-10, 0, 10));
+    torus2.onTransformChanged();
+
+    m_voxelObject.push_back(torus);
+    m_voxelObject.push_back(torus2);
 }
 
 void SceneManager::drawCantacts() const
@@ -309,50 +296,4 @@ void SceneManager::drawSceneBorders() const
     DrawCubeWires(Vector3{ -0.5f * w - 0.5f * t , 0.5f * h, 0.f }, t, h, w, color); // -x
     DrawCubeWires(Vector3{ 0.f, 0.5f * h, 0.5f * w + 0.5f * t }, w, h, t, color);   // +z
     DrawCubeWires(Vector3{ 0.f, 0.5f * h, -0.5f * w - 0.5f * t }, w, h, t, color);  // -z   
-}
-
-template<typename T>
-static T sqr(T value) {
-    return value * value;
-}
-
-void SceneManager::loadVoxels()
-{
-    //DrawMeshInstanced(Mesh mesh, Material material, Matrix * transforms, int instances);
-
-    // Draw voxelized torus
-
-    auto insideTorus = [](const Vector3& p, float R, float r)
-    {
-        return sqr(R - sqrt(sqr(p.x) + sqr(p.z))) + sqr(p.y) < sqr(r);
-    };
-
-    float R = 1.f;
-    float r = 0.5;
-    float voxel = 0.025f;
-
-    Model model = LoadModelFromMesh(GenMeshCube(voxel, voxel, voxel));
-    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
-
-    m_mesh = model.meshes[0];
-    m_material = model.materials[0];
-
-    for (float x = -2.f; x <= 2.f; x += voxel) {
-        for (float y = -2.f; y <= 2.f; y += voxel) {
-            for (float z = -2.f; z <= 2.f; z += voxel) {
-                Vector3 point{ x, y, z };
-
-                if (insideTorus(point, R, r)) {
-
-                    m_transforms[m_instances++] = MatrixTranslate(x, y, z);
-                    //m_gameObjects.emplace_back(GameObject{
-        /*LoadModelFromMesh(GenMeshCube(voxel, voxel, voxel)) });
-                    m_gameObjects.back().model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
-                    m_gameObjects.back().physBody = nullptr;
-                    m_gameObjects.back().shadowFactor = 0.125f;
-                    m_gameObjects.back().model.transform = MatrixTranslate(x, y, z);*/
-                }
-            }
-        }
-    }
 }

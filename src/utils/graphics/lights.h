@@ -66,8 +66,11 @@ void UnloadShadowMap(ShadowMap shadowMap);
 void ShadowMapBegin(ShadowMap shadowMap);
 void ShadowMapEnd();
 
-void EndShadowCaster();
 void BeginShadowCaster(Camera3D camera);
+void EndShadowCaster();
 
 Matrix CameraFrustum(Camera3D const& camera);
 Matrix CameraOrtho(Camera3D const& camera);
+
+void BeginInstacing(Shader shader);
+void EndInstancing();

@@ -49,15 +49,6 @@ public:
     void drawCantacts() const;
     void drawSceneBorders() const;
 
-    // Voxels
-    Mesh m_mesh;
-    Material m_material;
-    Matrix m_transforms[2 * 4096000];
-    int m_instances;
-    void loadVoxels();
-
-
-
 protected:
     SceneManager();
 
