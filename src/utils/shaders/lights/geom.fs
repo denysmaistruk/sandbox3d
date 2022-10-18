@@ -40,7 +40,6 @@ out vec4 finalColor;
 const vec4 fogColor = vec4(0.8, 0.8, 0.8, 0.5);
 const float fogDensity = 0.005;
 
-
 // Shadows
 const bool usePoisondDisk = true;
 const vec2 poissonDisk[16] = vec2[] ( 

@@ -133,21 +133,26 @@ int main(int argc, char const** argv)
             obj.model.materials[0].shader = shader;
             obj.model.materials[0].maps[MATERIAL_MAP_SHADOW].texture = shadow.depth;
             
+#if INSTANCING_ENABLED
+            DrawModelWires(obj.model, Vector3Zero(), 1.f, WHITE);
+#else
             if (ImGui_ImplPhysbox_Config::wiresMode) {
-                DrawModelWires(obj.model, Vector3Zero(), 1.f, WHITE);
+                DrawModelWires(obj.model, Vector3Zero(), 1.f, RED);
             }
             else {
                 SetShaderValue(shader, shader.locs[SHADER_LOC_SHADOW_FACTOR], &obj.shadowFactor, SHADER_UNIFORM_FLOAT);
                 DrawModel(obj.model, Vector3Zero(), 1.f, WHITE);
             }
+#endif
         }
 
-#if INSTANCING_ENABLED == 1
+#if INSTANCING_ENABLED
         // Render instanced objects
         BeginInstacing(shader);
         for (auto& voxelObject : sceneManager.getVoxelObjects()) {
             voxelObject.material.shader = shader;
             DrawMeshInstanced(voxelObject.mesh, voxelObject.material, voxelObject.transforms, voxelObject.instances);
+            drawGuizmo(voxelObject.transform);
         }
         EndInstancing();
 #endif
@@ -279,14 +284,10 @@ int main(int argc, char const** argv)
                 }
 
                 // Draw basis vector
-                DrawLine3D(Vector3Zero(), Vector3{ 1.f, 0.f, 0.f }, RED);   // x
-                DrawLine3D(Vector3Zero(), Vector3{ 0.f, 1.f, 0.f }, GREEN); // y
-                DrawLine3D(Vector3Zero(), Vector3{ 0.f, 0.f, 1.f }, BLUE);  // z
+                drawGuizmo(MatrixIdentity());
 
                 // Draw camera target
-                DrawLine3D(camera.target, Vector3Add(camera.target, Vector3{ 1.f, 0.f, 0.f }), RED);   // x
-                DrawLine3D(camera.target, Vector3Add(camera.target, Vector3{ 0.f, 1.f, 0.f }), GREEN); // y
-                DrawLine3D(camera.target, Vector3Add(camera.target, Vector3{ 0.f, 0.f, 1.f }), BLUE);  // z
+                drawGuizmo(MatrixTranslate(camera.target.x, camera.target.y, camera.target.z));
                 
                 // Update camera collision with environment
                 //Ray ray{camera.position, Vector3Normalize(Vector3Subtract(camera.target, camera.position))};

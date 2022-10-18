@@ -32,6 +32,7 @@ void SceneManager::init()
 #if INSTANCING_ENABLED
     // Voxel objects
     spawnVoxelTorus(0.1, 2, 0.5);
+    spawnGroundPlane();
 #else
     // Regular objects
     spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
@@ -42,8 +43,6 @@ void SceneManager::init()
     spawnBorderPlanes();
     //spawnRotatingTorus(Vector3{ 5, 20, 0 }, Vector3{ 0.1, 0.2, 0.3 }, 0.3f, 8.f);
 #endif
-
-    
 }
 
 void SceneManager::update(float dt)
@@ -270,7 +269,7 @@ void SceneManager::spawnVoxelTorus(float voxel, float radius, float size) // rad
     
     VoxelObject torus2;
     torus2 = torus;
-    torus2.transform = MatrixMultiply(MatrixIdentity(), MatrixTranslate(-10, 0, 10));
+    torus2.transform = MatrixMultiply(MatrixIdentity(), MatrixTranslate(-5, 5, 5));
     torus2.onTransformChanged();
 
     m_voxelObject.push_back(torus);

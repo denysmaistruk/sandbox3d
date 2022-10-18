@@ -3,7 +3,7 @@
 #include "raylib.h"
 #include "raymath.h"
 
-Mesh GenMeshPlaneTiled(float width, float length, int resX, int resZ, int tilesX, int tilesZ)
+Mesh genMeshPlaneTiled(float width, float length, int resX, int resZ, int tilesX, int tilesZ)
 {
 
     Mesh mesh = { 0 };
@@ -135,4 +135,12 @@ Mesh GenMeshPlaneTiled(float width, float length, int resX, int resZ, int tilesX
     UploadMesh(&mesh, false);
 
     return mesh;
+}
+
+void drawGuizmo(Matrix transform)
+{
+    Vector3 origin = Vector3Transform(Vector3Zero(), transform);
+    DrawLine3D(origin, Vector3Transform(Vector3{ 1.f, 0.f, 0.f }, transform), RED);
+    DrawLine3D(origin, Vector3Transform(Vector3{ 0.f, 1.0f, 0.f }, transform), GREEN);
+    DrawLine3D(origin, Vector3Transform(Vector3{ 0.f, 0.f, 1.f }, transform), BLUE);
 }

@@ -5,7 +5,6 @@ in vec3 vertexPosition;
 in vec2 vertexTexCoord;
 in vec3 vertexNormal;
 in vec4 vertexColor;
-
 in mat4 instanceTransform;
 
 // Input uniform values
@@ -30,12 +29,11 @@ void main()
     }
     
     fragPosition = vec3(mModel * vec4(vertexPosition, 1.0));
-
-    fragNormal = normalize(vec3(matNormal *vec4(vertexNormal, 0.0)));
-    shadowPos = matLight * vec4(fragPosition, 1.0);
+    fragNormal = normalize(vec3(matNormal * vec4(vertexNormal, 0.0)));
+    shadowPos = matLight *  vec4(fragPosition, 1.0);
 	fragTexCoord = vertexTexCoord;
     fragColor = vertexColor;
-    
+
      // Calculate final vertex position
     mat4 mvpi = mvp;
     if (instancing == 1) {

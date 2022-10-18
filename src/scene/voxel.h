@@ -28,7 +28,7 @@ struct VoxelObject
         instances = other.instances;
         transforms = new Matrix[instances];
         for (int i = 0; i < instances; ++i) {
-            transforms[i] = other.transforms[i];
+            transforms[i] = MatrixMultiply(other.transforms[i], MatrixInvert(other.transform));
         }
         return *this;
     }
