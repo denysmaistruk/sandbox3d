@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "scene_manager.h"
 
 #include "cyclone/collide_fine.h"
@@ -28,17 +29,21 @@ SceneManager::~SceneManager()
 
 void SceneManager::init()
 {
-    // Regular objects
-    //spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); 
-    //spawnBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
-    //spawnBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f); 
-    //spawnBall(Vector3{ 0.f, 8.f, 0.f }, Vector3{ 0.f, 100.f, 1.f }, 0.25f, 1.0f);
-    spawnGroundPlane();
-    //spawnBorderPlanes();
-    spawnRotatingTorus(Vector3{ 5, 20, 0 }, Vector3{ 0.1, 0.2, 0.3 }, 0.3f, 8.f);
-
+#if INSTANCING_ENABLED
     // Voxel objects
     spawnVoxelTorus(0.1, 2, 0.5);
+#else
+    // Regular objects
+    spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
+    spawnBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
+    spawnBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
+    spawnBall(Vector3{ 0.f, 8.f, 0.f }, Vector3{ 0.f, 100.f, 1.f }, 0.25f, 1.0f);
+    spawnGroundPlane();
+    spawnBorderPlanes();
+    //spawnRotatingTorus(Vector3{ 5, 20, 0 }, Vector3{ 0.1, 0.2, 0.3 }, 0.3f, 8.f);
+#endif
+
+    
 }
 
 void SceneManager::update(float dt)

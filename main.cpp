@@ -142,7 +142,7 @@ int main(int argc, char const** argv)
             }
         }
 
-#if INSTACING_ENABLED == 1
+#if INSTANCING_ENABLED == 1
         // Render instanced objects
         BeginInstacing(shader);
         for (auto& voxelObject : sceneManager.getVoxelObjects()) {

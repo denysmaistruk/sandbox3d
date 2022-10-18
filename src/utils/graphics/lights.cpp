@@ -218,7 +218,7 @@ Shader	LoadShadedGeometryShader	() {
 	shader.locs[SHADER_LOC_MAT_LIGHT]	  = GetShaderLocation(shader, "matLight");
 	shader.locs[SHADER_LOC_AMBIENT]		  = GetShaderLocation(shader, "ambient");
 	shader.locs[SHADER_LOC_INSTANCING]    = GetShaderLocation(shader, "instancing");
-#if INSTACING_ENABLED == 1
+#if INSTANCING_ENABLED == 1
 	shader.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocationAttrib(shader, "instanceTransform");
 #endif
 	return shader;
