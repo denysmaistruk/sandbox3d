@@ -12,5 +12,3 @@
 #include <stdio.h>
 #include <sstream>
 #include <vector>
-
-#define INSTANCING_ENABLED 0

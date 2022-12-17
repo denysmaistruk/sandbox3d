@@ -133,9 +133,6 @@ int main(int argc, char const** argv)
             obj.model.materials[0].shader = shader;
             obj.model.materials[0].maps[MATERIAL_MAP_SHADOW].texture = shadow.depth;
             
-#if INSTANCING_ENABLED
-            DrawModelWires(obj.model, Vector3Zero(), 1.f, WHITE);
-#else
             if (ImGui_ImplPhysbox_Config::wiresMode) {
                 DrawModelWires(obj.model, Vector3Zero(), 1.f, RED);
             }
@@ -143,7 +140,6 @@ int main(int argc, char const** argv)
                 SetShaderValue(shader, shader.locs[SHADER_LOC_SHADOW_FACTOR], &obj.shadowFactor, SHADER_UNIFORM_FLOAT);
                 DrawModel(obj.model, Vector3Zero(), 1.f, WHITE);
             }
-#endif
         }
 
 #if INSTANCING_ENABLED

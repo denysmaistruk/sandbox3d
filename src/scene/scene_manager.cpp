@@ -29,11 +29,6 @@ SceneManager::~SceneManager()
 
 void SceneManager::init()
 {
-#if INSTANCING_ENABLED
-    // Voxel objects
-    spawnVoxelTorus(0.1, 2, 0.5);
-    spawnGroundPlane();
-#else
     // Regular objects
     spawnBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
     spawnBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
@@ -42,7 +37,6 @@ void SceneManager::init()
     spawnGroundPlane();
     spawnBorderPlanes();
     //spawnRotatingTorus(Vector3{ 5, 20, 0 }, Vector3{ 0.1, 0.2, 0.3 }, 0.3f, 8.f);
-#endif
 }
 
 void SceneManager::update(float dt)
@@ -209,71 +203,6 @@ void SceneManager::spawnBorderPlanes()
     plane->direction = cyclone::Vector3(0, 0, -1);
     plane->offset = m_groundPlaneWidth / -2.f;
     PhysManager::instance().addPlane(plane);
-}
-
-void SceneManager::spawnVoxelTorus(float voxel, float radius, float size) // radius - R, size - r
-{
-    auto sqr = [](float value) {
-        return value * value;
-    };
-
-    auto insideTorus = [radius, size, sqr](const Vector3& point) {
-        return sqr(radius - sqrt(sqr(point.x) + sqr(point.z))) + sqr(point.y) < sqr(size);
-    };
-
-    // All tested points inside torus
-    std::vector<Vector3> allPoints;
-    const float bboxHalfSize = radius + size;
-    for (float x = -bboxHalfSize; x <= bboxHalfSize; x += voxel) {
-        for (float y = -bboxHalfSize; y <= bboxHalfSize; y += voxel) {
-            for (float z = -bboxHalfSize; z <= bboxHalfSize; z += voxel) {
-                
-                Vector3 point{ x, y, z };
-                if (insideTorus(point)) {
-                    allPoints.push_back(point);
-                }
-            }
-        }
-    }
-
-    // All tested points optimized
-    std::vector<Vector3> surfacePoints;
-    for (int i = 0; i < allPoints.size(); ++i) {
-
-        const Vector3 dx{ voxel, 0, 0 };
-        const Vector3 dy{ 0, voxel, 0 };
-        const Vector3 dz{ 0, 0, voxel };
-
-        const Vector3 point = allPoints[i];
-        if (insideTorus(Vector3Add(point, dy)) && insideTorus(Vector3Subtract(point, dy)) 
-            && insideTorus(Vector3Add(point, dz)) && insideTorus(Vector3Subtract(point, dz)) 
-            && insideTorus(Vector3Add(point, dx)) && insideTorus(Vector3Subtract(point, dx))) {
-            // Surrounded by 6 voxels
-            continue;
-        }
-        surfacePoints.push_back(point);
-    }
-
-    VoxelObject torus;
-    torus.voxel = voxel;
-    torus.transform = MatrixMultiply(MatrixIdentity(), MatrixTranslate(5, 5, -5));
-    torus.mesh = GenMeshCube(voxel, voxel, voxel);
-    torus.material = LoadMaterialDefault();
-    torus.material.maps[MATERIAL_MAP_DIFFUSE].color = RED;
-    torus.instances = surfacePoints.size();
-    torus.transforms = new Matrix[surfacePoints.size()];
-    for (int i = 0; i < surfacePoints.size(); ++i) {
-        torus.transforms[i] = MatrixTranslate(surfacePoints[i].x, surfacePoints[i].y, surfacePoints[i].z);
-    }
-    torus.onTransformChanged();
-    
-    VoxelObject torus2;
-    torus2 = torus;
-    torus2.transform = MatrixMultiply(MatrixIdentity(), MatrixTranslate(-5, 5, 5));
-    torus2.onTransformChanged();
-
-    m_voxelObject.push_back(torus);
-    m_voxelObject.push_back(torus2);
 }
 
 void SceneManager::drawCantacts() const

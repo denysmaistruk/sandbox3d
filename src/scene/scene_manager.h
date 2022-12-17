@@ -1,7 +1,6 @@
 #pragma once
 
 #include <raylib.h>
-#include "voxel.h"
 
 namespace cyclone
 {
@@ -41,9 +40,6 @@ public:
 
     std::vector<GameObject>& getObjects() { return m_gameObjects; }
     const std::vector<GameObject>& getObjects() const { return m_gameObjects; }
-
-    std::vector<VoxelObject>& getVoxelObjects() { return m_voxelObject; }
-    const std::vector<VoxelObject>& getVoxelObjects() const { return m_voxelObject; }
     
     // Debug
     void drawCantacts() const;
@@ -54,6 +50,5 @@ protected:
 
 private:
     std::vector<GameObject> m_gameObjects;
-    std::vector<VoxelObject> m_voxelObject;
     float m_groundPlaneWidth;
 };
