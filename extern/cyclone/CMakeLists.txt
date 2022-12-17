@@ -7,10 +7,8 @@ set(CMAKE_CXX_STANDARD 17)
 list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/cyclone/include")
 						   
 file(GLOB SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/cyclone/src/*.cpp
-							   #${CMAKE_CURRENT_SOURCE_DIR}/cyclone/src/*.h
-                               ${CMAKE_CURRENT_SOURCE_DIR}/cyclone/include/cyclone/*.h
-							   )
-
+                       ${CMAKE_CURRENT_SOURCE_DIR}/cyclone/include/cyclone/*.h
+					   )
 
 #source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCE_FILES})
 

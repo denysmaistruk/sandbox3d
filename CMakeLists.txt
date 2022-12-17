@@ -11,17 +11,20 @@ set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT "physbox")
 add_subdirectory(extern/raylib)
 add_subdirectory(extern/imgui)
 add_subdirectory(extern/cyclone)
+add_subdirectory(extern/imguizmo)
 
 list(APPEND EXTRA_LIBS raylib
                        imgui
                        cyclone
+                       imguizmo
                        )
 					   
 list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/src"
                            "${PROJECT_SOURCE_DIR}/extern/raylib/src"
                            "${PROJECT_SOURCE_DIR}/extern/imgui/imgui"
                            "${PROJECT_SOURCE_DIR}/extern/cyclone/cyclone/include"
-			   )
+                           "${PROJECT_SOURCE_DIR}/extern/imguizmo/imguizmo"
+							)
 
 file(GLOB_RECURSE SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp
                                ${PROJECT_SOURCE_DIR}/src/*.h
