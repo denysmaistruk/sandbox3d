@@ -10,3 +10,6 @@
 [submodule "extern/imguizmo/imguizmo"]
 	path = extern/imguizmo/imguizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo.git
+[submodule "extern/entt/entt"]
+	path = extern/entt/entt
+	url = https://github.com/skypjack/entt.git

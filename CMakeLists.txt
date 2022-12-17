@@ -12,11 +12,13 @@ add_subdirectory(extern/raylib)
 add_subdirectory(extern/imgui)
 add_subdirectory(extern/cyclone)
 add_subdirectory(extern/imguizmo)
+add_subdirectory(extern/entt)
 
 list(APPEND EXTRA_LIBS raylib
                        imgui
                        cyclone
                        imguizmo
+					   entt
                        )
 					   
 list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/src"
@@ -24,6 +26,7 @@ list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/src"
                            "${PROJECT_SOURCE_DIR}/extern/imgui/imgui"
                            "${PROJECT_SOURCE_DIR}/extern/cyclone/cyclone/include"
                            "${PROJECT_SOURCE_DIR}/extern/imguizmo/imguizmo"
+						   "${PROJECT_SOURCE_DIR}/extern/entt"
 							)
 
 file(GLOB_RECURSE SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp
