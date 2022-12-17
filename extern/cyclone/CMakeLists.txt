@@ -10,8 +10,6 @@ file(GLOB SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/cyclone/src/*.cpp
                        ${CMAKE_CURRENT_SOURCE_DIR}/cyclone/include/cyclone/*.h
 					   )
 
-#source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCE_FILES})
-
 add_library(cyclone ${SOURCE_FILES})
 
 target_include_directories(cyclone PUBLIC ${EXTRA_INCLUDES})

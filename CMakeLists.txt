@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.18)
 
-project(physbox VERSION 0.1)
+project(physbox VERSION 0.01)
 
-# project config
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
+
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT "physbox")
 
 add_subdirectory(extern/raylib)
@@ -13,6 +13,12 @@ add_subdirectory(extern/imgui)
 add_subdirectory(extern/cyclone)
 add_subdirectory(extern/imguizmo)
 add_subdirectory(extern/entt)
+
+set_target_properties(raylib   PROPERTIES FOLDER "External")
+set_target_properties(imgui    PROPERTIES FOLDER "External")
+set_target_properties(cyclone  PROPERTIES FOLDER "External")
+set_target_properties(imguizmo PROPERTIES FOLDER "External")
+set_target_properties(entt 	   PROPERTIES FOLDER "External")
 
 list(APPEND EXTRA_LIBS raylib
                        imgui

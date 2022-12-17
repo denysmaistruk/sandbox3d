@@ -10,8 +10,6 @@ file(GLOB SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/imguizmo/*.cpp
                        ${CMAKE_CURRENT_SOURCE_DIR}/imguizmo/*.h
 					   )
 
-#source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCE_FILES})
-
 add_library(imguizmo ${SOURCE_FILES})
 
 target_include_directories(imguizmo PUBLIC ${EXTRA_INCLUDES})
