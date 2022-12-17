@@ -34,8 +34,6 @@ public:
     void spawnGroundPlane();
     void spawnBorderPlanes();
 
-    void spawnVoxelTorus(float voxelSize, float R, float r);
-
     float getGroundPlaneWidth() const { return m_groundPlaneWidth; }
 
     std::vector<GameObject>& getObjects() { return m_gameObjects; }
