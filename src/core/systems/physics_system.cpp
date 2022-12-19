@@ -1,4 +1,4 @@
-#include "system_physics.h"
+#include "physics_system.h"
 
 #include "core/components.h"
 #include "cyclone/collide_fine.h"

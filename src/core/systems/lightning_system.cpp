@@ -1,4 +1,4 @@
-#include "system_lightning.h"
+#include "lightning_system.h"
 
 void LightningSystem::update(float dt)
 {

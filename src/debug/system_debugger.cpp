@@ -1,6 +1,6 @@
 #include "system_debugger.h"
 
-#include "core/systems/system_physics.h"
+#include "core/systems/physics_system.h"
 #include "cyclone/collide_fine.h"
 
 #include "raylib.h"
