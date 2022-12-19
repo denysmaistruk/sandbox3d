@@ -1,5 +1,3 @@
-#include "pch.h"
-
 #include "lights.h"
 
 #include "rlgl.h"

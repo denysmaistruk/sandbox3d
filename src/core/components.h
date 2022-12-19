@@ -6,14 +6,14 @@ struct TransformComponent
     Matrix transform;
 };
 
-struct ModelComponent
+struct RenderComponent
 {
     Model model;
+    float shadowFactor;
 };
 
-struct ShadowComponent
+struct LightComponent
 {
-    float shadowFactor;
 };
 
 namespace cyclone {
@@ -33,7 +33,7 @@ struct PhysComponent
     ColliderType collider;
     cyclone::CollisionPrimitive* collisionBody;
 
-    // TODO: CollisionPlane isn't in CollisionPrimitive hierarchy
-    // keep independent for a while
+    // TODO: CollisionPlane isn't in CollisionPrimitive hierarchy,
+    // keep it independent for a while.
     cyclone::CollisionPlane* collisionPlane;
 };

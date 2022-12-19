@@ -1,17 +1,18 @@
-#include "systems.h"
-#include "components.h"
+#include "system_physics.h"
 
+#include "core/components.h"
 #include "cyclone/collide_fine.h"
+#include "utils/raylib_cyclone_adapter.h"
 
-// Render
-//--------------------------------------------------------------------------------------
-void RenderSystem::update(float dt)
+PhysSystem::PhysSystem()
+    : m_contactResolver(maxContacts * 8)
+    , m_collisionData(new cyclone::CollisionData{ m_contacts, m_contacts, 0, 0, 0.5f, 0.3f, 0.1f })
+    , m_updateRate(0.033f)
+    , m_substeps(8)
 {
-    
+    cyclone::setSleepEpsilon(0.4f);
 }
 
-// Physics 
-//--------------------------------------------------------------------------------------
 void PhysSystem::update(float dt)
 {
     if (dt <= 0.0f) {
@@ -128,13 +129,19 @@ unsigned PhysSystem::getSleepingCount() const
 
 void PhysSystem::updateObjects(const double dt)
 {
-    auto view = getRegistry().view<PhysComponent>();
+    auto view = getRegistry().view<PhysComponent, TransformComponent>();
     
     for (auto entity : view) {
         auto& physComponent = view.get<PhysComponent>(entity);
         if (auto* collisionBody = physComponent.collisionBody; collisionBody->body) {
+            
+            // Update collision body transform
             collisionBody->body->integrate(dt);
             collisionBody->calculateInternals();
+            
+            // Update transform component
+            auto& transformComponent = view.get<TransformComponent>(entity);
+            transformComponent.transform = toRaylib(collisionBody->body->getTransform());
         }
     }
 }

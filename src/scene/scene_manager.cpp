@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "scene_manager.h"
 
 #include "cyclone/collide_fine.h"

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "imgui_impl_physbox.h"
 
 #include "imgui.h"
