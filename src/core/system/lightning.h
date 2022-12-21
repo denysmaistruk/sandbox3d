@@ -7,5 +7,5 @@ class LightningSystem : public SystemBase<LightningSystem>
 public:
     LightningSystem() = default;
 
-    void update(float dt) override;
+    void update(float dt);
 };

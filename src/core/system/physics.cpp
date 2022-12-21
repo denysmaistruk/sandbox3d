@@ -1,6 +1,6 @@
-#include "physics_system.h"
+#include "physics.h"
 
-#include "core/components.h"
+#include "core/component/components.h"
 #include "cyclone/collide_fine.h"
 #include "utils/raylib_cyclone_adapter.h"
 

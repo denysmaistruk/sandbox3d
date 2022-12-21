@@ -7,6 +7,6 @@ class InputSystem : SystemBase<InputSystem>
 public:
     InputSystem() = default;
 
-    void update(float dt) override;
+    void update(float dt);
 
 };

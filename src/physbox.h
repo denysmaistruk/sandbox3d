@@ -1,0 +1,5 @@
+#pragma once
+
+#define PHYSBOX_WINDOW_WIDTH 1600
+#define PHYSBOX_WINDOW_HEIGHT 900
+#define PHYSBOX_TARGET_FPS 60

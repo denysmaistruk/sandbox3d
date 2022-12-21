@@ -16,14 +16,11 @@ int main(int argc, char const** argv)
 {
     // Initialization
     //--------------------------------------------------------------------------------------
-    const int screenWidth = 1600;
-    const int screenHeight = 900;
-
     SetConfigFlags(FLAG_MSAA_4X_HINT);  // Enable Multi Sampling Anti Aliasing 4x (if available)
-    InitWindow(screenWidth, screenHeight, "physbox");
+    InitWindow(PHYSBOX_WINDOW_WIDTH, PHYSBOX_WINDOW_HEIGHT, "physbox");
 
     // Define the camera to look into our 3d world
-    Camera3D camera = { 0 };
+    Camera camera = { 0 };
     camera.position = Vector3{ 10.0f, 10.0f, 10.0f }; // Camera position
     camera.target = Vector3{ 0.0f, 0.0f, 0.0f };      // Camera looking at point
     camera.up = Vector3{ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
@@ -31,7 +28,7 @@ int main(int argc, char const** argv)
     camera.projection = CAMERA_PERSPECTIVE;           // Camera mode type
 
     SetCameraMode(camera, CAMERA_FREE); // Set a free camera mode
-    SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
+    SetTargetFPS(PHYSBOX_TARGET_FPS);                   // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     // Creating models, materials, shaders and lights
@@ -57,8 +54,8 @@ int main(int argc, char const** argv)
     io = &ImGui::GetIO();
     unsigned char* pixels = nullptr;
 
-    int width = screenWidth;
-    int height = screenHeight;
+    int width = PHYSBOX_WINDOW_WIDTH;
+    int height = PHYSBOX_WINDOW_HEIGHT;
 
     io->Fonts->TexDesiredWidth = 2048;
     io->Fonts->TexGlyphPadding = 1;
@@ -142,16 +139,6 @@ int main(int argc, char const** argv)
             }
         }
 
-#if INSTANCING_ENABLED
-        // Render instanced objects
-        BeginInstacing(shader);
-        for (auto& voxelObject : sceneManager.getVoxelObjects()) {
-            voxelObject.material.shader = shader;
-            DrawMeshInstanced(voxelObject.mesh, voxelObject.material, voxelObject.transforms, voxelObject.instances);
-            drawGuizmo(voxelObject.transform);
-        }
-        EndInstancing();
-#endif
         // Update positions by simulation
         if (!ImGui_ImplPhysbox_Config::pauseSimulation) {
             sceneManager.update(ImGui_ImplPhysbox_Config::timeScale * GetFrameTime());

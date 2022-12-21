@@ -1,4 +1,4 @@
-#include "input_system.h"
+#include "input.h"
 
 void InputSystem::update(float dt)
 {

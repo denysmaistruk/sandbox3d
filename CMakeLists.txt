@@ -24,7 +24,7 @@ list(APPEND EXTRA_LIBS raylib
                        imgui
                        cyclone
                        imguizmo
-					   entt
+                       entt
                        )
 					   
 list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/src"
@@ -44,6 +44,8 @@ file(GLOB_RECURSE SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp
 list(APPEND SOURCE_FILES ${PROJECT_SOURCE_DIR}/main.cpp )
 
 add_executable(physbox ${SOURCE_FILES})
+
+target_compile_options(physbox PRIVATE "/FIphysbox.h")
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCE_FILES})
 

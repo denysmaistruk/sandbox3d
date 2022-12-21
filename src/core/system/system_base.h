@@ -1,12 +1,12 @@
 #pragma once
-#include "core/registry.h"
+#include "core/registry/registry.h"
 
 template<class System>
 class SystemBase
 {
 public:
     static System& get();
-    virtual void update(float dt);
+    void update(float dt);
 
 protected:
     entt::registry& getRegistry();
@@ -22,6 +22,7 @@ System& SystemBase<System>::get()
 template<class System>
 void SystemBase<System>::update(float dt)
 {
+    static_cast<System*>(this)->update(dt);
 }
 
 template<class System>

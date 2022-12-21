@@ -2,6 +2,8 @@
 #include "system_base.h"
 #include "cyclone/contacts.h"
 
+#include "debug/system_debugger.h"
+
 namespace cyclone {
     struct CollisionData;
 }
@@ -9,6 +11,7 @@ namespace cyclone {
 class PhysSystem : public SystemBase<PhysSystem>
 {
     friend class SystemDebugger;
+    //friend class SystemDebugger2<SystemBase<PhysSystem>>;
 public:
     const static unsigned maxContacts = 256;
     int m_substeps;
@@ -16,7 +19,7 @@ public:
 
     PhysSystem();
 
-    void update(float dt) override;
+    void update(float dt);
 
     void setCollisionFriction(const float friction);
     float getCollisionFriction() const;

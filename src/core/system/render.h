@@ -7,5 +7,5 @@ class RenderSystem : SystemBase<RenderSystem>
 public:
     RenderSystem() = default;
 
-    void update(float dt) override;
+    void update(float dt);
 };
