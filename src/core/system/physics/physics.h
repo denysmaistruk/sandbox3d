@@ -24,15 +24,16 @@ public:
         float tolerance;
     };
     
-    PhysSystem();
-    
     void update(float dt);
 
     const Params& getParams() const { return m_params; }
     void setParams(const Params& params) { m_params = params; onParamsChanged(); }
 
+protected:
+    PhysSystem();
+
 private:
-    void updateEntities(float dt);
+    void updateTransform(float dt);
     void generateContacts();
     void onParamsChanged();
     void resetCounters();

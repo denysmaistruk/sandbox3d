@@ -8,7 +8,11 @@ class RenderSystem : SystemBase<RenderSystem>
 {
     friend struct SystemDebugger<RenderSystem>;
 public:
-    RenderSystem() = default;
-
+    
     void update(float dt);
+
+protected:
+    RenderSystem();
+
+private:
 };

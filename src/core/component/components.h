@@ -1,5 +1,6 @@
 #pragma once
 #include "raylib.h"
+#include "utils/graphics/lights.h"
 
 struct TransformComponent
 {
@@ -14,6 +15,8 @@ struct RenderComponent
 
 struct LightComponent
 {
+    Light light;
+    Camera caster;
 };
 
 struct PhysComponent

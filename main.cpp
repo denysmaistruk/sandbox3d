@@ -12,6 +12,8 @@
 
 #include "core/system/physics/physics.h"
 
+#include "core/camera/camera_controller.h"
+
 int main(int argc, char const** argv)
 {
     // Initialization
@@ -19,15 +21,7 @@ int main(int argc, char const** argv)
     SetConfigFlags(FLAG_MSAA_4X_HINT);  // Enable Multi Sampling Anti Aliasing 4x (if available)
     InitWindow(PHYSBOX_WINDOW_WIDTH, PHYSBOX_WINDOW_HEIGHT, "physbox");
 
-    // Define the camera to look into our 3d world
-    Camera camera = { 0 };
-    camera.position = Vector3{ 10.0f, 10.0f, 10.0f }; // Camera position
-    camera.target = Vector3{ 0.0f, 0.0f, 0.0f };      // Camera looking at point
-    camera.up = Vector3{ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
-    camera.fovy = 45.0f;                              // Camera field-of-view Y
-    camera.projection = CAMERA_PERSPECTIVE;           // Camera mode type
-
-    SetCameraMode(camera, CAMERA_FREE); // Set a free camera mode
+    SetCameraMode(CameraController::getCamera(), CAMERA_FREE); // Set a free camera mode
     SetTargetFPS(PHYSBOX_TARGET_FPS);                   // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
@@ -154,35 +148,35 @@ int main(int argc, char const** argv)
     {
         // Update
         //----------------------------------------------------------------------------------
-        UpdateCamera(&camera);          // Update camera
+        UpdateCamera(&CameraController::getCamera());          // Update camera
         
         // Keyboard input
         //----------------------------------------------------------------------------------
         if (IsKeyPressed(KEY_E)) {
-            sceneManager.onThrowBallFromCamera(camera);
+            sceneManager.onThrowBallFromCamera(CameraController::getCamera());
         }
         if (IsKeyPressed(KEY_R)) {
-            sceneManager.onThrowBoxFromCamera(camera);
+            sceneManager.onThrowBoxFromCamera(CameraController::getCamera());
         }
         if (IsKeyDown(KEY_Z)) {
-            camera.target = Vector3{ 0.0f, 0.0f, 0.0f };
+            CameraController::getCamera().target = Vector3{ 0.0f, 0.0f, 0.0f };
         }
         // Camera movement
-        Vector3 moveFront = Vector3Scale(Vector3Normalize(Vector3Subtract(camera.target, camera.position)), 0.5f);
-        Vector3 moveSide = Vector3Scale(Vector3Normalize(Vector3CrossProduct(moveFront, camera.up)), 0.5f);
+        Vector3 moveFront = Vector3Scale(Vector3Normalize(Vector3Subtract(CameraController::getCamera().target, CameraController::getCamera().position)), 0.5f);
+        Vector3 moveSide = Vector3Scale(Vector3Normalize(Vector3CrossProduct(moveFront, CameraController::getCamera().up)), 0.5f);
         if (IsKeyDown(KEY_W)) {
-            camera.target = Vector3Add(camera.target, moveFront);
+            CameraController::getCamera().target = Vector3Add(CameraController::getCamera().target, moveFront);
         }
         if (IsKeyDown(KEY_S)) {
-            camera.target = Vector3Subtract(camera.target, moveFront);
+            CameraController::getCamera().target = Vector3Subtract(CameraController::getCamera().target, moveFront);
         }
         if (IsKeyDown(KEY_D)) {
-            camera.position = Vector3Add(camera.position, moveSide);
-            camera.target = Vector3Add(camera.target, moveSide);
+            CameraController::getCamera().position = Vector3Add(CameraController::getCamera().position, moveSide);
+            CameraController::getCamera().target = Vector3Add(CameraController::getCamera().target, moveSide);
         }
         if (IsKeyDown(KEY_A)) {
-            camera.position = Vector3Subtract(camera.position, moveSide);
-            camera.target = Vector3Subtract(camera.target, moveSide);
+            CameraController::getCamera().position = Vector3Subtract(CameraController::getCamera().position, moveSide);
+            CameraController::getCamera().target = Vector3Subtract(CameraController::getCamera().target, moveSide);
         }
         // Stepping
         if (IsKeyDown(KEY_N)) {
@@ -235,9 +229,9 @@ int main(int argc, char const** argv)
         //----------------------------------------------------------------------------------
         BeginDrawing();
             ClearBackground(RAYWHITE);
-            BeginMode3D(camera);
+            BeginMode3D(CameraController::getCamera());
                 // Update geometry shader
-                SetShaderValue(shGeometry, shGeometry.locs[SHADER_LOC_VECTOR_VIEW], (float*)&camera.position, SHADER_UNIFORM_VEC3);
+                SetShaderValue(shGeometry, shGeometry.locs[SHADER_LOC_VECTOR_VIEW], (float*)&CameraController::getCamera().position, SHADER_UNIFORM_VEC3);
                 SetShaderValue(shGeometry, shGeometry.locs[SHADER_LOC_AMBIENT], new float[4] { 0.4f, 0.4f, 0.4f, 1.0f }, SHADER_UNIFORM_VEC4);
                 SetShaderValueMatrix(shGeometry, shGeometry.locs[SHADER_LOC_MAT_LIGHT], matLight);
                 
@@ -270,7 +264,7 @@ int main(int argc, char const** argv)
                 drawGuizmo(MatrixIdentity());
 
                 // Draw camera target
-                drawGuizmo(MatrixTranslate(camera.target.x, camera.target.y, camera.target.z));
+                drawGuizmo(MatrixTranslate(CameraController::getCamera().target.x, CameraController::getCamera().target.y, CameraController::getCamera().target.z));
                 
                 // Update camera collision with environment
                 //Ray ray{camera.position, Vector3Normalize(Vector3Subtract(camera.target, camera.position))};

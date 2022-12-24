@@ -14,7 +14,7 @@ PhysSystem::PhysSystem()
     , m_staticBodiesCount(0)
     , m_sleepingBodiesCount(0)
 {
-    cyclone::setSleepEpsilon(0.4f);
+    cyclone::setSleepEpsilon(PHYSBOX_SLEEP_EPSILON);
 }
 
 void PhysSystem::update(float dt) {
@@ -28,9 +28,10 @@ void PhysSystem::update(float dt) {
 
     for (int i = 0; i < m_params.substeps; ++i) {
 
-        float step = dt / float(m_params.substeps);
+        const float step = dt / static_cast<float>(m_params.substeps);
+        
         // Update the objects
-        updateEntities(step);
+        updateTransform(step);
 
         // Perform the contact generation
         generateContacts();
@@ -44,7 +45,7 @@ void PhysSystem::update(float dt) {
     }
 }
 
-void PhysSystem::updateEntities(float dt) {
+void PhysSystem::updateTransform(float dt) {
     resetCounters();
     
     auto entityView = getRegistry().view<PhysComponent, TransformComponent>();
