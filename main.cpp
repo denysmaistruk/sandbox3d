@@ -10,7 +10,7 @@
 #include "utils/imgui_impl_physbox.h"
 #include "utils/raylib_utils.h"
 
-#define SHADOW_MAP_RESOLUTION 4096
+#include "core/system/physics/physics.h"
 
 int main(int argc, char const** argv)
 {
@@ -86,7 +86,7 @@ int main(int argc, char const** argv)
     auto matLight = MatrixMultiply(GetCameraMatrix(shadowCaster),
         (shadowCaster.projection == CAMERA_PERSPECTIVE) ? CameraFrustum(shadowCaster) : CameraOrtho(shadowCaster));
 
-    auto shadow     = LoadShadowMap(SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION);
+    auto shadow     = LoadShadowMap(PHYSBOX_SHADOW_MAP_RESOLUTION, PHYSBOX_SHADOW_MAP_RESOLUTION);
     auto shPreview  = LoadDepthPreviewShader();
     auto shShadow   = LoadShadowShader();
     auto shGeometry = LoadShadedGeometryShader();

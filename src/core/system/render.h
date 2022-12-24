@@ -1,9 +1,12 @@
 #pragma once
 #include "system_base.h"
 
+template<typename System>
+struct  SystemDebugger;
+
 class RenderSystem : SystemBase<RenderSystem>
 {
-    friend class SystemDebugger;
+    friend struct SystemDebugger<RenderSystem>;
 public:
     RenderSystem() = default;
 

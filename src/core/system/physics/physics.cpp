@@ -5,10 +5,13 @@
 #include "utils/raylib_cyclone_adapter.h"
 
 PhysSystem::PhysSystem()
-    : m_contactResolver(maxContacts * 8)
-    , m_collisionData(new cyclone::CollisionData{ m_contacts, m_contacts, 0, 0, 0.5f, 0.3f, 0.1f })
-    , m_updateRate(0.033f)
-    , m_substeps(8)
+    : m_params{ 8, 0.033f, 0.5f, 0.3f, 0.1f }
+    , m_contactResolver(maxContacts * 8)
+    , m_collisionData(new cyclone::CollisionData{ 
+        m_contacts, m_contacts, 0, 0, m_params.friction, m_params.restitution, m_params.tolerance })
+    , m_rigidBodiesCount(0)
+    , m_staticBodiesCount(0)
+    , m_sleepingBodiesCount(0)
 {
     cyclone::setSleepEpsilon(0.4f);
 }
@@ -19,13 +22,13 @@ void PhysSystem::update(float dt)
         return;
     }
 
-    if (dt > m_updateRate) {
-        dt = m_updateRate;
+    if (dt > m_params.updateRate) {
+        dt = m_params.updateRate;
     }
 
-    for (int i = 0; i < m_substeps; ++i) {
+    for (int i = 0; i < m_params.substeps; ++i) {
 
-        float step = dt / float(m_substeps);
+        float step = dt / float(m_params.substeps);
         // Update the objects
         updateObjects(step);
 
@@ -41,107 +44,33 @@ void PhysSystem::update(float dt)
     }
 }
 
-void PhysSystem::setCollisionFriction(const float friction)
-{
-    assert(m_collisionData);
-    m_collisionData->friction = friction;
-}
-
-void PhysSystem::setCollisionRestitution(const float restitution)
-{
-    assert(m_collisionData);
-    m_collisionData->restitution = restitution;
-}
-
-void PhysSystem::setCollisionTolerance(const float tolerance)
-{
-    assert(m_collisionData);
-    m_collisionData->tolerance = tolerance;
-}
-
-float PhysSystem::getCollisionFriction() const
-{
-    return m_collisionData->friction;
-}
-
-float PhysSystem::getCollisionRestitution() const
-{
-    return m_collisionData->restitution;
-}
-
-float PhysSystem::getCollisionTolerance() const
-{
-    return m_collisionData->tolerance;
-}
-
-unsigned PhysSystem::getContactCount() const
-{
-    return m_collisionData->contactCount;
-}
-
-
-// TODO: the count can be cached in update
-unsigned PhysSystem::getRigidBodiesCount() const
-{
-    auto view = getRegistry().view<PhysComponent>();
-
-    unsigned count = 0;
-    for (auto entity : view) {
-        auto& physComponent = view.get<PhysComponent>(entity);
-        if (auto* collisionBody = physComponent.collisionBody; collisionBody->body) {
-            ++count;
-        }
-    }
-    return count;
-}
-
-// TODO: the count can be cached in update
-unsigned PhysSystem::getStaticBodiesCount() const
-{
-    auto view = getRegistry().view<PhysComponent>();
-
-    unsigned count = 0;
-    for (auto entity : view) {
-        auto& physComponent = view.get<PhysComponent>(entity);
-        if (auto* collisionBody = physComponent.collisionBody; collisionBody->body) {
-        }
-        else {
-            ++count;
-        }
-    }
-    return count;
-}
-
-// TODO: the count can be cached in update
-unsigned PhysSystem::getSleepingCount() const
-{
-    auto view = getRegistry().view<PhysComponent>();
-
-    unsigned count = 0;
-    for (auto entity : view) {
-        auto& physComponent = view.get<PhysComponent>(entity);
-        if (auto* collisionBody = physComponent.collisionBody; collisionBody->body && !collisionBody->body->getAwake()) {
-            ++count;
-        }
-    }
-    return count;
-}
-
 void PhysSystem::updateObjects(const double dt)
 {
-    auto view = getRegistry().view<PhysComponent, TransformComponent>();
+    auto enttView = getRegistry().view<PhysComponent, TransformComponent>();
     
-    for (auto entity : view) {
-        auto& physComponent = view.get<PhysComponent>(entity);
+    // Reset counters
+    m_rigidBodiesCount = 0;
+    m_staticBodiesCount = 0;
+    m_sleepingBodiesCount = 0;
+
+    for (auto entity : enttView) {
+        auto& physComponent = enttView.get<PhysComponent>(entity);
         if (auto* collisionBody = physComponent.collisionBody; collisionBody->body) {
-            
+            ++m_rigidBodiesCount;
+            if (!collisionBody->body->getAwake()) {
+                ++m_sleepingBodiesCount;
+            }
+
             // Update collision body transform
             collisionBody->body->integrate(dt);
             collisionBody->calculateInternals();
             
             // Update transform component
-            auto& transformComponent = view.get<TransformComponent>(entity);
+            auto& transformComponent = enttView.get<TransformComponent>(entity);
             transformComponent.transform = toRaylib(collisionBody->body->getTransform());
+        }
+        else {
+            ++m_staticBodiesCount;
         }
     }
 }
@@ -152,10 +81,10 @@ void PhysSystem::generateContacts()
     std::vector<cyclone::CollisionSphere*>  spheres;
     std::vector<cyclone::CollisionPlane*>   planes;
 
-    auto view = getRegistry().view<PhysComponent>();
+    auto enttView = getRegistry().view<PhysComponent>();
 
-    for (auto entity : view) {
-        auto& physComponent = view.get<PhysComponent>(entity);
+    for (auto entity : enttView) {
+        auto& physComponent = enttView.get<PhysComponent>(entity);
         if (auto* collisionBody = physComponent.collisionBody) {
             switch (physComponent.collider) {
             case PhysComponent::ColliderType::Box:
@@ -235,4 +164,12 @@ void PhysSystem::generateContacts()
             }
         }
     }
+}
+
+void PhysSystem::onParamsChanged()
+{
+    assert(m_collisionData);
+    m_collisionData->friction = m_params.friction;
+    m_collisionData->restitution = m_params.restitution;
+    m_collisionData->tolerance = m_params.tolerance;
 }
