@@ -22,6 +22,7 @@ void LightningSystem::update(float dt)
             lightComponent.light.position = lightComponent.caster.position;
             lightComponent.light.target = lightComponent.caster.target;
         }
+
         UpdateLightValues(m_shader, lightComponent.light);
     }
 

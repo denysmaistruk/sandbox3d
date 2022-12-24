@@ -100,8 +100,7 @@ void PhysSystem::onParamsChanged() {
     m_collisionData->tolerance = m_params.tolerance;
 }
 
-void PhysSystem::resetCounters()
-{
+void PhysSystem::resetCounters() {
     m_rigidBodiesCount = 0;
     m_staticBodiesCount = 0;
     m_sleepingBodiesCount = 0;

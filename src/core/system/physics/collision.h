@@ -26,9 +26,7 @@ public:
 class CollisionSphere : public CollisionBody
 {
 public:
-    void collide(CollisionBody& body) override {
-        body.collide(*this);
-    }
+    void collide(CollisionBody& body) override { body.collide(*this); }
 
     void collide(CollisionBox& box) override;
     void collide(CollisionSphere& sphere) override;
@@ -42,9 +40,7 @@ public:
 class CollisionBox : public CollisionBody
 {
 public:
-    void collide(CollisionBody& body) override {
-        body.collide(*this);
-    }
+    void collide(CollisionBody& body) override { body.collide(*this); }
 
     void collide(CollisionBox& box) override;
     void collide(CollisionSphere& sphere) override;
@@ -58,9 +54,7 @@ public:
 class CollisionPlane : public CollisionBody
 {
 public:
-    void collide(CollisionBody& body) override {
-        body.collide(*this);
-    }
+    void collide(CollisionBody& body) override { body.collide(*this); }
 
     void collide(CollisionBox& box) override;
     void collide(CollisionSphere& sphere) override;

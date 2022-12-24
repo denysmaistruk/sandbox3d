@@ -45,7 +45,7 @@ list(APPEND SOURCE_FILES ${PROJECT_SOURCE_DIR}/main.cpp )
 
 add_executable(physbox ${SOURCE_FILES})
 
-target_compile_options(physbox PRIVATE "/FIphysbox.h")
+target_compile_options(physbox PUBLIC "/FIphysbox.h")
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCE_FILES})
 
