@@ -32,9 +32,10 @@ public:
     void setParams(const Params& params) { m_params = params; onParamsChanged(); }
 
 private:
-    void updateObjects(const double dt);
+    void updateEntities(float dt);
     void generateContacts();
     void onParamsChanged();
+    void resetCounters();
 
     // Simulation parameters
     Params m_params;

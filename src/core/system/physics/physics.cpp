@@ -1,4 +1,5 @@
 #include "physics.h"
+#include "collision.h"
 
 #include "core/component/components.h"
 #include "cyclone/collide_fine.h"
@@ -16,8 +17,7 @@ PhysSystem::PhysSystem()
     cyclone::setSleepEpsilon(0.4f);
 }
 
-void PhysSystem::update(float dt)
-{
+void PhysSystem::update(float dt) {
     if (dt <= 0.0f) {
         return;
     }
@@ -30,7 +30,7 @@ void PhysSystem::update(float dt)
 
         float step = dt / float(m_params.substeps);
         // Update the objects
-        updateObjects(step);
+        updateEntities(step);
 
         // Perform the contact generation
         generateContacts();
@@ -44,132 +44,64 @@ void PhysSystem::update(float dt)
     }
 }
 
-void PhysSystem::updateObjects(const double dt)
-{
-    auto enttView = getRegistry().view<PhysComponent, TransformComponent>();
+void PhysSystem::updateEntities(float dt) {
+    resetCounters();
     
-    // Reset counters
-    m_rigidBodiesCount = 0;
-    m_staticBodiesCount = 0;
-    m_sleepingBodiesCount = 0;
-
-    for (auto entity : enttView) {
-        auto& physComponent = enttView.get<PhysComponent>(entity);
-        if (auto* collisionBody = physComponent.collisionBody; collisionBody->body) {
+    auto entityView = getRegistry().view<PhysComponent, TransformComponent>();
+   
+    for (auto entity : entityView) {
+        auto& physComponent = entityView.get<PhysComponent>(entity);
+        if (auto* collBody = physComponent.collBody; collBody->isDynamic()) {
+            // Update statistics
             ++m_rigidBodiesCount;
-            if (!collisionBody->body->getAwake()) {
+            if (collBody->isSleeping()) {
                 ++m_sleepingBodiesCount;
             }
 
             // Update collision body transform
-            collisionBody->body->integrate(dt);
-            collisionBody->calculateInternals();
+            collBody->integrate(dt);
             
             // Update transform component
-            auto& transformComponent = enttView.get<TransformComponent>(entity);
-            transformComponent.transform = toRaylib(collisionBody->body->getTransform());
+            auto& transformComponent = entityView.get<TransformComponent>(entity);
+            transformComponent.transform = toRaylib(collBody->getTransform());
+            continue;
         }
-        else {
-            ++m_staticBodiesCount;
-        }
+        // Update statistics
+        ++m_staticBodiesCount;   
     }
 }
 
-void PhysSystem::generateContacts()
-{
-    std::vector<cyclone::CollisionBox*>     boxes;
-    std::vector<cyclone::CollisionSphere*>  spheres;
-    std::vector<cyclone::CollisionPlane*>   planes;
-
-    auto enttView = getRegistry().view<PhysComponent>();
-
-    for (auto entity : enttView) {
-        auto& physComponent = enttView.get<PhysComponent>(entity);
-        if (auto* collisionBody = physComponent.collisionBody) {
-            switch (physComponent.collider) {
-            case PhysComponent::ColliderType::Box:
-                boxes.push_back(static_cast<cyclone::CollisionBox*>(collisionBody));
-                break;
-            case PhysComponent::ColliderType::Sphere:
-                spheres.push_back(static_cast<cyclone::CollisionSphere*>(collisionBody));
-                break;
-            case PhysComponent::ColliderType::Plane:
-                planes.push_back(physComponent.collisionPlane);
-                break;
-            }
-        }
-    }
-
-    // Contacts generation
+void PhysSystem::generateContacts() {
+    assert(m_collisionData);
     m_collisionData->reset(maxContacts);
 
-    // boxes
-    for (auto* box : boxes) {
-        // box and plane
-        for (auto* plane : planes) {
-            if (m_collisionData->hasMoreContacts()) {
-                cyclone::CollisionDetector::boxAndHalfSpace(*box, *plane, m_collisionData);
-            }
-            else {
-                return;
-            }
-        }
+    auto entityView = getRegistry().view<PhysComponent>();
 
-        // box and sphere
-        for (auto* sphere : spheres) {
-            if (m_collisionData->hasMoreContacts()) {
-                cyclone::CollisionDetector::boxAndSphere(*box, *sphere, m_collisionData);
+    for (auto ent1 : entityView) {
+        for (auto ent2 : entityView) {
+            if (ent1 == ent2) {
+                continue;
             }
-            else {
-                return;
-            }
-        }
-
-        // box and box
-        for (auto* otherBox : boxes) {
-            if (m_collisionData->hasMoreContacts()) {
-                if (otherBox == box) {
-                    continue;
-                }
-                cyclone::CollisionDetector::boxAndBox(*box, *otherBox, m_collisionData);
-            }
-            else {
-                return;
-            }
-        }
-    }
-
-    // spheres
-    for (auto* sphere : spheres) {
-        // sphere and plane
-        for (auto* plane : planes) {
-            if (m_collisionData->hasMoreContacts()) {
-                cyclone::CollisionDetector::sphereAndHalfSpace(*sphere, *plane, m_collisionData);
-            }
-            else {
-                return;
-            }
-        }
-
-        // sphere and sphere
-        for (auto* otherSpere : spheres) {
-            if (m_collisionData->hasMoreContacts()) {
-                if (otherSpere == sphere) {
-                    continue;
-                }
-                cyclone::CollisionDetector::sphereAndSphere(*sphere, *otherSpere, m_collisionData);
-            }
-            else {
-                return;
+            auto& body1 = entityView.get<PhysComponent>(ent1).collBody;
+            auto& body2 = entityView.get<PhysComponent>(ent2).collBody;
+            if (body1 && body2) {
+                // Collision resolution
+                body1->collide(*body2);
             }
         }
     }
 }
 
-void PhysSystem::onParamsChanged()
-{
+void PhysSystem::onParamsChanged() {
     assert(m_collisionData);
     m_collisionData->friction = m_params.friction;
     m_collisionData->restitution = m_params.restitution;
     m_collisionData->tolerance = m_params.tolerance;
+}
+
+void PhysSystem::resetCounters()
+{
+    m_rigidBodiesCount = 0;
+    m_staticBodiesCount = 0;
+    m_sleepingBodiesCount = 0;
 }
