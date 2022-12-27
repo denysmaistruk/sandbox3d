@@ -2,12 +2,11 @@
 #include "core/component/components.h"
 
 LightningSystem::LightningSystem()
-    : m_shader{ 0 }
+: m_shader{ 0 }
 {
 }
 
-void LightningSystem::update(float dt)
-{
+void LightningSystem::update(float dt) {
     auto entityView = getRegistry().view<LightComponent>();
 
     int lightsCount = 0;

@@ -5,7 +5,7 @@ template<class System>
 class SystemBase
 {
 public:
-    static System& get();
+    static System& getSystem();
     void update(float dt);
 
 protected:
@@ -14,25 +14,22 @@ protected:
 };
 
 template<class System>
-System& SystemBase<System>::get()
-{
+System& SystemBase<System>::getSystem() {
     static System system;
     return system;
 }
+
 template<class System>
-void SystemBase<System>::update(float dt)
-{
+void SystemBase<System>::update(float dt) {
     static_cast<System*>(this)->update(dt);
 }
 
 template<class System>
-entt::registry& SystemBase<System>::getRegistry()
-{
+entt::registry& SystemBase<System>::getRegistry() {
     return EntityRegistry::getRegistry();
 }
 
 template<class System>
-const entt::registry& SystemBase<System>::getRegistry() const
-{
+const entt::registry& SystemBase<System>::getRegistry() const {
     return EntityRegistry::getRegistry();
 }

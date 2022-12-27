@@ -9,7 +9,7 @@ template<>
 struct SystemDebugger<PhysSystem>
 {
     void drawContacts() {
-        const auto& physSystem = PhysSystem::get();
+        const auto& physSystem = PhysSystem::getSystem();
 
         auto* contacts = physSystem.m_contacts;
         for (int i = 0; i < physSystem.m_collisionData->contactCount; ++i) {
