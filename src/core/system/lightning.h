@@ -12,9 +12,13 @@ public:
 
     void setShader(Shader& shader) { m_shader = shader; }
 
+    Camera getShadowCaster() const { return m_shadowCaster; }
+    Matrix getLightMatrix() const;
+
 protected:
     LightningSystem();
 
 private:
     Shader m_shader;
+    Camera m_shadowCaster;
 };

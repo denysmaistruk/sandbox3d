@@ -68,8 +68,8 @@ int main(int argc, char const** argv)
     image.height = height;
     image.mipmaps = 1;
     image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
-    Texture2D texture = LoadTextureFromImage(image);
-    io->Fonts->TexID = (void*)(&texture.id);
+    //Texture2D texture = LoadTextureFromImage(image);
+    io->Fonts->TexID = (void*)(&LoadTextureFromImage(image).id);
     //--------------------------------------------------------------------------------------
 
     Camera3D shadowCaster = {};
@@ -248,7 +248,7 @@ int main(int argc, char const** argv)
                 updateScene(shGeometry);
   
                 // Draw debug geometry
-                if (ImGui_ImplPhysbox_Config::drawLightsDebug) {   
+                /*if (ImGui_ImplPhysbox_Config::drawLightsDebug) {
                     for (int i = 0; i < MAX_LIGHTS; ++i) {
                         if (lights[i].enabled) {
                             DrawCubeWires(lights[i].position, 0.125f, 0.125f, 0.125f, YELLOW);
@@ -263,7 +263,7 @@ int main(int argc, char const** argv)
 
                 if (ImGui_ImplPhysbox_Config::drawContacts) {
                     sceneManager.drawCantacts();
-                }
+                }*/
 
                 // Draw basis vector
                 drawGuizmo(MatrixIdentity());
@@ -303,8 +303,8 @@ int main(int argc, char const** argv)
             ImGui::Render();
             raylib_render_imgui(ImGui::GetDrawData());
             //--------------------------------------------------------------------------------------
-
         EndDrawing();
+
         //----------------------------------------------------------------------------------
     }
 

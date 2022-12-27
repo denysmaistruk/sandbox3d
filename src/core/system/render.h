@@ -19,12 +19,18 @@ public:
     void setGeometryShader(const Shader& shader) { m_geometryShader = shader; }
     void setPreviewShader(const Shader& shader) { m_previewShader = shader; }
 
+    static void ImGuiInit();
+
 protected:
     RenderSystem();
 
 private:
-    void updateShadow(const Model& model);
-    void updateGeometry(const Model& model, const float shadowFactor);
+    void drawShadow(const Model& model);
+    void drawGeometry(const Model& model, const float shadowFactor);
+
+    void ImGuiBegin();
+    void ImGuiEnd();
+    void ImGuiWidgets();
 
     ShadowMap m_shadowMap;
     Shader m_shadowShader;
