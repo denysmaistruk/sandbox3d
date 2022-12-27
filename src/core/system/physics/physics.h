@@ -11,6 +11,7 @@ struct SystemDebugger;
 
 class PhysSystem : public SystemBase<PhysSystem>
 {
+    friend SystemBase<PhysSystem>;
     friend struct SystemDebugger<PhysSystem>;
 public:
     const static unsigned maxContacts = 256;

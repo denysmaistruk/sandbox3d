@@ -5,16 +5,17 @@
 template<typename System>
 struct SystemDebugger;
 
-class InputSystem : SystemBase<InputSystem>
+class InputSystem : public SystemBase<InputSystem>
 {
-    friend class SystemDebugger<InputSystem>;
+    friend SystemBase<InputSystem>;
+    friend struct SystemDebugger<InputSystem>;
 public:
-    InputSystem();
-
     void update(float dt);
 
     void addInputEventHandler(const InputEvent& event, const std::function<void(const InputEvent&)>& handler);
 
+protected:
+    InputSystem();
 private:
     InputEventDispatcher m_dispatcher;
 };

@@ -4,6 +4,7 @@
 
 class LightningSystem : public SystemBase<LightningSystem>
 {
+    friend SystemBase<LightningSystem>;
 public:
     const static int maxLights = PHYSBOX_MAX_LIGHTS;
 

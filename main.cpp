@@ -14,6 +14,8 @@
 
 #include "core/camera/camera_controller.h"
 
+#include "core/system/input/input.h"
+
 int main(int argc, char const** argv)
 {
     // Initialization
@@ -71,14 +73,15 @@ int main(int argc, char const** argv)
     //--------------------------------------------------------------------------------------
 
     Camera3D shadowCaster = {};
-    shadowCaster.position = Vector3{ 50.0f, 50.0f, 50.0f};    // Camera position
+    shadowCaster.position = Vector3{ 20.f, 70.0f, 0.0f };    // Camera position
     shadowCaster.target = Vector3{ 0.0f, 0.0f, 0.0f };         // Camera looking at point
     shadowCaster.up = Vector3{ 0.0f, 1.0f, 0.0f };             // Camera up vector (rotation towards target)
-    shadowCaster.fovy = 90.0f;                                 // Camera field-of-view Y
+    shadowCaster.fovy = 90.9f;                                 // Camera field-of-view Y
     shadowCaster.projection = CAMERA_ORTHOGRAPHIC;             // Camera mode type
 
-    auto matLight = MatrixMultiply(GetCameraMatrix(shadowCaster),
-        (shadowCaster.projection == CAMERA_PERSPECTIVE) ? CameraFrustum(shadowCaster) : CameraOrtho(shadowCaster));
+    /*auto matLight = MatrixMultiply(GetCameraMatrix(shadowCaster),
+        (shadowCaster.projection == CAMERA_PERSPECTIVE) ? CameraFrustum(shadowCaster) : CameraOrtho(shadowCaster));*/
+    Matrix matLight;
 
     auto shadow     = LoadShadowMap(PHYSBOX_SHADOW_MAP_RESOLUTION, PHYSBOX_SHADOW_MAP_RESOLUTION);
     auto shPreview  = LoadDepthPreviewShader();
@@ -108,15 +111,15 @@ int main(int argc, char const** argv)
 
         // Render settings
         // Shadow caster
-        shadowCaster.position = ImGui_ImplPhysbox_Config::shadowCasterPosition;
-        shadowCaster.target = ImGui_ImplPhysbox_Config::shadowCasterTarget;
+        //shadowCaster.position = ImGui_ImplPhysbox_Config::shadowCasterPosition;
+        //shadowCaster.target = ImGui_ImplPhysbox_Config::shadowCasterTarget;
         matLight = MatrixMultiply(GetCameraMatrix(shadowCaster),
             (shadowCaster.projection == CAMERA_PERSPECTIVE) ? CameraFrustum(shadowCaster) : CameraOrtho(shadowCaster));
-        switch (ImGui_ImplPhysbox_Config::shadowCasterCameraType){
+        /*switch (ImGui_ImplPhysbox_Config::shadowCasterCameraType){
             case 0: shadowCaster.projection = CAMERA_PERSPECTIVE; break;
             case 1: shadowCaster.projection = CAMERA_ORTHOGRAPHIC; break;
         }
-        shadowCaster.fovy = ImGui_ImplPhysbox_Config::shadowCasterFOV;
+        shadowCaster.fovy = ImGui_ImplPhysbox_Config::shadowCasterFOV;*/
 
         // Render objects
         for (auto& obj : sceneManager.getObjects())
@@ -133,14 +136,16 @@ int main(int argc, char const** argv)
             }
         }
 
-        // Update positions by simulation
-        if (!ImGui_ImplPhysbox_Config::pauseSimulation) {
-            sceneManager.update(ImGui_ImplPhysbox_Config::timeScale * GetFrameTime());
-        }
-        else if (!stepping) {
-            sceneManager.update(ImGui_ImplPhysbox_Config::timeScale * GetFrameTime());
-            stepping = true;
-        }
+        sceneManager.update(ImGui_ImplPhysbox_Config::timeScale * GetFrameTime());
+
+        //// Update positions by simulation
+        //if (!ImGui_ImplPhysbox_Config::pauseSimulation) {
+        //    sceneManager.update(ImGui_ImplPhysbox_Config::timeScale * GetFrameTime());
+        //}
+        //else if (!stepping) {
+        //    sceneManager.update(ImGui_ImplPhysbox_Config::timeScale * GetFrameTime());
+        //    stepping = true;
+        //}
     };
 
     // Main game loop

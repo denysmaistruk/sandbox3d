@@ -17,16 +17,20 @@ PhysSystem::PhysSystem()
     cyclone::setSleepEpsilon(PHYSBOX_SLEEP_EPSILON);
 }
 
-void PhysSystem::update(float dt) {
-    if (dt <= 0.0f) {
+void PhysSystem::update(float dt) 
+{
+    if (dt <= 0.0f) 
+    {
         return;
     }
 
-    if (dt > m_params.updateRate) {
+    if (dt > m_params.updateRate) 
+    {
         dt = m_params.updateRate;
     }
 
-    for (int i = 0; i < m_params.substeps; ++i) {
+    for (int i = 0; i < m_params.substeps; ++i) 
+    {
 
         const float step = dt / static_cast<float>(m_params.substeps);
         
@@ -45,17 +49,21 @@ void PhysSystem::update(float dt) {
     }
 }
 
-void PhysSystem::updateTransform(float dt) {
+void PhysSystem::updateTransform(float dt) 
+{
     resetCounters();
     
     auto entityView = getRegistry().view<PhysComponent, TransformComponent>();
    
-    for (auto entity : entityView) {
+    for (auto entity : entityView) 
+    {
         auto& physComponent = entityView.get<PhysComponent>(entity);
-        if (auto* collBody = physComponent.collBody; collBody->isDynamic()) {
+        if (auto* collBody = physComponent.collBody; collBody->isDynamic()) 
+        {
             // Update statistics
             ++m_rigidBodiesCount;
-            if (collBody->isSleeping()) {
+            if (collBody->isSleeping()) 
+            {
                 ++m_sleepingBodiesCount;
             }
 
@@ -72,20 +80,25 @@ void PhysSystem::updateTransform(float dt) {
     }
 }
 
-void PhysSystem::generateContacts() {
+void PhysSystem::generateContacts() 
+{
     assert(m_collisionData);
     m_collisionData->reset(maxContacts);
 
     auto entityView = getRegistry().view<PhysComponent>();
 
-    for (auto ent1 : entityView) {
-        for (auto ent2 : entityView) {
-            if (ent1 == ent2) {
+    for (auto ent1 : entityView) 
+    {
+        for (auto ent2 : entityView) 
+        {
+            if (ent1 == ent2) 
+            {
                 continue;
             }
             auto& body1 = entityView.get<PhysComponent>(ent1).collBody;
             auto& body2 = entityView.get<PhysComponent>(ent2).collBody;
-            if (body1 && body2) {
+            if (body1 && body2) 
+            {
                 // Collision resolution
                 body1->collide(*body2);
             }
@@ -93,14 +106,16 @@ void PhysSystem::generateContacts() {
     }
 }
 
-void PhysSystem::onParamsChanged() {
+void PhysSystem::onParamsChanged() 
+{
     assert(m_collisionData);
     m_collisionData->friction = m_params.friction;
     m_collisionData->restitution = m_params.restitution;
     m_collisionData->tolerance = m_params.tolerance;
 }
 
-void PhysSystem::resetCounters() {
+void PhysSystem::resetCounters() 
+{
     m_rigidBodiesCount = 0;
     m_staticBodiesCount = 0;
     m_sleepingBodiesCount = 0;
