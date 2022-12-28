@@ -6,6 +6,7 @@
 #include "core/system/physics/physics.h"
 #include "cyclone/collide_fine.h"
 #include "utils/raylib_cyclone_adapter.h"
+#include "raymath.h"
 
 entt::entity EntityFactory::createBox(const Vector3& pos, const Vector3& velocity, const Vector3& halfSize, const float mass)
 {
@@ -121,7 +122,7 @@ entt::entity EntityFactory::createPlane(const Vector3& direction, const float of
     PhysComponent physComponent{ collisionPlane };
 
     // Transform component
-    TransformComponent transformComponent{ toRaylib(collisionPlane->getTransform()) };
+    TransformComponent transformComponent{ MatrixIdentity() };
 
     Image checked = GenImageChecked(debugExtend, debugExtend, 1, 1, GRAY, LIGHTGRAY);
     Texture2D checkersTexture = LoadTextureFromImage(checked);
@@ -130,7 +131,7 @@ entt::entity EntityFactory::createPlane(const Vector3& direction, const float of
     Model model = LoadModelFromMesh(GenMeshPlane(debugExtend, debugExtend, 1, 1));
     model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = checkersTexture;
     model.transform = transformComponent.transform;
-    float shadowFactor = 0.125f;
+    float shadowFactor = 0.75f;
 
     // Render component
     RenderComponent renderComponent{ model, shadowFactor };

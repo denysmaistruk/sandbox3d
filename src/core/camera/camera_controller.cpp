@@ -20,3 +20,8 @@ Camera& CameraController::getCamera()
 {
     return get().camera;
 }
+
+void CameraController::update(float dt)
+{
+    UpdateCamera(&get().camera);
+}

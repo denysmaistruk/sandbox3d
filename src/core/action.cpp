@@ -36,8 +36,8 @@ void createScene()
     // New light entities
     const Shader& shader = RenderSystem::getSystem().getGeometryShader();
     EntityFactory::createLight(shader, LIGHT_DIRECTIONAL, Vector3{ 20.f, 70.f, 0.f }, Vector3Zero(), WHITE);
-    EntityFactory::createLight(shader, LIGHT_SPOT, Vector3{ -2.f, 2.f, -2.f }, Vector3Zero(), WHITE);
-    EntityFactory::createLight(shader, LIGHT_POINT, Vector3{ 2.f, 1.f, 2.f }, Vector3Zero(), YELLOW, 0.f);
+    //EntityFactory::createLight(shader, LIGHT_SPOT, Vector3{ -2.f, 2.f, -2.f }, Vector3Zero(), WHITE);
+    //EntityFactory::createLight(shader, LIGHT_POINT, Vector3{ 2.f, 1.f, 2.f }, Vector3Zero(), YELLOW, 0.f);
 }
 
 void throwBallFromCamera()

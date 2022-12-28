@@ -17,6 +17,7 @@ void raylib_render_imgui(ImDrawData* draw_data);
 
 RenderSystem::RenderSystem()
     : m_isWiresMode(false)
+    , m_drawShadowMap(false)
 {
     m_shadowMap = LoadShadowMap(PHYSBOX_SHADOW_MAP_WIDTH, PHYSBOX_SHADOW_MAP_WIDTH);
     m_shadowShader = LoadShadowShader();
@@ -88,12 +89,15 @@ void RenderSystem::update(float dt)
             drawGuizmo(MatrixTranslate(CameraController::getCamera().target.x, CameraController::getCamera().target.y, CameraController::getCamera().target.z));
         }
         EndMode3D();
-
-        BeginShaderMode(m_previewShader);
+        
+        if (m_drawShadowMap)
         {
-            DrawTextureEx(m_shadowMap.depth, Vector2{ 0, 0 }, 0.0f, 0.125, WHITE);
+            BeginShaderMode(m_previewShader);
+            {
+                DrawTextureEx(m_shadowMap.depth, Vector2{ 0, 0 }, 0.0f, 0.125, WHITE);
+            }
+            EndShaderMode();
         }
-        EndShaderMode();
 
         // Imgui set up widgets and draw
         ImGuiWidgets();
@@ -102,7 +106,24 @@ void RenderSystem::update(float dt)
     EndDrawing();
 }
 
-void RenderSystem::ImGuiInit()
+void RenderSystem::unloadAllModels()
+{
+    auto entityView = getRegistry().view<RenderComponent>();
+
+    for (auto [entity,  renderComponent] : entityView.each())
+    {
+        UnloadModel(renderComponent.model);
+    }
+}
+
+void RenderSystem::unloadAllShaders()
+{
+    UnloadShader(m_shadowShader);
+    UnloadShader(m_geometryShader);
+    UnloadShader(m_previewShader);
+}
+
+ImGuiIO* RenderSystem::ImGuiInit()
 {
     ImGui::CreateContext(nullptr);
     ImGui::StyleColorsDark(nullptr);
@@ -110,7 +131,7 @@ void RenderSystem::ImGuiInit()
 
     // Build and load the texture atlas into a texture
     // (In the examples/ app this is usually done within the ImGui_ImplXXX_Init() function from one of the demo Renderer)
-    struct ImGuiIO* io;
+    ImGuiIO* io;
     io = &ImGui::GetIO();
     unsigned char* pixels = nullptr;
 
@@ -132,8 +153,9 @@ void RenderSystem::ImGuiInit()
     image.height = height;
     image.mipmaps = 1;
     image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
-    Texture2D texture = LoadTextureFromImage(image);
+    static Texture2D texture = LoadTextureFromImage(image);
     io->Fonts->TexID = (void*)(&texture.id);
+    return io;
 }
 
 void RenderSystem::drawShadow(const Model& model)

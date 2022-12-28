@@ -4,7 +4,7 @@
 
 static constexpr bool operator<(const InputEvent& left, const InputEvent& right)
 {
-    return left.type < right.type;
+    return static_cast<int>(left.type) * left.signal < static_cast<int>(right.type) * right.signal;
 }
 
 void InputEventDispatcher::registerEventHandler(const InputEvent& event, const std::function<void(const InputEvent&)>& handler) 

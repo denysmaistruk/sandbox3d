@@ -4,12 +4,14 @@
 #include "raylib.h"
 #include "utils/graphics/lights.h"
 
+struct ImGuiIO;
+
 template<typename System>
 struct SystemDebugger;
 
 class RenderSystem : public SystemBase<RenderSystem>
 {
-    DECLARE_NEW_SYSTEM(RenderSystem);
+    DECLARE_PHYSBOX_SYSTEM(RenderSystem);
 public:
     void update(float dt);
 
@@ -18,7 +20,10 @@ public:
     const Shader& getGeometryShader() { return m_geometryShader; }
     const Shader& getPreviewShader() { return m_previewShader; }
 
-    static void ImGuiInit();
+    void unloadAllModels();
+    void unloadAllShaders();
+
+    static ImGuiIO* ImGuiInit();
 
 protected:
     RenderSystem();
@@ -37,4 +42,5 @@ private:
     Shader m_previewShader;
 
     bool m_isWiresMode;
+    bool m_drawShadowMap;
 };
