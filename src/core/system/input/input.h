@@ -7,8 +7,7 @@ struct SystemDebugger;
 
 class InputSystem : public SystemBase<InputSystem>
 {
-    friend SystemBase<InputSystem>;
-    friend struct SystemDebugger<InputSystem>;
+    DECLARE_NEW_SYSTEM(InputSystem);
 public:
     void update(float dt);
 
@@ -16,6 +15,7 @@ public:
 
 protected:
     InputSystem();
+
 private:
     InputEventDispatcher m_dispatcher;
 };

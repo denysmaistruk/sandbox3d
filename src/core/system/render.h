@@ -7,17 +7,16 @@
 template<typename System>
 struct SystemDebugger;
 
-class RenderSystem : SystemBase<RenderSystem>
+class RenderSystem : public SystemBase<RenderSystem>
 {
-    friend SystemBase<RenderSystem>;
-    friend struct SystemDebugger<RenderSystem>;
+    DECLARE_NEW_SYSTEM(RenderSystem);
 public:
     void update(float dt);
 
-    void setShadowMap(const ShadowMap& shadowMap) { m_shadowMap = shadowMap; }
-    void setShadowShader(const Shader& shader) { m_shadowShader = shader; }
-    void setGeometryShader(const Shader& shader) { m_geometryShader = shader; }
-    void setPreviewShader(const Shader& shader) { m_previewShader = shader; }
+    const ShadowMap& getShadowMap() { return m_shadowMap; }
+    const Shader& getShadowShader() { return m_shadowShader; }
+    const Shader& getGeometryShader() { return m_geometryShader; }
+    const Shader& getPreviewShader() { return m_previewShader; }
 
     static void ImGuiInit();
 

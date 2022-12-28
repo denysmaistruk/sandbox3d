@@ -10,10 +10,10 @@
 #include "utils/raylib_utils.h"
 #include "utils/imgui_impl_physbox.h"
 
-extern bool ImGui_ImplRaylib_Init();
-extern bool ImGui_ImplRaylib_ProcessEvent();
-extern void ImGui_ImplRaylib_NewFrame();
-extern void raylib_render_imgui(ImDrawData* draw_data);
+bool ImGui_ImplRaylib_Init();
+bool ImGui_ImplRaylib_ProcessEvent();
+void ImGui_ImplRaylib_NewFrame();
+void raylib_render_imgui(ImDrawData* draw_data);
 
 RenderSystem::RenderSystem()
     : m_isWiresMode(false)

@@ -30,6 +30,8 @@ public:
     const Params& getParams() const { return m_params; }
     void setParams(const Params& params) { m_params = params; onParamsChanged(); }
 
+    cyclone::CollisionData* getCollisionData() { return m_collisionData; }
+
 protected:
     PhysSystem();
 

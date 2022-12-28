@@ -17,6 +17,7 @@ struct LightComponent
 {
     Light light;
     Camera caster;
+    int lightId;
 };
 
 struct PhysComponent
