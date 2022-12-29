@@ -11,6 +11,7 @@
     Vector3 position;
     Vector3 target;
     Color color;
+    
     // Spot light parameters
     float cutoff;
     float lightRadius;
