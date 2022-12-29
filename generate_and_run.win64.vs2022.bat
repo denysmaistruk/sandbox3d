@@ -8,6 +8,6 @@ cmake -G "Visual Studio 17 2022" -S . -B build
 cd build 
 
 ::open solution
-physbox.sln
+sandbox3d.sln
 
 pause
