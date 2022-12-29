@@ -12,9 +12,9 @@ int main(int argc, char const** argv)
 {
     // Initialization
     SetConfigFlags(FLAG_MSAA_4X_HINT);  // enable Multi Sampling Anti Aliasing 4x (if available)
-    InitWindow(PHYSBOX_WINDOW_WIDTH, PHYSBOX_WINDOW_HEIGHT, "physbox");
+    InitWindow(SANDBOX3D_WINDOW_WIDTH, SANDBOX3D_WINDOW_HEIGHT, "physbox");
     SetCameraMode(CameraController::getCamera(), CAMERA_FREE);
-    SetTargetFPS(PHYSBOX_TARGET_FPS);                   
+    SetTargetFPS(SANDBOX3D_TARGET_FPS);                   
     
     // Create scene
     action::bindAllActions();

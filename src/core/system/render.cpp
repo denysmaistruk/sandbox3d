@@ -19,7 +19,7 @@ RenderSystem::RenderSystem()
     : m_isWiresMode(false)
     , m_drawShadowMap(false)
 {
-    m_shadowMap = LoadShadowMap(PHYSBOX_SHADOW_MAP_WIDTH, PHYSBOX_SHADOW_MAP_WIDTH);
+    m_shadowMap = LoadShadowMap(SANDBOX3D_SHADOW_MAP_WIDTH, SANDBOX3D_SHADOW_MAP_WIDTH);
     m_shadowShader = LoadShadowShader();
     m_geometryShader = LoadShadedGeometryShader();
     m_previewShader = LoadDepthPreviewShader();
@@ -135,8 +135,8 @@ ImGuiIO* RenderSystem::ImGuiInit()
     io = &ImGui::GetIO();
     unsigned char* pixels = nullptr;
 
-    int width = PHYSBOX_WINDOW_WIDTH;
-    int height = PHYSBOX_WINDOW_HEIGHT;
+    int width = SANDBOX3D_WINDOW_WIDTH;
+    int height = SANDBOX3D_WINDOW_HEIGHT;
 
     io->Fonts->TexDesiredWidth = 2048;
     io->Fonts->TexGlyphPadding = 1;
@@ -193,6 +193,6 @@ void RenderSystem::ImGuiEnd()
 void RenderSystem::ImGuiWidgets()
 {
     bool open = true;
-    // ImGui::ShowDemoWindow(&open);  // demo example
+    ImGui::ShowDemoWindow(&open);  // demo example
     ImGui_ImplPhysbox_ShowDebugWindow(&open);
 }

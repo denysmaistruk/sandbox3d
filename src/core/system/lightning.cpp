@@ -1,6 +1,8 @@
 #include "lightning.h"
-#include "core/component/components.h"
+
 #include "raymath.h"
+
+#include "core/component/components.h"
 
 LightningSystem::LightningSystem()
     : m_shader{ 0 }

@@ -14,7 +14,7 @@ PhysSystem::PhysSystem()
     , m_staticBodiesCount(0)
     , m_sleepingBodiesCount(0)
 {
-    cyclone::setSleepEpsilon(PHYSBOX_SLEEP_EPSILON);
+    cyclone::setSleepEpsilon(SANDBOX3D_PHYSICS_SLEEP_EPSILON);
 }
 
 void PhysSystem::update(float dt) 

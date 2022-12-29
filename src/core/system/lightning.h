@@ -6,7 +6,7 @@ class LightningSystem : public SystemBase<LightningSystem>
 {
     friend SystemBase<LightningSystem>;
 public:
-    const static int maxLights = PHYSBOX_MAX_LIGHTS;
+    const static int maxLights = SANDBOX3D_MAX_LIGHTS;
 
     void update(float dt);
 
