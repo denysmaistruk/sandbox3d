@@ -11,7 +11,7 @@ struct SystemDebugger;
 
 class RenderSystem : public SystemBase<RenderSystem>
 {
-    DECLARE_PHYSBOX_SYSTEM(RenderSystem);
+    SANDBOX3D_SYSTEM_CLASS(RenderSystem);
 public:
     void update(float dt);
 

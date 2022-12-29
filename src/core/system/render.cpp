@@ -8,7 +8,7 @@
 #include "core/camera/camera_controller.h"
 
 #include "utils/raylib_utils.h"
-#include "utils/imgui_impl_physbox.h"
+#include "utils/imgui_impl_sandbox3d.h"
 
 bool ImGui_ImplRaylib_Init();
 bool ImGui_ImplRaylib_ProcessEvent();
@@ -194,5 +194,6 @@ void RenderSystem::ImGuiWidgets()
 {
     bool open = true;
     ImGui::ShowDemoWindow(&open);  // demo example
-    ImGui_ImplPhysbox_ShowDebugWindow(&open);
+    ImGui_ImplSandbox3d_ShowDebugWindow(&open);
+    ImGui_ImplSandbox3d_ShowStatsWindow(&open);
 }

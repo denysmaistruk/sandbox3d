@@ -7,7 +7,7 @@ struct SystemDebugger;
 
 class InputSystem : public SystemBase<InputSystem>
 {
-    DECLARE_PHYSBOX_SYSTEM(InputSystem);
+    SANDBOX3D_SYSTEM_CLASS(InputSystem);
 public:
     void update(float dt);
 

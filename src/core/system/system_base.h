@@ -1,7 +1,7 @@
 #pragma once
 #include "core/registry/registry.h"
 
-#define DECLARE_PHYSBOX_SYSTEM(className) friend class SystemBase<className>;
+#define SANDBOX3D_SYSTEM_CLASS(className) friend class SystemBase<className>;
 
 template<class System>
 class SystemBase

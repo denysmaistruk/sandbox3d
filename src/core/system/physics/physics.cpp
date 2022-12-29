@@ -31,7 +31,6 @@ void PhysSystem::update(float dt)
 
     for (int i = 0; i < m_params.substeps; ++i) 
     {
-
         const float step = dt / static_cast<float>(m_params.substeps);
         
         // Update the objects

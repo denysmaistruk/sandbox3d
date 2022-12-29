@@ -2,7 +2,7 @@
 
 #include "graphics/lights.h"
 
-struct ImGui_ImplPhysbox_Config
+struct ImGui_ImplSandbox3d_Config
 {
     // Render
     static bool drawDepthTexture;
@@ -25,4 +25,5 @@ struct ImGui_ImplPhysbox_Config
     static float timeScale;
 };
 
-void ImGui_ImplPhysbox_ShowDebugWindow(bool* p_open);
+void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open);
+void ImGui_ImplSandbox3d_ShowStatsWindow(bool* open);

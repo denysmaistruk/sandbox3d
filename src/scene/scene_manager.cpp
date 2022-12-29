@@ -4,7 +4,7 @@
 #include "phys_manager.h"
 
 #include "../utils/raylib_cyclone_adapter.h"
-#include "../utils/imgui_impl_physbox.h"
+#include "../utils/imgui_impl_sandbox3d.h"
 
 #include "raymath.h"
 
@@ -12,8 +12,8 @@ SceneManager::SceneManager()
     : m_groundPlaneWidth(90.f)
 {
     auto& physManager = PhysManager::instance(); // construct phys manager
-    ImGui_ImplPhysbox_Config::substeps = physManager.getSubsteps();
-    ImGui_ImplPhysbox_Config::sleepEpsilon = cyclone::getSleepEpsilon();
+    ImGui_ImplSandbox3d_Config::substeps = physManager.getSubsteps();
+    ImGui_ImplSandbox3d_Config::sleepEpsilon = cyclone::getSleepEpsilon();
 }
 
 SceneManager& SceneManager::instance()

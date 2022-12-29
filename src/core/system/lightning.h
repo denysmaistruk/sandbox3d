@@ -4,7 +4,7 @@
 
 class LightningSystem : public SystemBase<LightningSystem>
 {
-    friend SystemBase<LightningSystem>;
+    SANDBOX3D_SYSTEM_CLASS(LightningSystem);
 public:
     const static int maxLights = SANDBOX3D_MAX_LIGHTS;
 

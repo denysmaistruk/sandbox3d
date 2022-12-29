@@ -1,9 +1,10 @@
 #pragma once
 #include "raylib.h"
 #include "raymath.h"
-#include "utils/raylib_cyclone_adapter.h"
-#include "core/system/physics.h"
 #include "cyclone/collide_fine.h"
+
+#include "core/system/physics.h"
+#include "utils/raylib_cyclone_adapter.h"
 
 template<>
 struct SystemDebugger<PhysSystem>

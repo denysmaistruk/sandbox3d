@@ -1,11 +1,14 @@
 #include "action.h"
+
+#include "raylib.h"
+#include "raymath.h"
+
 #include "core/camera/camera_controller.h"
 #include "core/factory/factory.h"
 #include "core/system/render.h"
-#include "raylib.h"
-#include "raymath.h"
-#include "utils/imgui_impl_physbox.h"
 #include "core/system/input/input.h"
+
+#include "utils/imgui_impl_sandbox3d.h"
 
 namespace action
 {
@@ -97,7 +100,7 @@ void moveCameraRight()
 
 void pauseSimulation()
 {
-    ImGui_ImplPhysbox_Config::pauseSimulation = !ImGui_ImplPhysbox_Config::pauseSimulation;
+    ImGui_ImplSandbox3d_Config::pauseSimulation = !ImGui_ImplSandbox3d_Config::pauseSimulation;
 }
 
 } // action
