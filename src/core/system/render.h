@@ -24,6 +24,9 @@ public:
     void unloadAllModels();
     void unloadAllShaders();
 
+    int addDebugDrawCallback(const std::function<void()>& callBack);
+    void removeDebugDrawCallback(int index);
+
     static ImGuiIO* ImGuiInit();
 
 protected:
@@ -33,6 +36,7 @@ private:
     void drawShadow(const Model& model);
     void drawGeometry(const Model& model, const float shadowFactor);
     void drawLightSource(const Light& light);
+    void drawDebugGeometry();
 
     void ImGuiBegin();
     void ImGuiEnd();
@@ -46,4 +50,6 @@ private:
     bool m_isWiresMode;
     bool m_drawShadowMap;
     bool m_drawLightSource;
+
+    std::vector<std::function<void()>> m_debugDrawCallbacks;
 };

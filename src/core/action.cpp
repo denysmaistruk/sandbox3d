@@ -100,7 +100,7 @@ void moveCameraRight()
 
 void pauseSimulation()
 {
-    ImGui_ImplSandbox3d_Config::pauseSimulation = !ImGui_ImplSandbox3d_Config::pauseSimulation;
+    
 }
 
 } // action

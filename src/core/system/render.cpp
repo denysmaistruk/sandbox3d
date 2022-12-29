@@ -3,8 +3,11 @@
 #include "imgui.h"
 #include "raymath.h"
 
+#include "debug/debugger_physics.h"
+
 #include "core/component/components.h"
 #include "core/system/lightning.h"
+#include "core/system/physics/physics.h"
 #include "core/camera/camera_controller.h"
 
 #include "utils/raylib_utils.h"
@@ -38,6 +41,7 @@ void RenderSystem::update(float dt)
         
     // Update lightning and get shadow caster
     auto& lightSystem = LightningSystem::getSystem();
+    lightSystem.setShader(m_geometryShader);
     lightSystem.update(dt);
     Camera caster = lightSystem.getShadowCaster();
 
@@ -84,15 +88,21 @@ void RenderSystem::update(float dt)
             {
                 for (auto [entity, lightComponent] : getRegistry().view<LightComponent>().each())
                 {
-                    drawLightSource(lightComponent.light);
+                    if (lightComponent.light.enabled)
+                        drawLightSource(lightComponent.light);
                 }
             }
             
+            // All registered debug geometry
+            drawDebugGeometry();
+
             // Draw basis vector
             drawGuizmo(MatrixIdentity());
 
             // Draw camera target
             drawGuizmo(MatrixTranslate(CameraController::getCamera().target.x, CameraController::getCamera().target.y, CameraController::getCamera().target.z));
+
+            
         }
         EndMode3D();
         
@@ -127,6 +137,17 @@ void RenderSystem::unloadAllShaders()
     UnloadShader(m_shadowShader);
     UnloadShader(m_geometryShader);
     UnloadShader(m_previewShader);
+}
+
+int RenderSystem::addDebugDrawCallback(const std::function<void()>& callBack)
+{
+    m_debugDrawCallbacks.push_back(callBack);
+    return m_debugDrawCallbacks.size() - 1;
+}
+
+void RenderSystem::removeDebugDrawCallback(int callBackIndex)
+{
+    m_debugDrawCallbacks.erase(m_debugDrawCallbacks.begin() + callBackIndex);
 }
 
 ImGuiIO* RenderSystem::ImGuiInit()
@@ -189,6 +210,14 @@ void RenderSystem::drawLightSource(const Light& light)
     DrawLine3D(light.position, light.target, YELLOW);
 }
 
+void RenderSystem::drawDebugGeometry()
+{
+    for (const auto& callback : m_debugDrawCallbacks)
+    {
+        callback();
+    }
+}
+
 void RenderSystem::ImGuiBegin()
 {
     ImGui_ImplRaylib_NewFrame();
@@ -205,7 +234,7 @@ void RenderSystem::ImGuiEnd()
 void RenderSystem::ImGuiWidgets()
 {
     bool open = true;
-    ImGui::ShowDemoWindow(&open);  // demo example
+    //ImGui::ShowDemoWindow(&open);  // demo example
     ImGui_ImplSandbox3d_ShowDebugWindow(&open);
     ImGui_ImplSandbox3d_ShowStatsWindow(&open);
 }

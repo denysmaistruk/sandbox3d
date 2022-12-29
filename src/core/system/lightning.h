@@ -22,4 +22,5 @@ protected:
 private:
     Shader m_shader;
     Camera m_shadowCaster;
+    std::map<int, bool> m_lightsMask;
 };

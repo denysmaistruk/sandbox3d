@@ -116,7 +116,7 @@ static int lightsCount = 0;    // Current amount of created lights
 //----------------------------------------------------------------------------------
 
 // Create a light and get shader locations
-Light CreateLight(Shader shader, int type, Vector3 position, Vector3 target, Color color, float cutoff /*= 0.7f*/, float lightRadius /*= 10.f*/, float spotSoftness /*= 0.65f*/)
+Light CreateLight(Shader shader, int type, Vector3 position, Vector3 target, Color color)
 {
     Light light = { 0 };
 

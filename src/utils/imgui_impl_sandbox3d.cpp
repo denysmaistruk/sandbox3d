@@ -2,59 +2,32 @@
 
 #include "imgui.h"
 
-#include "core/registry/registry.h"
 #include "core/component/components.h"
-#include "debug/debugger_physics.h"
-#include "debug/debugger_render.h"
-#include "scene/phys_manager.h"
-
+#include "core/registry/registry.h"
 #include "core/system/lightning.h"
 
-bool ImGui_ImplSandbox3d_Config::lights[MAX_LIGHTS] = { true, false, false, false };
+#include "debug/debugger_physics.h"
+#include "debug/debugger_render.h"
 
-struct LightsMask
+struct LightsMaskLocal
 {
-    LightsMask()
+    LightsMaskLocal()
         : lights{ false }
     {
-        lights[0] = true;
+        lights[0] = true; // turn on fist light
+        onChanged();
     }
 
-    void onMaskChanged()
+    void onChanged()
     {
         for (int i = 0; i < LightningSystem::maxLights; ++i)
-        {
             LightningSystem::getSystem().setLightEnable(i, lights[i]);
-        }
     }
 
     bool lights[LightningSystem::maxLights];
 };
 
-static LightsMask lightsMask;
-
-//static bool lightsMask[LightningSystem::maxLights] = { true, false, false, false };
-
-
-Vector3 ImGui_ImplSandbox3d_Config::shadowCasterPosition = Vector3{ 20.f, 70.0f, 0.0f };
-
-Vector3 ImGui_ImplSandbox3d_Config::shadowCasterTarget = Vector3{ 0.0f, 0.0f, 0.0f };
-
-float ImGui_ImplSandbox3d_Config::shadowCasterFOV = 90.9f;
-
-int ImGui_ImplSandbox3d_Config::shadowCasterCameraType = 1;
-
-bool ImGui_ImplSandbox3d_Config::pauseSimulation = false;
-
-bool ImGui_ImplSandbox3d_Config::drawSceneBorders = false;
-
-bool ImGui_ImplSandbox3d_Config::drawContacts = false;
-
-int ImGui_ImplSandbox3d_Config::substeps = 1;
-
-float ImGui_ImplSandbox3d_Config::sleepEpsilon = 0.3f;
-
-float ImGui_ImplSandbox3d_Config::timeScale = 1.5f;
+static LightsMaskLocal lightsMaskLocal;
 
 static void HelpMarker(const char* fmt, ...)
 {
@@ -72,24 +45,8 @@ static void HelpMarker(const char* fmt, ...)
     }
 }
 
-static void fromVector3(const Vector3& vec3, float* arr3)
-{
-    arr3[0] = vec3.x;
-    arr3[1] = vec3.y;
-    arr3[2] = vec3.z;
-}
-
-static void fromArray3(const float* arr3, Vector3& vec3)
-{
-    vec3.x = arr3[0];
-    vec3.y = arr3[1];
-    vec3.z = arr3[2];
-}
-
 void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
 {
-    auto& physManager = PhysManager::instance();
-    
     if (!ImGui::Begin("Sandbox3d", open))
     {
         ImGui::End();
@@ -110,98 +67,139 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
         }
 
         static bool shadowTexture = false;
-        if (ImGui::Checkbox("Draw shadow map texture", &shadowTexture))
+        if (ImGui::Checkbox("Shadow map texture", &shadowTexture))
         {
             renderDebugger.setDrawShadowMap(shadowTexture);
         }
 
         static bool drawLightSource = false;
-        if (ImGui::Checkbox("Draw light source", &drawLightSource))
+        if (ImGui::Checkbox("Light source", &drawLightSource))
         {
             renderDebugger.setDrawLightSource(drawLightSource);
         }
         
         // Lights
-        if (ImGui::TreeNode("Scene lights"))
+        if (ImGui::TreeNode("Lights"))
         {
             char lightStr[32] = "Light:@\0";
             for (int i = 0; i < LightningSystem::maxLights; ++i)
             {
                 lightStr[6] = '0' + i;
 
-                if (ImGui::Checkbox(lightStr, &lightsMask.lights[i]))
+                if (ImGui::Checkbox(lightStr, &lightsMaskLocal.lights[i]))
                 {
                     for (int j = 0; j < LightningSystem::maxLights; ++j)
                     {
                         if (j == i)
                             continue;
-                        lightsMask.lights[j] = false;
+                        lightsMaskLocal.lights[j] = false;
                     }
                 }
             }
-            lightsMask.onMaskChanged();
+            lightsMaskLocal.onChanged();
             ImGui::TreePop();
         }
 
         // Shadow caster 
         if (ImGui::TreeNode("Shadow caster"))
         {
-            float buf3[3] = { 0 };
+            int enabled = 0;
+            for (auto& [entity, lightComponent] : EntityRegistry::getRegistry().view<LightComponent>().each())
+            {
+                if (lightComponent.light.enabled)
+                {
+                    auto& caster = lightComponent.caster;
+                    
+                    float3 position = Vector3ToFloatV(caster.position);
+                    if (ImGui::InputFloat3("Position", position.v))
+                    {
+                        caster.position = Vector3{ position.v[0], position.v[1], position.v[2] };
+                    }
 
-            fromVector3(ImGui_ImplSandbox3d_Config::shadowCasterPosition, buf3);
-            ImGui::InputFloat3("Position", buf3);
-            fromArray3(buf3, ImGui_ImplSandbox3d_Config::shadowCasterPosition);
+                    float3 target = Vector3ToFloatV(caster.target);
+                    if (ImGui::InputFloat3("Target", target.v))
+                    {
+                        caster.target = Vector3{ target.v[0], target.v[1], target.v[2] };
+                    }
 
-            fromVector3(ImGui_ImplSandbox3d_Config::shadowCasterTarget, buf3);
-            ImGui::InputFloat3("Target", buf3);
-            fromArray3(buf3, ImGui_ImplSandbox3d_Config::shadowCasterTarget);
-            
-            const char* cameraTypes[] = { "PERSPECTIVE", "ORTHOGRAPHIC" };
-            ImGui::Combo("Camera type", &ImGui_ImplSandbox3d_Config::shadowCasterCameraType, cameraTypes, IM_ARRAYSIZE(cameraTypes));
-            ImGui::SameLine(); HelpMarker("Affects dynamic shadowing.");
+                    int projectionType = caster.projection;
+                    const char* cameraTypes[] = { "PERSPECTIVE", "ORTHOGRAPHIC" };
+                    if (ImGui::Combo("Projection type", &projectionType, cameraTypes, IM_ARRAYSIZE(cameraTypes)))
+                    {
+                        caster.projection = projectionType;
+                    }
+                    ImGui::SameLine(); HelpMarker("Affects dynamic shadowing.");
 
-            ImGui::InputFloat("FOV", &ImGui_ImplSandbox3d_Config::shadowCasterFOV);
-            
+                    float fovy = caster.fovy;
+                    if (ImGui::InputFloat("FOV", &fovy))
+                    {
+                        caster.fovy = fovy;
+                    }
+
+                    enabled++;
+                }
+            }
+            assert(enabled <= 1);
             ImGui::TreePop();
-        }
-
-        //TreePop();
+        }    
     }
-    //Separator();
-
+    
     // Physics
     if (ImGui::CollapsingHeader("Physics"))
     {
-        ImGui::Checkbox("Pause simulation", &ImGui_ImplSandbox3d_Config::pauseSimulation);
-        ImGui::Checkbox("Draw scene borders", &ImGui_ImplSandbox3d_Config::drawSceneBorders);
-        ImGui::Checkbox("Draw contacts", &ImGui_ImplSandbox3d_Config::drawContacts);
-        ImGui::InputInt("Substeps", &ImGui_ImplSandbox3d_Config::substeps);
-        ImGui::InputFloat("Sleep epsilon", &ImGui_ImplSandbox3d_Config::sleepEpsilon);
-        ImGui::InputFloat("Time scale", &ImGui_ImplSandbox3d_Config::timeScale);
-        ImGui::SameLine(); HelpMarker("Maximum dt is %.3f", physManager.getUpdateRate());
-
-        static float friction = physManager.getCollisionFriction();
-        ImGui::InputFloat("Collision friction", &friction);
-        if (friction != physManager.getCollisionFriction()) {
-            physManager.setCollisionFriction(friction);
+        //ImGui::Checkbox("Pause simulation", &ImGui_ImplSandbox3d_Config::pauseSimulation);
+        //ImGui::Checkbox("Draw scene borders", &ImGui_ImplSandbox3d_Config::drawSceneBorders);
+        
+        static bool drawContacts = false;
+        if (ImGui::Checkbox("Draw contacts", &drawContacts))
+        {
+            static int callbackIndex = 0;
+            if (drawContacts)
+            {
+                callbackIndex = RenderSystem::getSystem().addDebugDrawCallback([]() 
+                    { 
+                        SystemDebugger<PhysSystem>().drawContacts(); 
+                    });
+            }
+            else
+            {
+                RenderSystem::getSystem().removeDebugDrawCallback(callbackIndex);
+            }
         }
+        auto params = PhysSystem::getSystem().getParams();
+        bool paramsChanged = false;
 
-        static float restitution = physManager.getCollisionRestitution();
-        ImGui::InputFloat("Collision restitution", &restitution);
-        if (restitution != physManager.getCollisionRestitution()) {
-            physManager.setCollisionRestitution(restitution);
+        if (ImGui::InputInt("Substeps", &params.substeps))
+        {
+            paramsChanged = true;
         }
-
-        static float tolerance = physManager.getCollisionTolerance();
-        ImGui::InputFloat("Collision tolerance", &tolerance);
-        if (tolerance != physManager.getCollisionTolerance()) {
-            physManager.setCollisionTolerance(tolerance);
+        
+        if (ImGui::InputFloat("Update rate", &params.updateRate))
+        {
+            paramsChanged = true;
         }
-
-        //TreePop();
+        
+        if (ImGui::InputFloat("Friction", &params.friction))
+        {
+            paramsChanged = true;
+        }
+        
+        if (ImGui::InputFloat("Restitution", &params.restitution))
+        {
+            paramsChanged = true;
+        }
+      
+        if (ImGui::InputFloat("Tolerance", &params.tolerance))
+        {
+            paramsChanged = true;
+        }
+        
+        if (paramsChanged)
+        {
+            PhysSystem::getSystem().setParams(params);
+        }
     }
-    //Separator();
-
+    
     ImGui::End();
 }
 
