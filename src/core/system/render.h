@@ -12,6 +12,7 @@ struct SystemDebugger;
 class RenderSystem : public SystemBase<RenderSystem>
 {
     SANDBOX3D_SYSTEM_CLASS(RenderSystem);
+    friend struct SystemDebugger<RenderSystem>;
 public:
     void update(float dt);
 
@@ -26,11 +27,12 @@ public:
     static ImGuiIO* ImGuiInit();
 
 protected:
-    RenderSystem();
+    RenderSystem(size_t id);
 
 private:
     void drawShadow(const Model& model);
     void drawGeometry(const Model& model, const float shadowFactor);
+    void drawLightSource(const Light& light);
 
     void ImGuiBegin();
     void ImGuiEnd();
@@ -43,4 +45,5 @@ private:
 
     bool m_isWiresMode;
     bool m_drawShadowMap;
+    bool m_drawLightSource;
 };

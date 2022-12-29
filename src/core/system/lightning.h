@@ -10,13 +10,14 @@ public:
 
     void update(float dt);
 
+    void setLightEnable(int lightId, bool enable);
     void setShader(Shader& shader) { m_shader = shader; }
 
     Camera getShadowCaster() const { return m_shadowCaster; }
     Matrix getLightMatrix() const;
 
 protected:
-    LightningSystem();
+    LightningSystem(size_t id);
 
 private:
     Shader m_shader;

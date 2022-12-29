@@ -4,15 +4,37 @@
 
 #include "core/registry/registry.h"
 #include "core/component/components.h"
+#include "debug/debugger_physics.h"
+#include "debug/debugger_render.h"
 #include "scene/phys_manager.h"
 
-bool ImGui_ImplSandbox3d_Config::drawDepthTexture = false;
-
-bool ImGui_ImplSandbox3d_Config::drawLightsDebug = false;
-
-bool ImGui_ImplSandbox3d_Config::wiresMode = false;
+#include "core/system/lightning.h"
 
 bool ImGui_ImplSandbox3d_Config::lights[MAX_LIGHTS] = { true, false, false, false };
+
+struct LightsMask
+{
+    LightsMask()
+        : lights{ false }
+    {
+        lights[0] = true;
+    }
+
+    void onMaskChanged()
+    {
+        for (int i = 0; i < LightningSystem::maxLights; ++i)
+        {
+            LightningSystem::getSystem().setLightEnable(i, lights[i]);
+        }
+    }
+
+    bool lights[LightningSystem::maxLights];
+};
+
+static LightsMask lightsMask;
+
+//static bool lightsMask[LightningSystem::maxLights] = { true, false, false, false };
+
 
 Vector3 ImGui_ImplSandbox3d_Config::shadowCasterPosition = Vector3{ 20.f, 70.0f, 0.0f };
 
@@ -66,51 +88,63 @@ static void fromArray3(const float* arr3, Vector3& vec3)
 
 void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
 {
-    using namespace ImGui;
-
-    ImGuiIO& io = GetIO();
     auto& physManager = PhysManager::instance();
     
-    if (!Begin("Sandbox3d/Debugger", open))
+    if (!ImGui::Begin("Sandbox3d", open))
     {
-        End();
+        ImGui::End();
         return;
     }
-
-    //if (SmallButton("Click me!"))
-    //{
-    //    // do something
-    //}
-
-    Text("%.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-    Text("%d:contacts(%d)", physManager.getContactCount(), physManager.maxContacts);
-    Text("%d:rigid,%d:static(bodies)", physManager.getRigidBodiesCount(), physManager.getStaticBodiesCount());
-    Text("%d:sleeping", physManager.getSleepingCount());
     
-    Separator();
+    ImGui::Text("Settings to vary sandbox behavior!");
 
     // Render
-    if (TreeNode("Render"))
+    if (ImGui::CollapsingHeader("Render"))
     {
-        Checkbox("Wires mode", &ImGui_ImplSandbox3d_Config::wiresMode);
-        Checkbox("Draw depth texture", &ImGui_ImplSandbox3d_Config::drawDepthTexture);
-        Checkbox("Draw lights", &ImGui_ImplSandbox3d_Config::drawLightsDebug);
+        SystemDebugger<RenderSystem> renderDebugger;
+
+        static bool wires = false;
+        if (ImGui::Checkbox("Wires mode", &wires))
+        {
+            renderDebugger.setWiresMode(wires);
+        }
+
+        static bool shadowTexture = false;
+        if (ImGui::Checkbox("Draw shadow map texture", &shadowTexture))
+        {
+            renderDebugger.setDrawShadowMap(shadowTexture);
+        }
+
+        static bool drawLightSource = false;
+        if (ImGui::Checkbox("Draw light source", &drawLightSource))
+        {
+            renderDebugger.setDrawLightSource(drawLightSource);
+        }
         
         // Lights
-        if (TreeNode("Scene lights"))
+        if (ImGui::TreeNode("Scene lights"))
         {
             char lightStr[32] = "Light:@\0";
-            for (int i = 0; i < MAX_LIGHTS; ++i)
+            for (int i = 0; i < LightningSystem::maxLights; ++i)
             {
                 lightStr[6] = '0' + i;
-                Checkbox(lightStr, &ImGui_ImplSandbox3d_Config::lights[i]);
-            }
 
-            TreePop();
+                if (ImGui::Checkbox(lightStr, &lightsMask.lights[i]))
+                {
+                    for (int j = 0; j < LightningSystem::maxLights; ++j)
+                    {
+                        if (j == i)
+                            continue;
+                        lightsMask.lights[j] = false;
+                    }
+                }
+            }
+            lightsMask.onMaskChanged();
+            ImGui::TreePop();
         }
 
         // Shadow caster 
-        if (TreeNode("Shadow caster"))
+        if (ImGui::TreeNode("Shadow caster"))
         {
             float buf3[3] = { 0 };
 
@@ -126,49 +160,49 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
             ImGui::Combo("Camera type", &ImGui_ImplSandbox3d_Config::shadowCasterCameraType, cameraTypes, IM_ARRAYSIZE(cameraTypes));
             ImGui::SameLine(); HelpMarker("Affects dynamic shadowing.");
 
-            InputFloat("FOV", &ImGui_ImplSandbox3d_Config::shadowCasterFOV);
+            ImGui::InputFloat("FOV", &ImGui_ImplSandbox3d_Config::shadowCasterFOV);
             
-            TreePop();
+            ImGui::TreePop();
         }
 
-        TreePop();
+        //TreePop();
     }
-    Separator();
+    //Separator();
 
     // Physics
-    if (TreeNode("Physics"))
+    if (ImGui::CollapsingHeader("Physics"))
     {
-        Checkbox("Pause simulation", &ImGui_ImplSandbox3d_Config::pauseSimulation);
-        Checkbox("Draw scene borders", &ImGui_ImplSandbox3d_Config::drawSceneBorders);
-        Checkbox("Draw contacts", &ImGui_ImplSandbox3d_Config::drawContacts);
-        InputInt("Substeps", &ImGui_ImplSandbox3d_Config::substeps);
-        InputFloat("Sleep epsilon", &ImGui_ImplSandbox3d_Config::sleepEpsilon);
-        InputFloat("Time scale", &ImGui_ImplSandbox3d_Config::timeScale);
+        ImGui::Checkbox("Pause simulation", &ImGui_ImplSandbox3d_Config::pauseSimulation);
+        ImGui::Checkbox("Draw scene borders", &ImGui_ImplSandbox3d_Config::drawSceneBorders);
+        ImGui::Checkbox("Draw contacts", &ImGui_ImplSandbox3d_Config::drawContacts);
+        ImGui::InputInt("Substeps", &ImGui_ImplSandbox3d_Config::substeps);
+        ImGui::InputFloat("Sleep epsilon", &ImGui_ImplSandbox3d_Config::sleepEpsilon);
+        ImGui::InputFloat("Time scale", &ImGui_ImplSandbox3d_Config::timeScale);
         ImGui::SameLine(); HelpMarker("Maximum dt is %.3f", physManager.getUpdateRate());
 
         static float friction = physManager.getCollisionFriction();
-        InputFloat("Collision friction", &friction);
+        ImGui::InputFloat("Collision friction", &friction);
         if (friction != physManager.getCollisionFriction()) {
             physManager.setCollisionFriction(friction);
         }
 
         static float restitution = physManager.getCollisionRestitution();
-        InputFloat("Collision restitution", &restitution);
+        ImGui::InputFloat("Collision restitution", &restitution);
         if (restitution != physManager.getCollisionRestitution()) {
             physManager.setCollisionRestitution(restitution);
         }
 
         static float tolerance = physManager.getCollisionTolerance();
-        InputFloat("Collision tolerance", &tolerance);
+        ImGui::InputFloat("Collision tolerance", &tolerance);
         if (tolerance != physManager.getCollisionTolerance()) {
             physManager.setCollisionTolerance(tolerance);
         }
 
-        TreePop();
+        //TreePop();
     }
-    Separator();
+    //Separator();
 
-    End();
+    ImGui::End();
 }
 
 void ImGui_ImplSandbox3d_ShowStatsWindow(bool* open)
@@ -193,9 +227,17 @@ void ImGui_ImplSandbox3d_ShowStatsWindow(bool* open)
         ImGui::Text("Stats:");
         ImGui::Separator();
         ImGuiIO& io = ImGui::GetIO();
-        ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::Text("fps - %.1f; %.3f ms/frame", io.Framerate, 1000.f / io.Framerate);
         auto& registry = EntityRegistry::getRegistry();
-        ImGui::Text("entities - %d (lights - %d)", registry.size(), registry.view<LightComponent>().size());
+        ImGui::Text("systems - %d;", SystemIdentifier::identifier);
+        ImGui::Text("entities - %d; lights - %d", registry.size(), registry.view<LightComponent>().size());
+
+        SystemDebugger<PhysSystem> physDebugger;
+        const int rigidBodies = physDebugger.getRigidBodiesCount();
+        const int staticBodies = physDebugger.getStaticBodiesCount();
+        const int sleepingBodies = physDebugger.getSleepingBodiesCount();
+        ImGui::Text("phys bodies - %d; rigid - %d, static - %d, sleeping - %d", rigidBodies + staticBodies, rigidBodies, staticBodies, sleepingBodies);
+
     }
     ImGui::End();
 }

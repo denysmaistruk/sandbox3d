@@ -15,9 +15,10 @@ bool ImGui_ImplRaylib_ProcessEvent();
 void ImGui_ImplRaylib_NewFrame();
 void raylib_render_imgui(ImDrawData* draw_data);
 
-RenderSystem::RenderSystem()
+RenderSystem::RenderSystem(size_t id) 
     : m_isWiresMode(false)
     , m_drawShadowMap(false)
+    , m_drawLightSource(false)
 {
     m_shadowMap = LoadShadowMap(SANDBOX3D_SHADOW_MAP_WIDTH, SANDBOX3D_SHADOW_MAP_WIDTH);
     m_shadowShader = LoadShadowShader();
@@ -39,10 +40,6 @@ void RenderSystem::update(float dt)
     auto& lightSystem = LightningSystem::getSystem();
     lightSystem.update(dt);
     Camera caster = lightSystem.getShadowCaster();
-
-    // Light matrix
-    Matrix matLight = MatrixMultiply(GetCameraMatrix(caster),
-        (caster.projection == CAMERA_PERSPECTIVE) ? CameraFrustum(caster) : CameraOrtho(caster));
 
     // Draw/update shadow map (z-buffer)
     ShadowMapBegin(m_shadowMap);
@@ -82,6 +79,15 @@ void RenderSystem::update(float dt)
                 drawGeometry(renderComponent.model, renderComponent.shadowFactor);
             }
 
+            // Draw light sources
+            if (m_drawLightSource)
+            {
+                for (auto [entity, lightComponent] : getRegistry().view<LightComponent>().each())
+                {
+                    drawLightSource(lightComponent.light);
+                }
+            }
+            
             // Draw basis vector
             drawGuizmo(MatrixIdentity());
 
@@ -175,6 +181,12 @@ void RenderSystem::drawGeometry(const Model& model, const float shadowFactor)
         SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_SHADOW_FACTOR], &shadowFactor, SHADER_UNIFORM_FLOAT);
         DrawModel(model, Vector3Zero(), 1.f, WHITE);
     }
+}
+
+void RenderSystem::drawLightSource(const Light& light)
+{
+    DrawCubeWires(light.position, 0.125f, 0.125f, 0.125f, YELLOW);
+    DrawLine3D(light.position, light.target, YELLOW);
 }
 
 void RenderSystem::ImGuiBegin()

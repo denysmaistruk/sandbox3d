@@ -5,9 +5,9 @@
 struct ImGui_ImplSandbox3d_Config
 {
     // Render
-    static bool drawDepthTexture;
+   /* static bool drawDepthTexture;
     static bool drawLightsDebug;
-    static bool wiresMode;
+    static bool wiresMode;*/
 
     static bool lights[MAX_LIGHTS];
 

@@ -4,9 +4,7 @@
 
 #include "core/component/components.h"
 
-LightningSystem::LightningSystem()
-    : m_shader{ 0 }
-    , m_shadowCaster{ 0 }
+LightningSystem::LightningSystem(size_t id) 
 {
 }
 
@@ -20,13 +18,10 @@ void LightningSystem::update(float dt)
         ++lightsCount;
         auto& lightComponent = entityView.get<LightComponent>(entity);
 
-        // Turn on/off lights by imgui input
-        // lightComponent.light.enabled = ImGui_ImplPhysbox_Config::lights[i];
-
         lightComponent.light.position = lightComponent.caster.position;
         lightComponent.light.target = lightComponent.caster.target;
         
-        if (lightComponent.light.type == LIGHT_DIRECTIONAL)
+        if (lightComponent.light.enabled)
         {
             m_shadowCaster = lightComponent.caster;
         }
@@ -35,6 +30,19 @@ void LightningSystem::update(float dt)
     }
 
     assert(lightsCount <= maxLights);
+}
+
+void LightningSystem::setLightEnable(int lightId, bool enable)
+{
+    for (auto& [entity, lightComponent] : getRegistry().view<LightComponent>().each())
+    {
+        if (lightComponent.lightId == lightId)
+        {
+            lightComponent.light.enabled = enable;
+        }
+
+        lightComponent.light.enabled = true;
+    }
 }
 
 Matrix LightningSystem::getLightMatrix() const

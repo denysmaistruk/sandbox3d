@@ -16,8 +16,8 @@ struct RenderComponent
 struct LightComponent
 {
     Light light;
-    Camera caster;
     int lightId;
+    Camera caster;
 };
 
 struct PhysComponent

@@ -147,7 +147,7 @@ entt::entity EntityFactory::createPlane(const Vector3& direction, const float of
     return entity;
 }
 
-entt::entity EntityFactory::createLight(Shader shader, int type, Vector3 position, Vector3 target, Color color, float cutoff /*= 0.7f*/, float lightRadius /*= 10.f*/, float spotSoftness /*= 0.65f*/)
+entt::entity EntityFactory::createLight(Shader shader, int type, Vector3 position, Vector3 target, Color color, int casterProjType /*= CAMERA_ORTHOGRAPHIC*/, float cutoff /*= 0.7f*/, float lightRadius /*= 10.f*/, float spotSoftness /*= 0.65f*/)
 {
     LightComponent lightComponent;
 
@@ -155,15 +155,12 @@ entt::entity EntityFactory::createLight(Shader shader, int type, Vector3 positio
     lightComponent.light = CreateLight(shader, type, position, target, color, cutoff, lightRadius, spotSoftness);
     
     // Set shadow caster
-    if (type != LIGHT_POINT)
-    {
-        lightComponent.caster.position = position;
-        lightComponent.caster.target = target;
-        lightComponent.caster.up = Vector3{ 0.0f, 1.0f, 0.0f };
-        lightComponent.caster.fovy = 90.9f;
-        lightComponent.caster.projection = CAMERA_ORTHOGRAPHIC;
-    }
-
+    lightComponent.caster.position = position;
+    lightComponent.caster.target = target;
+    lightComponent.caster.up = Vector3{ 0.0f, 1.0f, 0.0f };
+    lightComponent.caster.fovy = 90.9f;
+    lightComponent.caster.projection = casterProjType;
+ 
     static int lightId = 0;
     lightComponent.lightId = lightId++;
 

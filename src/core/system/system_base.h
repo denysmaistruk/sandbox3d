@@ -3,6 +3,12 @@
 
 #define SANDBOX3D_SYSTEM_CLASS(className) friend class SystemBase<className>;
 
+struct SystemIdentifier
+{
+    inline static size_t identifier = 0;
+    static size_t generateSystemId() { return identifier++; }
+};
+
 template<class System>
 class SystemBase
 {
@@ -18,7 +24,8 @@ protected:
 template<class System>
 System& SystemBase<System>::getSystem() 
 {
-    static System system;
+    static size_t systemId = SystemIdentifier::generateSystemId();
+    static System system(systemId);
     return system;
 }
 

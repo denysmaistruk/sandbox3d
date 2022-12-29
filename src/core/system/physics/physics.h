@@ -33,7 +33,7 @@ public:
     cyclone::CollisionData* getCollisionData() { return m_collisionData; }
 
 protected:
-    PhysSystem();
+    PhysSystem(size_t id);
 
 private:
     void updateTransform(float dt);

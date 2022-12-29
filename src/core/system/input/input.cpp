@@ -1,6 +1,6 @@
 #include "input.h"
 
-InputSystem::InputSystem() 
+InputSystem::InputSystem(size_t id)
 {
 }
 

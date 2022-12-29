@@ -5,7 +5,7 @@
 #include "cyclone/collide_fine.h"
 #include "utils/raylib_cyclone_adapter.h"
 
-PhysSystem::PhysSystem()
+PhysSystem::PhysSystem(size_t id)  
     : m_params{ 8, 0.033f, 0.5f, 0.3f, 0.1f }
     , m_contactResolver(maxContacts * 8)
     , m_collisionData(new cyclone::CollisionData{ 
