@@ -14,7 +14,12 @@ int main(int argc, char const** argv)
     SetConfigFlags(FLAG_MSAA_4X_HINT);  // enable Multi Sampling Anti Aliasing 4x (if available)
     InitWindow(SANDBOX3D_WINDOW_WIDTH, SANDBOX3D_WINDOW_HEIGHT, "sandbox3d");
     SetCameraMode(CameraController::getCamera(), CAMERA_FREE);
-    SetTargetFPS(SANDBOX3D_TARGET_FPS);                   
+    SetTargetFPS(SANDBOX3D_TARGET_FPS);        
+    
+    // Icon
+    Image icon = LoadImage(SANDBOX3D_ICON_PATH);
+    SetWindowIcon(icon);
+
     
     // Create scene
     action::bindAllActions();
