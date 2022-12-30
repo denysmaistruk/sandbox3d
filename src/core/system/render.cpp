@@ -25,7 +25,7 @@ RenderSystem::RenderSystem(size_t id)
     : m_isWiresMode(false)
     , m_drawShadowMap(false)
     , m_drawLightSource(false)
-    , m_drawText3d(false)
+    , m_drawText3d(true)
 {
     m_shadowMap = LoadShadowMap(SANDBOX3D_SHADOW_MAP_WIDTH, SANDBOX3D_SHADOW_MAP_WIDTH);
     m_shadowShader = LoadShadowShader();
@@ -33,7 +33,7 @@ RenderSystem::RenderSystem(size_t id)
     m_previewShader = LoadDepthPreviewShader();
     m_text3dShader = LoadText3DShader();
 
-    addText3dMessage("3D TEXT DEBUG", Vector3{ 0.f, 3.f, 0.f });
+    addText3dMessage("WELCOME TO SANDBOX 3D!", Vector3{ 0.f, 7.f, 0.f });
 }
 
 void RenderSystem::update(float dt)
@@ -72,7 +72,7 @@ void RenderSystem::update(float dt)
     // Draw scene
     BeginDrawing();
     {
-        ClearBackground(RAYWHITE);
+        ClearBackground(BLACK);
         BeginMode3D(CameraController::getCamera());
         {
             // Update values for geometry shader
@@ -257,7 +257,9 @@ void RenderSystem::drawText3D()
 {
     for (const auto& [key, pair] : m_text3dMessages)
     {
-        DrawText3D(GetFontDefault(), pair.first, pair.second, 4.0f, 0.5f, 0.0f, true, WHITE, false);
+        Vector3 ext = MeasureText3D(GetFontDefault(), pair.first, 4.0f, 0.5f, 0.0f);
+        ext = Vector3Multiply(ext, Vector3{ 0.5f, 0.f, 0.5f });
+        DrawText3D(GetFontDefault(), pair.first, Vector3Subtract(pair.second, ext), 4.0f, 0.5f, 0.0f, true, WHITE, false);
     }
 }
 
