@@ -129,7 +129,7 @@ Light CreateLight(Shader shader, int type, Vector3 position, Vector3 target, Col
 {
 	Light light = { 0 };
 
-	if (lightsCount < MAX_LIGHTS)
+	if (lightsCount < SANDBOX3D_MAX_LIGHTS)
 	{
 		light.enabled = true;
 		light.type = type;

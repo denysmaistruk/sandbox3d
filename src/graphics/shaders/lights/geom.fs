@@ -54,9 +54,9 @@ const vec2 poissonDisk[16] = vec2[] (
 );
 
 float random(vec3 seed, int i) {
-	vec4 seed4 = vec4(seed, i);
-	float dotSeed4 = dot(seed4, vec4(12.9898, 78.233, 45.164, 94.673));
-	return fract(sin(dotSeed4) * 43758.5453);
+    vec4 seed4 = vec4(seed, i);
+    float dotSeed4 = dot(seed4, vec4(12.9898, 78.233, 45.164, 94.673));
+    return fract(sin(dotSeed4) * 43758.5453);
 }
 
 float ShadowCalc(vec4 p, float bias)
@@ -64,28 +64,28 @@ float ShadowCalc(vec4 p, float bias)
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
     vec3 projCoords = p.xyz / p.w;
     projCoords = projCoords * 0.5 + 0.5;
-	float depth = projCoords.z;
-	float texDepth = texture(shadowMap, projCoords.xy).r;
+    float depth = projCoords.z;
+    float texDepth = texture(shadowMap, projCoords.xy).r;
 
     float shadow = 0.0;
     if (usePoisondDisk) {
         for (int x = -1; x <= 1; ++x) {
-		    for (int y = -1; y <= 1; ++y) {
+            for (int y = -1; y <= 1; ++y) {
                 for (int i = 0; i < 4; ++i) {
                     int index = int(16.0 * random(fragPosition, i)) % 16;
                     float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize + poissonDisk[index] / 5000.0).r; 
-		            shadow += depth - bias < pcfDepth ? 0.0 : 0.25;        
+                    shadow += depth - bias < pcfDepth ? 0.0 : 0.25;        
                 }
-		    }    
-	    }
+            }    
+        }
     }
     else {
         for (int x = -1; x <= 1; ++x) {
-		    for (int y = -1; y <= 1; ++y) {
+            for (int y = -1; y <= 1; ++y) {
                 float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-		        shadow += depth - bias < pcfDepth ? 0.0 : 1.0;        
-		    }    
-	    }
+                shadow += depth - bias < pcfDepth ? 0.0 : 1.0;        
+            }    
+        }
     }
     
     return shadow / 9.0;
@@ -154,7 +154,8 @@ void main()
     // float bias = 0.00005f * tan(acos(NdotLSum));
     
     float shadow = 0.0;
-    if (directionalLightOnly) {
+    if (directionalLightOnly) 
+    {
         const float bias = -0.0005;
         shadow = ShadowCalc(shadowPos, bias);
     }

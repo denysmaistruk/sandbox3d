@@ -1,6 +1,6 @@
 #pragma once
 #include "raylib.h"
-#include "utils/graphics/lights.h"
+#include "graphics/lights.h"
 
 struct TransformComponent
 {

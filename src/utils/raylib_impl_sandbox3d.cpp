@@ -1,6 +1,5 @@
-#include "raylib_utils.h"
+#include "raylib_impl_sandbox3d.h"
 
-#include "raylib.h"
 #include "raymath.h"
 
 Mesh genMeshPlaneTiled(float width, float length, int resX, int resZ, int tilesX, int tilesZ)

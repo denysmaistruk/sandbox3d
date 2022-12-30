@@ -11,8 +11,9 @@
 #include "core/system/physics/physics.h"
 #include "core/camera/camera_controller.h"
 
-#include "utils/graphics/text3d.h"
-#include "utils/raylib_utils.h"
+#include "graphics/text3d.h"
+
+#include "utils/raylib_impl_sandbox3d.h"
 #include "utils/imgui_impl_sandbox3d.h"
 
 bool ImGui_ImplRaylib_Init();

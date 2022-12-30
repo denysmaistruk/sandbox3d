@@ -10,7 +10,7 @@
 #include "debug/debugger_physics.h"
 #include "debug/debugger_render.h"
 
-#include "utils/raylib_utils.h"
+#include "utils/raylib_impl_sandbox3d.h"
 
 struct LightsMaskLocal
 {

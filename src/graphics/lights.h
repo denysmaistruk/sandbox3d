@@ -3,8 +3,6 @@
 #include <raylib.h>
 #include <stdint.h>
 
-#define MAX_LIGHTS 4   
-
  struct Light {
     bool enabled;
     int type;

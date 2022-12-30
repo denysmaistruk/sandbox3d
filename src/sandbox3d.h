@@ -12,5 +12,5 @@
 
 #define SANDBOX3D_PHYSICS_SLEEP_EPSILON 0.4f
 
-#define SANDBOX3D_SHADER_PATH "../src/utils/shaders/"
+#define SANDBOX3D_SHADER_PATH "../src/graphics/shaders/"
 #define SANDBOX3D_ICON_PATH "../resources/icon.png"

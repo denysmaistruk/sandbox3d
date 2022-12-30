@@ -2,7 +2,8 @@
 #include "system_base.h"
 
 #include "raylib.h"
-#include "utils/graphics/lights.h"
+
+#include "graphics/lights.h"
 
 struct ImGuiIO;
 
