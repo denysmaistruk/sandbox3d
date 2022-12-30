@@ -25,7 +25,11 @@ public:
     void unloadAllShaders();
 
     int addDebugDrawCallback(const std::function<void()>& callBack);
-    void removeDebugDrawCallback(int index);
+    void removeDebugDrawCallback(int key);
+
+    int addText3dMessage(const char* message, const Vector3& pos);
+    void updateText3dMessage(int key, const char* newMessage, const Vector3& newPos);
+    void tryRemoveText3dMessage(int key);
 
     static ImGuiIO* ImGuiInit();
 
@@ -36,8 +40,9 @@ private:
     void drawShadow(const Model& model);
     void drawGeometry(const Model& model, const float shadowFactor);
     void drawLightSource(const Light& light);
+    void drawText3D(const char* text, Vector3 pos);
     void drawDebugGeometry();
-
+    
     void ImGuiBegin();
     void ImGuiEnd();
     void ImGuiWidgets();
@@ -46,10 +51,13 @@ private:
     Shader m_shadowShader;
     Shader m_geometryShader;
     Shader m_previewShader;
+    Shader m_text3dShader;
 
     bool m_isWiresMode;
     bool m_drawShadowMap;
     bool m_drawLightSource;
+    bool m_drawText3d;
 
+    std::map<int, std::pair<const char*, Vector3>> m_text3dMessages;
     std::vector<std::function<void()>> m_debugDrawCallbacks;
 };

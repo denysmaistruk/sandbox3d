@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 #include "raymath.h"
+#include "rlgl.h"
 
 #include "debug/debugger_physics.h"
 
@@ -10,6 +11,7 @@
 #include "core/system/physics/physics.h"
 #include "core/camera/camera_controller.h"
 
+#include "utils/graphics/text3d.h"
 #include "utils/raylib_utils.h"
 #include "utils/imgui_impl_sandbox3d.h"
 
@@ -22,11 +24,15 @@ RenderSystem::RenderSystem(size_t id)
     : m_isWiresMode(false)
     , m_drawShadowMap(false)
     , m_drawLightSource(false)
+    , m_drawText3d(false)
 {
     m_shadowMap = LoadShadowMap(SANDBOX3D_SHADOW_MAP_WIDTH, SANDBOX3D_SHADOW_MAP_WIDTH);
     m_shadowShader = LoadShadowShader();
     m_geometryShader = LoadShadedGeometryShader();
     m_previewShader = LoadDepthPreviewShader();
+    m_text3dShader = LoadText3DShader();
+
+    addText3dMessage("3D TEXT DEBUG", Vector3{ 0.f, 3.f, 0.f });
 }
 
 void RenderSystem::update(float dt)
@@ -93,6 +99,25 @@ void RenderSystem::update(float dt)
                 }
             }
             
+            if (m_drawText3d)
+            {
+                BeginShaderMode(m_text3dShader);
+                {
+                    // TODO: figure out how to draw text always facing to camera
+                    // rlPushMatrix();
+                    // rlRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+                    // rlRotatef(90.0f, 0.0f, 0.0f, -1.0f);
+
+                    for (const auto& [key, pair] : m_text3dMessages)
+                    {
+                        drawText3D(pair.first, pair.second);
+                    }
+
+                    // rlPopMatrix();
+                }
+                EndShaderMode();
+            }
+            
             // All registered debug geometry
             drawDebugGeometry();
 
@@ -145,9 +170,30 @@ int RenderSystem::addDebugDrawCallback(const std::function<void()>& callBack)
     return m_debugDrawCallbacks.size() - 1;
 }
 
-void RenderSystem::removeDebugDrawCallback(int callBackIndex)
+void RenderSystem::removeDebugDrawCallback(int key)
 {
-    m_debugDrawCallbacks.erase(m_debugDrawCallbacks.begin() + callBackIndex);
+    m_debugDrawCallbacks.erase(m_debugDrawCallbacks.begin() + key);
+}
+
+int RenderSystem::addText3dMessage(const char* message, const Vector3& pos)
+{
+    static int key = 0;
+    m_text3dMessages[key++] = std::make_pair(message, pos);
+    return key;
+}
+
+void RenderSystem::updateText3dMessage(int key, const char* newMessage, const Vector3& newPos)
+{
+    assert(m_text3dMessages.find(key) != m_text3dMessages.end());
+    m_text3dMessages[key] = std::make_pair(newMessage, newPos);
+}
+
+void RenderSystem::tryRemoveText3dMessage(int key)
+{
+    if (m_text3dMessages.find(key) != m_text3dMessages.end())
+    {
+        m_text3dMessages.erase(m_text3dMessages.find(key));
+    }
 }
 
 ImGuiIO* RenderSystem::ImGuiInit()
@@ -208,6 +254,11 @@ void RenderSystem::drawLightSource(const Light& light)
 {
     DrawCubeWires(light.position, 0.125f, 0.125f, 0.125f, YELLOW);
     DrawLine3D(light.position, light.target, YELLOW);
+}
+
+void RenderSystem::drawText3D(const char* text, Vector3 pos)
+{
+    DrawText3D(GetFontDefault(), text, pos, 4.0f, 0.5f, 0.0f, true, WHITE, false);
 }
 
 void RenderSystem::drawDebugGeometry()

@@ -5,8 +5,7 @@
 
 #include "../extern/raylib/src/external/glad.h"
 
-#define SHADER_PATH "../src/utils/shaders/"
-#define SHADOW_PATH SHADER_PATH "lights/"
+#define SHADOW_PATH SANDBOX3D_SHADER_PATH "lights/"
 
 #define PB_ORTHOGRAPHIC_CAMERA_CULL_DISTANCE_FAR 100
 

@@ -144,3 +144,8 @@ void drawGuizmo(Matrix transform)
     DrawLine3D(origin, Vector3Transform(Vector3{ 0.f, 1.0f, 0.f }, transform), GREEN);
     DrawLine3D(origin, Vector3Transform(Vector3{ 0.f, 0.f, 1.f }, transform), BLUE);
 }
+
+Vector3 Vector3Translate(Vector3 v, Matrix mat)
+{
+    return Vector3{ v.x + mat.m12, v.y + mat.m13, v.z + mat.m14 };
+}

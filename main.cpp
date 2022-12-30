@@ -32,7 +32,7 @@ int main(int argc, char const** argv)
     {        
         CameraController::update(GetFrameTime());
 
-        PhysSystem::getSystem().update(GetFrameTime() * 1.4f); // speed-up physics a bit
+        PhysSystem::getSystem().update(GetFrameTime() * 1.5f); // speed-up physics a bit
         InputSystem::getSystem().update(GetFrameTime());
         RenderSystem::getSystem().update(GetFrameTime());
     }

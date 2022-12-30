@@ -5,9 +5,12 @@
 #include "core/component/components.h"
 #include "core/registry/registry.h"
 #include "core/system/lightning.h"
+#include "core/system/physics/collision.h"
 
 #include "debug/debugger_physics.h"
 #include "debug/debugger_render.h"
+
+#include "utils/raylib_utils.h"
 
 struct LightsMaskLocal
 {
@@ -28,6 +31,56 @@ struct LightsMaskLocal
 };
 
 static LightsMaskLocal lightsMaskLocal;
+
+static void fetchSleepingEntities(bool enable)
+{
+    static std::map<entt::entity, int> entMsgKeyMap;
+    
+    auto view = EntityRegistry::getRegistry().view<TransformComponent, PhysComponent>();
+
+    if (!enable)
+    {
+        if (!entMsgKeyMap.empty())
+        {
+            for (auto [entity, index] : entMsgKeyMap)
+            {
+                RenderSystem::getSystem().tryRemoveText3dMessage(index);
+            }
+            entMsgKeyMap.clear();
+        }
+
+        return;
+    }
+
+    for (auto& [entity, transformComponent, physComponent] : view.each())
+    {
+        const char* msg = "Zzz!";
+        const Vector3 msgPos = Vector3Add(Vector3Translate(Vector3Zero(), transformComponent.transform), Vector3{ 0.f, 1.f, 0.f });
+
+        if (physComponent.collBody->isSleeping())
+        {
+            if (entMsgKeyMap.find(entity) == entMsgKeyMap.end())
+            {
+                // Add new
+                entMsgKeyMap[entity] = RenderSystem::getSystem().addText3dMessage(msg, msgPos);
+            }
+            else
+            {
+                // Update existing
+                RenderSystem::getSystem().updateText3dMessage(entMsgKeyMap[entity], msg, msgPos);
+            }
+        }
+        else // not sleeping
+        {
+            if (entMsgKeyMap.find(entity) != entMsgKeyMap.end())
+            {
+                RenderSystem::getSystem().tryRemoveText3dMessage(entMsgKeyMap[entity]);
+                entMsgKeyMap.erase(entMsgKeyMap.find(entity));
+            }
+        }
+    }
+}
+
 
 static void HelpMarker(const char* fmt, ...)
 {
@@ -52,13 +105,19 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
         ImGui::End();
         return;
     }
-    
+
     ImGui::Text("Settings to vary sandbox behavior!");
 
     // Render
     if (ImGui::CollapsingHeader("Render System"))
     {
         SystemDebugger<RenderSystem> renderDebugger;
+
+        static bool text3d = false;
+        if (ImGui::Checkbox("Text 3D", &text3d))
+        {
+            renderDebugger.setDrawText3d(text3d);
+        }
 
         static bool wires = false;
         if (ImGui::Checkbox("Wires mode", &wires))
@@ -150,6 +209,13 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
         //ImGui::Checkbox("Pause simulation", &ImGui_ImplSandbox3d_Config::pauseSimulation);
         //ImGui::Checkbox("Draw scene borders", &ImGui_ImplSandbox3d_Config::drawSceneBorders);
         
+        static bool drawSleepingMarkers = false;
+        if (ImGui::Checkbox("Draw sleeping markers", &drawSleepingMarkers))
+        {
+            // value was changed
+        }
+        fetchSleepingEntities(drawSleepingMarkers);
+
         static bool drawContacts = false;
         if (ImGui::Checkbox("Draw contacts", &drawContacts))
         {
@@ -228,13 +294,13 @@ void ImGui_ImplSandbox3d_ShowStatsWindow(bool* open)
         ImGui::Text("fps - %.1f; %.3f ms/frame", io.Framerate, 1000.f / io.Framerate);
         auto& registry = EntityRegistry::getRegistry();
         ImGui::Text("systems - %d;", SystemIdentifier::identifier);
-        ImGui::Text("entities - %d; lights - %d", registry.size(), registry.view<LightComponent>().size());
+        ImGui::Text("entities - %d; [lights - %d]", registry.size(), registry.view<LightComponent>().size());
 
         SystemDebugger<PhysSystem> physDebugger;
         const int rigidBodies = physDebugger.getRigidBodiesCount();
         const int staticBodies = physDebugger.getStaticBodiesCount();
         const int sleepingBodies = physDebugger.getSleepingBodiesCount();
-        ImGui::Text("phys bodies - %d; rigid - %d, static - %d, sleeping - %d", rigidBodies + staticBodies, rigidBodies, staticBodies, sleepingBodies);
+        ImGui::Text("phys bodies - %d; [rigid - %d, static - %d, \nsleeping - %d]", rigidBodies + staticBodies, rigidBodies, staticBodies, sleepingBodies);
 
     }
     ImGui::End();
