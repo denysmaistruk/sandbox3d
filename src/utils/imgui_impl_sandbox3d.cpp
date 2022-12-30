@@ -44,7 +44,7 @@ static void fetchSleepingEntities(bool enable)
         {
             for (auto [entity, index] : entMsgKeyMap)
             {
-                RenderSystem::getSystem().tryRemoveText3dMessage(index);
+                RenderSystem::getSystem().removeText3dMessage(index);
             }
             entMsgKeyMap.clear();
         }
@@ -74,7 +74,7 @@ static void fetchSleepingEntities(bool enable)
         {
             if (entMsgKeyMap.find(entity) != entMsgKeyMap.end())
             {
-                RenderSystem::getSystem().tryRemoveText3dMessage(entMsgKeyMap[entity]);
+                RenderSystem::getSystem().removeText3dMessage(entMsgKeyMap[entity]);
                 entMsgKeyMap.erase(entMsgKeyMap.find(entity));
             }
         }

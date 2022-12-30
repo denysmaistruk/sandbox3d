@@ -178,8 +178,8 @@ void RenderSystem::removeDebugDrawCallback(int key)
 int RenderSystem::addText3dMessage(const char* message, const Vector3& pos)
 {
     static int key = 0;
-    m_text3dMessages[key++] = std::make_pair(message, pos);
-    return key;
+    m_text3dMessages[key] = std::make_pair(message, pos);
+    return key++;
 }
 
 void RenderSystem::updateText3dMessage(int key, const char* newMessage, const Vector3& newPos)
@@ -188,12 +188,10 @@ void RenderSystem::updateText3dMessage(int key, const char* newMessage, const Ve
     m_text3dMessages[key] = std::make_pair(newMessage, newPos);
 }
 
-void RenderSystem::tryRemoveText3dMessage(int key)
+void RenderSystem::removeText3dMessage(int key)
 {
-    if (m_text3dMessages.find(key) != m_text3dMessages.end())
-    {
-        m_text3dMessages.erase(m_text3dMessages.find(key));
-    }
+    assert(m_text3dMessages.find(key) != m_text3dMessages.end());
+    m_text3dMessages.erase(m_text3dMessages.find(key));
 }
 
 ImGuiIO* RenderSystem::ImGuiInit()

@@ -29,7 +29,7 @@ public:
 
     int addText3dMessage(const char* message, const Vector3& pos);
     void updateText3dMessage(int key, const char* newMessage, const Vector3& newPos);
-    void tryRemoveText3dMessage(int key);
+    void removeText3dMessage(int key);
 
     static ImGuiIO* ImGuiInit();
 
