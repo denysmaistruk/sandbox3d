@@ -40,7 +40,7 @@ private:
     void drawShadow(const Model& model);
     void drawGeometry(const Model& model, const float shadowFactor);
     void drawLightSource(const Light& light);
-    void drawText3D(const char* text, Vector3 pos);
+    void drawText3D();
     void drawDebugGeometry();
     
     void ImGuiBegin();
@@ -59,5 +59,5 @@ private:
     bool m_drawText3d;
 
     std::map<int, std::pair<const char*, Vector3>> m_text3dMessages;
-    std::vector<std::function<void()>> m_debugDrawCallbacks;
+    std::map<int, std::function<void()>> m_debugDrawCallbacks;
 };

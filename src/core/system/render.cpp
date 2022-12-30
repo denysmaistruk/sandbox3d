@@ -107,12 +107,9 @@ void RenderSystem::update(float dt)
                     // rlPushMatrix();
                     // rlRotatef(90.0f, 1.0f, 0.0f, 0.0f);
                     // rlRotatef(90.0f, 0.0f, 0.0f, -1.0f);
-
-                    for (const auto& [key, pair] : m_text3dMessages)
-                    {
-                        drawText3D(pair.first, pair.second);
-                    }
-
+                     
+                    drawText3D();
+                    
                     // rlPopMatrix();
                 }
                 EndShaderMode();
@@ -166,13 +163,14 @@ void RenderSystem::unloadAllShaders()
 
 int RenderSystem::addDebugDrawCallback(const std::function<void()>& callBack)
 {
-    m_debugDrawCallbacks.push_back(callBack);
-    return m_debugDrawCallbacks.size() - 1;
+    static int key = 0;
+    m_debugDrawCallbacks[key] = callBack;
+    return key++;
 }
 
 void RenderSystem::removeDebugDrawCallback(int key)
 {
-    m_debugDrawCallbacks.erase(m_debugDrawCallbacks.begin() + key);
+    m_debugDrawCallbacks.erase(m_debugDrawCallbacks.find(key));
 }
 
 int RenderSystem::addText3dMessage(const char* message, const Vector3& pos)
@@ -254,14 +252,17 @@ void RenderSystem::drawLightSource(const Light& light)
     DrawLine3D(light.position, light.target, YELLOW);
 }
 
-void RenderSystem::drawText3D(const char* text, Vector3 pos)
+void RenderSystem::drawText3D()
 {
-    DrawText3D(GetFontDefault(), text, pos, 4.0f, 0.5f, 0.0f, true, WHITE, false);
+    for (const auto& [key, pair] : m_text3dMessages)
+    {
+        DrawText3D(GetFontDefault(), pair.first, pair.second, 4.0f, 0.5f, 0.0f, true, WHITE, false);
+    }
 }
 
 void RenderSystem::drawDebugGeometry()
 {
-    for (const auto& callback : m_debugDrawCallbacks)
+    for (const auto& [key, callback] : m_debugDrawCallbacks)
     {
         callback();
     }
