@@ -56,7 +56,7 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
     ImGui::Text("Settings to vary sandbox behavior!");
 
     // Render
-    if (ImGui::CollapsingHeader("Render"))
+    if (ImGui::CollapsingHeader("Render System"))
     {
         SystemDebugger<RenderSystem> renderDebugger;
 
@@ -145,7 +145,7 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
     }
     
     // Physics
-    if (ImGui::CollapsingHeader("Physics"))
+    if (ImGui::CollapsingHeader("Physics System"))
     {
         //ImGui::Checkbox("Pause simulation", &ImGui_ImplSandbox3d_Config::pauseSimulation);
         //ImGui::Checkbox("Draw scene borders", &ImGui_ImplSandbox3d_Config::drawSceneBorders);

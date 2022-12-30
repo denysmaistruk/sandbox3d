@@ -20,7 +20,6 @@ int main(int argc, char const** argv)
     Image icon = LoadImage(SANDBOX3D_ICON_PATH);
     SetWindowIcon(icon);
 
-    
     // Create scene
     action::bindAllActions();
     action::createScene();
