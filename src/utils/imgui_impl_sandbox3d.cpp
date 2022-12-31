@@ -36,7 +36,7 @@ static void fetchSleepingEntities(bool enable)
 {
     static std::map<entt::entity, int> entMsgKeyMap;
     
-    auto view = EntityRegistry::getRegistry().view<TransformComponent, PhysComponent>();
+    auto view = EntityRegistry::getRegistry().view<TransformComponent, PhysComponent>(entt::exclude<DestroyTag>);
 
     if (!enable)
     {
@@ -294,14 +294,14 @@ void ImGui_ImplSandbox3d_ShowStatsWindow(bool* open)
         ImGui::Text("fps - %.1f; %.3f ms/frame", io.Framerate, 1000.f / io.Framerate);
         auto& registry = EntityRegistry::getRegistry();
         ImGui::Text("systems - %d;", SystemIdentifier::identifier);
-        ImGui::Text("entities - %d; [lights - %d]", registry.size(), registry.view<LightComponent>().size());
+        ImGui::Text("entities - %d; [lights - %d]", registry.alive(), registry.view<LightComponent>().size());
 
         SystemDebugger<PhysSystem> physDebugger;
         const int rigidBodies = physDebugger.getRigidBodiesCount();
         const int staticBodies = physDebugger.getStaticBodiesCount();
         const int sleepingBodies = physDebugger.getSleepingBodiesCount();
         ImGui::Text("phys bodies - %d; [rigid - %d, static - %d, \nsleeping - %d]", rigidBodies + staticBodies, rigidBodies, staticBodies, sleepingBodies);
-
+        ImGui::Text("contacts - %d;", physDebugger.getContactsCount());
     }
     ImGui::End();
 }

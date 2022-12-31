@@ -38,7 +38,7 @@ RenderSystem::RenderSystem(size_t id)
 
 void RenderSystem::update(float dt)
 {
-    auto entityView = getRegistry().view<TransformComponent, RenderComponent>();
+    auto entityView = getRegistry().view<TransformComponent, RenderComponent>(entt::exclude<DestroyTag>);
     
     // Synchronize transform
     for (auto [entity, transformComponent, renderComponent] : entityView.each())

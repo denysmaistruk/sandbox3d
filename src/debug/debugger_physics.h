@@ -24,6 +24,11 @@ struct SystemDebugger<PhysSystem>
         }
     }
 
+    int getContactsCount()
+    {
+        return PhysSystem::getSystem().m_contactsCount;
+    }
+
     int getRigidBodiesCount()
     {
         return PhysSystem::getSystem().m_rigidBodiesCount;
@@ -38,5 +43,4 @@ struct SystemDebugger<PhysSystem>
     {
         return PhysSystem::getSystem().m_sleepingBodiesCount;
     }
-
 };

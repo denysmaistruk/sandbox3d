@@ -24,3 +24,8 @@ struct PhysComponent
 {
     class CollisionBody* collBody;
 };
+
+struct DestroyTag
+{
+	// Each system must exclude this tag from views
+};

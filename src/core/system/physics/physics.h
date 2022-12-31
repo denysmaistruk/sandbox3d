@@ -2,7 +2,9 @@
 #include "core/system/system_base.h"
 #include "cyclone/contacts.h"
 
-namespace cyclone {
+struct Vector3;
+namespace cyclone 
+{
     struct CollisionData;
 }
 
@@ -41,6 +43,8 @@ private:
     void onParamsChanged();
     void resetCounters();
 
+    bool isInWorldBoundaries(const Vector3& position);
+
     // Simulation parameters
     Params m_params;
 
@@ -52,6 +56,7 @@ private:
     cyclone::CollisionData* m_collisionData;
 
     // Statistics
+    int m_contactsCount;
     int m_rigidBodiesCount;
     int m_staticBodiesCount;
     int m_sleepingBodiesCount;

@@ -10,7 +10,7 @@ LightningSystem::LightningSystem(size_t id)
 
 void LightningSystem::update(float dt) 
 {
-    auto& entityView = getRegistry().view<LightComponent>();
+    auto& entityView = getRegistry().view<LightComponent>(entt::exclude<DestroyTag>);
 
     int lightsCount = 0;
     for (auto entity : entityView) 

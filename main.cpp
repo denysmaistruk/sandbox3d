@@ -4,6 +4,7 @@
 
 #include "core/action.h"
 #include "core/camera/camera_controller.h"
+#include "core/system/cleanup.h"
 #include "core/system/input/input.h"
 #include "core/system/physics/physics.h"
 #include "core/system/render.h"
@@ -32,9 +33,10 @@ int main(int argc, char const** argv)
     {        
         CameraController::update(GetFrameTime());
 
-        PhysSystem::getSystem().update(GetFrameTime() * 1.5f); // speed-up physics a bit
         InputSystem::getSystem().update(GetFrameTime());
+        PhysSystem::getSystem().update(GetFrameTime() * 1.5f); // speed-up physics simulation
         RenderSystem::getSystem().update(GetFrameTime());
+        CleanupSystem::getSystem().update(GetFrameTime());
     }
 
     // De-initialization

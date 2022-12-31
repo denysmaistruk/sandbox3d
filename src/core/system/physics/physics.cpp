@@ -10,6 +10,7 @@ PhysSystem::PhysSystem(size_t id)
     , m_contactResolver(maxContacts * 8)
     , m_collisionData(new cyclone::CollisionData{ 
         m_contacts, m_contacts, 0, 0, m_params.friction, m_params.restitution, m_params.tolerance })
+    , m_contactsCount(0)
     , m_rigidBodiesCount(0)
     , m_staticBodiesCount(0)
     , m_sleepingBodiesCount(0)
@@ -51,9 +52,9 @@ void PhysSystem::update(float dt)
 void PhysSystem::updateTransform(float dt) 
 {
     resetCounters();
+
+    auto entityView = getRegistry().view<PhysComponent, TransformComponent>(entt::exclude<DestroyTag>);
     
-    auto entityView = getRegistry().view<PhysComponent, TransformComponent>();
-   
     for (auto entity : entityView) 
     {
         auto& physComponent = entityView.get<PhysComponent>(entity);
@@ -72,6 +73,13 @@ void PhysSystem::updateTransform(float dt)
             // Update transform component
             auto& transformComponent = entityView.get<TransformComponent>(entity);
             transformComponent.transform = toRaylib(collBody->getTransform());
+
+            // Add destroy tag for entities out of wold boundaries
+            if (!isInWorldBoundaries(toRaylib(collBody->getRigidBody()->getPosition())))
+            {
+                getRegistry().emplace<DestroyTag>(entity);
+            }
+
             continue;
         }
         // Update statistics
@@ -84,7 +92,7 @@ void PhysSystem::generateContacts()
     assert(m_collisionData);
     m_collisionData->reset(maxContacts);
 
-    auto entityView = getRegistry().view<PhysComponent>();
+    auto entityView = getRegistry().view<PhysComponent>(entt::exclude<DestroyTag>);
 
     for (auto ent1 : entityView) 
     {
@@ -103,6 +111,8 @@ void PhysSystem::generateContacts()
             }
         }
     }
+    // Update statistics info
+    m_contactsCount = m_collisionData->contactCount;
 }
 
 void PhysSystem::onParamsChanged() 
@@ -115,7 +125,13 @@ void PhysSystem::onParamsChanged()
 
 void PhysSystem::resetCounters() 
 {
+    m_contactsCount = 0;
     m_rigidBodiesCount = 0;
     m_staticBodiesCount = 0;
     m_sleepingBodiesCount = 0;
+}
+
+bool PhysSystem::isInWorldBoundaries(const Vector3& position)
+{
+    return position.y > -100.f;
 }
