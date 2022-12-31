@@ -2,31 +2,42 @@
 
 static void boxBoxCollisionImpl(CollisionBox& box1, CollisionBox& box2, cyclone::CollisionData* collData) 
 {
-    if (&box1 != &box2 && collData->hasMoreContacts()) 
+    if (&box1 != &box2 && collData->hasMoreContacts())
+    {
         cyclone::CollisionDetector::boxAndBox(*box1.box, *box2.box, collData);
+    }
 }
 
 static void boxSphereCollisionImpl(CollisionBox& box, CollisionSphere& sphere, cyclone::CollisionData* collData) 
 {
     if (collData->hasMoreContacts())
+    {
         cyclone::CollisionDetector::boxAndSphere(*box.box, *sphere.sphere, collData);
+    }
 }
 
 static void boxPlaneCollisionImpl(CollisionBox& box, CollisionPlane& plane, cyclone::CollisionData* collData) 
 {
     if (collData->hasMoreContacts())
+    {
         cyclone::CollisionDetector::boxAndHalfSpace(*box.box, *plane.plane, collData);
+    }
 }
 
 static void sphereSphereCollisionImpl(CollisionSphere& sphere1, CollisionSphere& sphere2, cyclone::CollisionData* collData) 
 {
     if (&sphere1 != &sphere2 && collData->hasMoreContacts())
+    {
         cyclone::CollisionDetector::sphereAndSphere(*sphere1.sphere, *sphere2.sphere, collData);
+    }
 }
 
-static void spherePlaneCollisionImpl(CollisionSphere& sphere, CollisionPlane& plane, cyclone::CollisionData* collData) {
+static void spherePlaneCollisionImpl(CollisionSphere& sphere, CollisionPlane& plane, cyclone::CollisionData* collData) 
+{
     if (collData->hasMoreContacts())
+    {
         cyclone::CollisionDetector::sphereAndHalfSpace(*sphere.sphere, *plane.plane, collData);
+    }
 }
 
 void CollisionBody::integrate(float dt) 

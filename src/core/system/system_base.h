@@ -9,11 +9,16 @@ struct SystemIdentifier
     static size_t generateSystemId() { return identifier++; }
 };
 
+struct SystemTrait {};
+struct NullSystem : SystemTrait {};
+struct AllSystems : SystemTrait {};
+
 template<class System>
 class SystemBase
 {
 public:
     static System& getSystem();
+    static size_t getSystemsCount();
     void update(float dt);
 
 protected:
@@ -33,6 +38,18 @@ template<class System>
 void SystemBase<System>::update(float dt) 
 {
     static_cast<System*>(this)->update(dt);
+}
+
+template<>
+inline size_t SystemBase<AllSystems>::getSystemsCount()
+{
+    return SystemIdentifier::identifier;
+}
+
+template<>
+inline size_t SystemBase<NullSystem>::getSystemsCount()
+{
+    return INT_MAX;
 }
 
 template<class System>
