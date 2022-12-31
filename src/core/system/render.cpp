@@ -103,15 +103,8 @@ void RenderSystem::update(float dt)
             if (m_drawText3d)
             {
                 BeginShaderMode(m_text3dShader);
-                {
-                    // TODO: figure out how to draw text always facing to camera
-                    // rlPushMatrix();
-                    // rlRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-                    // rlRotatef(90.0f, 0.0f, 0.0f, -1.0f);
-                     
-                    drawText3D();
-                    
-                    // rlPopMatrix();
+                {  
+                    drawText3D();  
                 }
                 EndShaderMode();
             }
@@ -124,8 +117,6 @@ void RenderSystem::update(float dt)
 
             // Draw camera target
             drawGuizmo(MatrixTranslate(CameraController::getCamera().target.x, CameraController::getCamera().target.y, CameraController::getCamera().target.z));
-
-            
         }
         EndMode3D();
         
