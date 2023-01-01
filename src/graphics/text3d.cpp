@@ -5,9 +5,18 @@
 #define LETTER_BOUNDRY_SIZE 0.25f
 #define LETTER_BOUNDRY_COLOR VIOLET
 
+#define CASCADIA_FONT_PATH SANDBOX3D_RESOURCES_PATH"font/cascadia_code/ttf/CascadiaMono.ttf"
+
 Shader LoadText3DShader()
 {
     return LoadShader(nullptr, SANDBOX3D_SHADER_PATH"alpha_discard.fs");
+}
+
+Font GetFontText3D()
+{
+    static Font font = LoadFont(CASCADIA_FONT_PATH);
+    SetTextureFilter(font.texture, TEXTURE_FILTER_ANISOTROPIC_16X);
+    return font;
 }
 
 void DrawTextCodepoint3D(Font font, int codepoint, Vector3 position, float fontSize, bool backface, Color tint, bool drawBoundary)

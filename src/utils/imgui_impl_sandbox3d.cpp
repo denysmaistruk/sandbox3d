@@ -113,7 +113,7 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
     {
         SystemDebugger<RenderSystem> renderDebugger;
 
-        static bool text3d = false;
+        static bool text3d = true;
         if (ImGui::Checkbox("Text 3D", &text3d))
         {
             renderDebugger.setDrawText3d(text3d);

@@ -248,9 +248,9 @@ void RenderSystem::drawText3D()
 {
     for (const auto& [key, pair] : m_text3dMessages)
     {
-        Vector3 ext = MeasureText3D(GetFontDefault(), pair.first, 4.0f, 0.5f, 0.0f);
-        ext = Vector3Multiply(ext, Vector3{ 0.5f, 0.f, 0.5f });
-        DrawText3D(GetFontDefault(), pair.first, Vector3Subtract(pair.second, ext), 4.0f, 0.5f, 0.0f, true, WHITE, false);
+        Vector3 textSize = MeasureText3D(GetFontText3D(), pair.first, 10.0f, 4.0f, 0.0f);
+        textSize = Vector3Multiply(textSize, Vector3{ 0.5f, 0.f, 0.5f });
+        DrawText3D(GetFontText3D(), pair.first, Vector3Subtract(pair.second, textSize), 10.0f, 4.0f, 0.0f, true, WHITE, false);
     }
 }
 

@@ -18,7 +18,7 @@ int main(int argc, char const** argv)
     SetTargetFPS(SANDBOX3D_TARGET_FPS);        
     
     // Icon
-    Image icon = LoadImage(SANDBOX3D_ICON_PATH);
+    Image icon = LoadImage(SANDBOX3D_RESOURCES_PATH"icon.png");
     SetWindowIcon(icon);
 
     // Create scene
