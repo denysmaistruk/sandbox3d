@@ -65,7 +65,7 @@ void DrawTextCodepoint3D(Font font, int codepoint, Vector3 position, float fontS
         rlColor4ub(tint.r, tint.g, tint.b, tint.a);
 
         // Front Face
-        rlNormal3f(0.0f, -1.0f, 0.0f);                                // Normal Pointing Up
+        rlNormal3f(0.0f, 1.0f, 0.0f);                                // Normal Pointing Up
         rlTexCoord2f(tx, ty); rlVertex3f(x, y, z);                    // Top Left Of The Texture and Quad
         rlTexCoord2f(tx, th); rlVertex3f(x, y - height, z);           // Bottom Left Of The Texture and Quad
         rlTexCoord2f(tw, th); rlVertex3f(x + width, y - height, z);   // Bottom Right Of The Texture and Quad

@@ -48,6 +48,9 @@ private:
     void ImGuiEnd();
     void ImGuiWidgets();
 
+    void ImGuizmoBegin();
+    void ImGuizmoWidgets();
+
     ShadowMap m_shadowMap;
     Shader m_shadowShader;
     Shader m_geometryShader;

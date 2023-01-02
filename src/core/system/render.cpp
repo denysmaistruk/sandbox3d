@@ -1,6 +1,7 @@
 #include "render.h"
 
 #include "imgui.h"
+#include "imguizmo.h"
 #include "raymath.h"
 #include "rlgl.h"
 
@@ -15,6 +16,7 @@
 
 #include "utils/raylib_impl_sandbox3d.h"
 #include "utils/imgui_impl_sandbox3d.h"
+#include "utils/imguizmo_impl_sandbox3d.h"
 
 bool ImGui_ImplRaylib_Init();
 bool ImGui_ImplRaylib_ProcessEvent();
@@ -131,6 +133,7 @@ void RenderSystem::update(float dt)
 
         // Imgui set up widgets and draw
         ImGuiWidgets();
+        ImGuizmoWidgets();
         ImGuiEnd();
     }
     EndDrawing();
@@ -281,4 +284,15 @@ void RenderSystem::ImGuiWidgets()
     //ImGui::ShowDemoWindow(&open);  // demo example
     ImGui_ImplSandbox3d_ShowDebugWindow(&open);
     ImGui_ImplSandbox3d_ShowStatsWindow(&open);
+}
+
+void RenderSystem::ImGuizmoBegin()
+{
+    ImGuizmo::BeginFrame();
+}
+
+void RenderSystem::ImGuizmoWidgets()
+{
+    ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
+    ImGuizmo_ImplSandbox3d_EditTransform(CameraController::getCamera(), MatrixIdentity());
 }
