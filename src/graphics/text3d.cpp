@@ -15,7 +15,7 @@ Shader LoadText3DShader()
 Font GetFontText3D()
 {
     static Font font = LoadFont(CASCADIA_FONT_PATH);
-    SetTextureFilter(font.texture, TEXTURE_FILTER_ANISOTROPIC_16X);
+    SetTextureFilter(font.texture, TEXTURE_FILTER_TRILINEAR);
     return font;
 }
 
