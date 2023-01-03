@@ -222,7 +222,7 @@ Matrix CameraFrustum(Camera3D const& camera) {
 	double const zfar	= RL_CULL_DISTANCE_FAR;
 	double const znear	= RL_CULL_DISTANCE_NEAR;
 	double const top	= znear * tan(camera.fovy * 0.5 * DEG2RAD);
-	double const right	= top;
+	double const right	= top * 1.77777779; // aspect isn't available directly
 	double const left	= -right;
 	double const bottom	= -top;
 
