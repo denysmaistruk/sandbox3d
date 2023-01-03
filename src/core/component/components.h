@@ -16,7 +16,6 @@ struct RenderComponent
 struct LightComponent
 {
     Light light;
-    int lightId;
     Camera caster;
 };
 

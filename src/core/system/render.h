@@ -15,6 +15,8 @@ class RenderSystem : public SystemBase<RenderSystem>
     SANDBOX3D_SYSTEM_CLASS(RenderSystem);
     friend struct SystemDebugger<RenderSystem>;
 public:
+    static auto constexpr k_ambientColor = { 0.4f, 0.4f, 0.4f, 1.0f };
+
     void update(float dt);
 
     const ShadowMap& getShadowMap() { return m_shadowMap; }

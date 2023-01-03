@@ -129,7 +129,9 @@ Light CreateLight(Shader shader, int type, Vector3 position, Vector3 target, Col
 {
 	Light light = { 0 };
 
-	if (lightsCount < SANDBOX3D_MAX_LIGHTS)
+	assert(lightsCount < SANDBOX3D_MAX_LIGHTS);
+	++lightsCount;
+
 	{
 		light.enabled = true;
 		light.type = type;
@@ -150,26 +152,24 @@ Light CreateLight(Shader shader, int type, Vector3 position, Vector3 target, Col
 		char spotSoftnessName[32] = "lights[x].spotSoftness\0";
 
 		// Set location name [x] depending on lights count
-		enabledName[7] = '0' + lightsCount;
-		typeName[7] = '0' + lightsCount;
-		posName[7] = '0' + lightsCount;
-		targetName[7] = '0' + lightsCount;
-		colorName[7] = '0' + lightsCount;
-		cutoffName[7] = '0' + lightsCount;
-		lightRadiusName[7] = '0' + lightsCount;
-		spotSoftnessName[7] = '0' + lightsCount;
+		// @NOTE: for now, only one light can be active at the time; offset ignored
+		enabledName             [7] = '0'; // + lightsCount;
+		typeName                [7] = '0'; // + lightsCount;
+		posName                 [7] = '0'; // + lightsCount;
+		targetName              [7] = '0'; // + lightsCount;
+		colorName               [7] = '0'; // + lightsCount;
+		cutoffName              [7] = '0'; // + lightsCount;
+		lightRadiusName         [7] = '0'; // + lightsCount;
+		spotSoftnessName        [7] = '0'; // + lightsCount;
 
-		light.enabledLoc = GetShaderLocation(shader, enabledName);
-		light.typeLoc = GetShaderLocation(shader, typeName);
-		light.posLoc = GetShaderLocation(shader, posName);
-		light.targetLoc = GetShaderLocation(shader, targetName);
-		light.colorLoc = GetShaderLocation(shader, colorName);
-		light.cutoffLoc = GetShaderLocation(shader, cutoffName);
-		light.lightRadiusLoc = GetShaderLocation(shader, lightRadiusName);
-		light.spotSoftnessLoc = GetShaderLocation(shader, spotSoftnessName);
-
-		UpdateLightValues(shader, light);
-		++lightsCount;
+		light.enabledLoc        = GetShaderLocation(shader, enabledName);
+		light.typeLoc           = GetShaderLocation(shader, typeName);
+		light.posLoc            = GetShaderLocation(shader, posName);
+		light.targetLoc         = GetShaderLocation(shader, targetName);
+		light.colorLoc          = GetShaderLocation(shader, colorName);
+		light.cutoffLoc         = GetShaderLocation(shader, cutoffName);
+		light.lightRadiusLoc    = GetShaderLocation(shader, lightRadiusName);
+		light.spotSoftnessLoc   = GetShaderLocation(shader, spotSoftnessName);
 	}
 	return light;
 }

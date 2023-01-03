@@ -50,10 +50,12 @@ void RenderSystem::update(float dt)
     }
     
     // Update lightning and get shadow caster
-    auto& lightSystem = LightningSystem::getSystem();
-    lightSystem.setShader(m_geometryShader);
-    lightSystem.update(dt);
-    Camera caster = lightSystem.getShadowCaster();
+    auto const& lightSystem = LightningSystem::getSystem();
+    auto const& lightInfo   = lightSystem.getCurrentLight();
+    Camera  caster  = lightInfo.caster;
+    Light   light   = lightInfo.light;
+    light.position  = caster.position;
+    light.target    = caster.target;
 
     // Draw/update shadow map (z-buffer)
     ShadowMapBegin(m_shadowMap);
@@ -79,9 +81,22 @@ void RenderSystem::update(float dt)
         BeginMode3D(CameraController::getCamera());
         {
             // Update values for geometry shader
-            SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_VECTOR_VIEW], (float*)&CameraController::getCamera().position, SHADER_UNIFORM_VEC3);
-            SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_AMBIENT], new float[4] { 0.4f, 0.4f, 0.4f, 1.0f }, SHADER_UNIFORM_VEC4);
-            SetShaderValueMatrix(m_geometryShader, m_geometryShader.locs[SHADER_LOC_MAT_LIGHT], lightSystem.getLightMatrix());
+            UpdateLightValues       (m_geometryShader, light);
+            SetShaderValue          (m_geometryShader, m_geometryShader.locs[SHADER_LOC_VECTOR_VIEW], (float*)&CameraController::getCamera().position, SHADER_UNIFORM_VEC3);
+            SetShaderValue          (m_geometryShader, m_geometryShader.locs[SHADER_LOC_AMBIENT], k_ambientColor.begin(), SHADER_UNIFORM_VEC4);
+            SetShaderValueTexture   (m_geometryShader, m_geometryShader.locs[SHADER_LOC_MAP_SHADOW], m_shadowMap.depth);
+         
+            {
+                auto const caster_world = GetCameraMatrix(caster);
+                auto const caster_proj  = (caster.projection == CAMERA_PERSPECTIVE)
+                                        ? CameraFrustum (caster)
+                                        : CameraOrtho   (caster);
+                auto const caster_mat   = MatrixMultiply(caster_world, caster_proj);
+                SetShaderValueMatrix
+                    ( m_geometryShader
+                    , m_geometryShader.locs[SHADER_LOC_MAT_LIGHT]
+                    , caster_mat);
+            }
 
             // Update values for preview shader
             int casterPerspective = caster.projection == CAMERA_ORTHOGRAPHIC;

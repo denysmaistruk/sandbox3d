@@ -12,26 +12,6 @@
 
 #include "utils/raylib_impl_sandbox3d.h"
 
-struct LightsMaskLocal
-{
-    LightsMaskLocal()
-        : lights{ false }
-    {
-        lights[0] = true; // turn on fist light
-        onChanged();
-    }
-
-    void onChanged()
-    {
-        for (int i = 0; i < LightningSystem::maxLights; ++i)
-            LightningSystem::getSystem().setLightEnable(i, lights[i]);
-    }
-
-    bool lights[LightningSystem::maxLights];
-};
-
-static LightsMaskLocal lightsMaskLocal;
-
 static void fetchSleepingEntities(bool enable)
 {
     static std::map<entt::entity, int> entMsgKeyMap;
@@ -140,67 +120,19 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
         // Lights
         if (ImGui::TreeNode("Lights"))
         {
-            char lightStr[32] = "Light:@\0";
-            for (int i = 0; i < LightningSystem::maxLights; ++i)
+            auto const& lights  = EntityRegistry::getRegistry().view<LightComponent>();
+            static int current  = lights.find(LightningSystem::getSystem().getCurrentLightId()) - lights.begin();
+            char lightStr[32]   = "Light:@\0";
+            int i = 0;
+            for (auto const& entity : lights)
             {
                 lightStr[6] = '0' + i;
-
-                if (ImGui::Checkbox(lightStr, &lightsMaskLocal.lights[i]))
-                {
-                    for (int j = 0; j < LightningSystem::maxLights; ++j)
-                    {
-                        if (j == i)
-                            continue;
-                        lightsMaskLocal.lights[j] = false;
-                    }
-                }
+                if (ImGui::RadioButton(lightStr, &current, i))
+                    LightningSystem::getSystem().setCurrentLightId(entity);
+                ++i;
             }
-            lightsMaskLocal.onChanged();
             ImGui::TreePop();
         }
-
-        // Shadow caster 
-        if (ImGui::TreeNode("Shadow caster"))
-        {
-            int enabled = 0;
-            for (auto& [entity, lightComponent] : EntityRegistry::getRegistry().view<LightComponent>().each())
-            {
-                if (lightComponent.light.enabled)
-                {
-                    auto& caster = lightComponent.caster;
-                    
-                    float3 position = Vector3ToFloatV(caster.position);
-                    if (ImGui::InputFloat3("Position", position.v))
-                    {
-                        caster.position = Vector3{ position.v[0], position.v[1], position.v[2] };
-                    }
-
-                    float3 target = Vector3ToFloatV(caster.target);
-                    if (ImGui::InputFloat3("Target", target.v))
-                    {
-                        caster.target = Vector3{ target.v[0], target.v[1], target.v[2] };
-                    }
-
-                    int projectionType = caster.projection;
-                    const char* cameraTypes[] = { "PERSPECTIVE", "ORTHOGRAPHIC" };
-                    if (ImGui::Combo("Projection type", &projectionType, cameraTypes, IM_ARRAYSIZE(cameraTypes)))
-                    {
-                        caster.projection = projectionType;
-                    }
-                    ImGui::SameLine(); HelpMarker("Affects dynamic shadowing.");
-
-                    float fovy = caster.fovy;
-                    if (ImGui::InputFloat("FOV", &fovy))
-                    {
-                        caster.fovy = fovy;
-                    }
-
-                    enabled++;
-                }
-            }
-            assert(enabled <= 1);
-            ImGui::TreePop();
-        }    
     }
     
     // Physics
