@@ -4,11 +4,13 @@
 #include "raymath.h"
 
 #include "core/camera/camera_controller.h"
+#include "core/component/components.h"
 #include "core/factory/factory.h"
-#include "core/system/render.h"
 #include "core/system/input/input.h"
+#include "core/system/render.h"
 
 #include "utils/imgui_impl_sandbox3d.h"
+#include "utils/raylib_impl_sandbox3d.h"
 
 namespace action
 {
@@ -24,7 +26,7 @@ void bindAllActions()
     inputSystem.addInputEventHandler({ InputEventType::KeyDown, KEY_S }, [](const InputEvent&) { action::moveCameraBack(); });
     inputSystem.addInputEventHandler({ InputEventType::KeyDown, KEY_A }, [](const InputEvent&) { action::moveCameraLeft(); });
     inputSystem.addInputEventHandler({ InputEventType::KeyDown, KEY_D }, [](const InputEvent&) { action::moveCameraRight(); });
-    inputSystem.addInputEventHandler({ InputEventType::KeyPressed, KEY_P }, [](const InputEvent&) { action::pauseSimulation(); });
+    inputSystem.addInputEventHandler({ InputEventType::MouseButtonPressed, MOUSE_BUTTON_LEFT }, [](const InputEvent&) { action::clickEntity(); });
 }
 
 void createScene()
@@ -98,9 +100,39 @@ void moveCameraRight()
     camera.target = Vector3Add(camera.target, Vector3Scale(direction, 0.5f));
 }
 
-void pauseSimulation()
+void clickEntity()
 {
+    if (!IsKeyDown(KEY_LEFT_CONTROL))
+    {
+        return;
+    }
+
+    Ray ray = GetMouseRay(GetMousePosition(),CameraController::getCamera());
+    RayCollision collision = { false, 100000.f, Vector3Zero(), Vector3Zero()};
+    entt::entity collEntity;
+
+    auto& registry = EntityRegistry::getRegistry();
+    auto& entityView = registry.view<RenderComponent>(entt::exclude<DestroyTag, ClickedEntityTag>);
     
+    for (auto [entity, renderComponent] : entityView.each())
+    {
+        RayCollision collisionTemp = GetRayCollisionBox(ray, GetModelBoundingBoxTransformed(renderComponent.model));
+        if (collisionTemp.hit && collisionTemp.distance < collision.distance)
+        {
+            collision = collisionTemp;
+            collEntity = entity;
+        }
+    }
+
+    if (collision.hit && registry.valid(collEntity))
+    {
+        for (auto [entity] : registry.view<ClickedEntityTag>().each())
+        {
+            registry.remove<ClickedEntityTag>(entity);
+        }
+
+        registry.emplace<ClickedEntityTag>(collEntity);
+    }
 }
 
 } // action

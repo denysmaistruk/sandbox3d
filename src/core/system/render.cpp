@@ -43,11 +43,15 @@ void RenderSystem::update(float dt)
     auto entityView = getRegistry().view<TransformComponent, RenderComponent>(entt::exclude<DestroyTag>);
     
     // Synchronize transform
-    for (auto [entity, transformComponent, renderComponent] : entityView.each())
+
+    if (!PhysSystem::getSystem().getIsPaused())
     {
-        renderComponent.model.transform = transformComponent.transform;
+        for (auto [entity, transformComponent, renderComponent] : entityView.each())
+        {
+            renderComponent.model.transform = transformComponent.transform;
+        }
     }
-        
+    
     // Update lightning and get shadow caster
     auto& lightSystem = LightningSystem::getSystem();
     lightSystem.setShader(m_geometryShader);
@@ -114,11 +118,13 @@ void RenderSystem::update(float dt)
             // All registered debug geometry
             drawDebugGeometry();
 
+            drawClicked();
+
             // Draw basis vector
-            drawGuizmo(MatrixIdentity());
+            DrawGuizmo(MatrixIdentity());
 
             // Draw camera target
-            drawGuizmo(MatrixTranslate(CameraController::getCamera().target.x, CameraController::getCamera().target.y, CameraController::getCamera().target.z));
+            DrawGuizmo(MatrixTranslate(CameraController::getCamera().target.x, CameraController::getCamera().target.y, CameraController::getCamera().target.z));
         }
         EndMode3D();
         
@@ -265,6 +271,15 @@ void RenderSystem::drawDebugGeometry()
     }
 }
 
+void RenderSystem::drawClicked()
+{
+    auto& entityView = EntityRegistry::getRegistry().view<RenderComponent, ClickedEntityTag>(entt::exclude<DestroyTag>);
+    for (auto [entity, renderComponent] : entityView.each())
+    {
+        DrawBoundingBox(GetModelBoundingBoxTransformed(renderComponent.model), WHITE);
+    }
+}
+
 void RenderSystem::ImGuiBegin()
 {
     ImGui_ImplRaylib_NewFrame();
@@ -293,6 +308,16 @@ void RenderSystem::ImGuizmoBegin()
 
 void RenderSystem::ImGuizmoWidgets()
 {
+    // No manipulations when physics running
+    if (!PhysSystem::getSystem().getIsPaused())
+    {
+        return;
+    }
+
     ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
-    ImGuizmo_ImplSandbox3d_EditTransform(CameraController::getCamera(), MatrixIdentity());
+
+    for (auto& [entity, transformComponent] : EntityRegistry::getRegistry().view<TransformComponent, ClickedEntityTag>().each())
+    {
+        ImGuizmo_ImplSandbox3d_EditTransform(CameraController::getCamera(), transformComponent.transform);
+    }
 }

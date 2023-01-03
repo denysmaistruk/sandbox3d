@@ -43,4 +43,9 @@ struct SystemDebugger<PhysSystem>
     {
         return PhysSystem::getSystem().m_sleepingBodiesCount;
     }
+
+    void setUpdatePaused(bool paused)
+    {
+        PhysSystem::getSystem().m_isUpdatePaused = paused;
+    }
 };

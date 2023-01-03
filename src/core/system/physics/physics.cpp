@@ -14,13 +14,14 @@ PhysSystem::PhysSystem(size_t id)
     , m_rigidBodiesCount(0)
     , m_staticBodiesCount(0)
     , m_sleepingBodiesCount(0)
+    , m_isUpdatePaused(false)
 {
     cyclone::setSleepEpsilon(SANDBOX3D_PHYSICS_SLEEP_EPSILON);
 }
 
 void PhysSystem::update(float dt) 
 {
-    if (dt <= 0.0f) 
+    if (dt <= 0.0f || m_isUpdatePaused) 
     {
         return;
     }

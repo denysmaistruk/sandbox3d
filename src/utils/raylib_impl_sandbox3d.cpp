@@ -2,7 +2,7 @@
 
 #include "raymath.h"
 
-Mesh genMeshPlaneTiled(float width, float length, int resX, int resZ, int tilesX, int tilesZ)
+Mesh GenMeshPlaneTiled(float width, float length, int resX, int resZ, int tilesX, int tilesZ)
 {
 
     Mesh mesh = { 0 };
@@ -136,7 +136,7 @@ Mesh genMeshPlaneTiled(float width, float length, int resX, int resZ, int tilesX
     return mesh;
 }
 
-void drawGuizmo(Matrix transform)
+void DrawGuizmo(Matrix transform)
 {
     Vector3 origin = Vector3Transform(Vector3Zero(), transform);
     DrawLine3D(origin, Vector3Transform(Vector3{ 1.f, 0.f, 0.f }, transform), RED);
@@ -147,4 +147,65 @@ void drawGuizmo(Matrix transform)
 Vector3 Vector3Translate(Vector3 v, Matrix mat)
 {
     return Vector3{ v.x + mat.m12, v.y + mat.m13, v.z + mat.m14 };
+}
+
+
+BoundingBox GetMeshBoundingBoxTransfomed(Mesh mesh, Matrix transform)
+{
+    // Get min and max vertex to construct bounds (AABB)
+    Vector3 minVertex = { 0 };
+    Vector3 maxVertex = { 0 };
+
+    if (mesh.vertices != nullptr)
+    {
+        Vector3 vertexInit = { mesh.vertices[0], mesh.vertices[1], mesh.vertices[2] };
+        vertexInit = Vector3Transform(vertexInit, transform);
+        
+        minVertex = vertexInit;
+        maxVertex = vertexInit;
+
+        for (int i = 1; i < mesh.vertexCount; i++)
+        {
+            Vector3 vertex{ mesh.vertices[i * 3], mesh.vertices[i * 3 + 1], mesh.vertices[i * 3 + 2] };
+            vertex = Vector3Transform(vertex, transform);
+
+            minVertex = Vector3Min(minVertex, vertex);
+            maxVertex = Vector3Max(maxVertex, vertex);
+        }
+    }
+
+    // Create the bounding box
+    BoundingBox box = { 0 };
+    box.min = minVertex;
+    box.max = maxVertex;
+
+    return box;
+}
+
+BoundingBox GetModelBoundingBoxTransformed(Model model)
+{
+    BoundingBox bounds = { 0 };
+
+    if (model.meshCount > 0)
+    {
+        Vector3 temp = { 0 };
+        bounds = GetMeshBoundingBoxTransfomed(model.meshes[0], model.transform);
+
+        for (int i = 1; i < model.meshCount; i++)
+        {
+            BoundingBox tempBounds = GetMeshBoundingBox(model.meshes[i]);
+
+            temp.x = (bounds.min.x < tempBounds.min.x) ? bounds.min.x : tempBounds.min.x;
+            temp.y = (bounds.min.y < tempBounds.min.y) ? bounds.min.y : tempBounds.min.y;
+            temp.z = (bounds.min.z < tempBounds.min.z) ? bounds.min.z : tempBounds.min.z;
+            bounds.min = temp;
+
+            temp.x = (bounds.max.x > tempBounds.max.x) ? bounds.max.x : tempBounds.max.x;
+            temp.y = (bounds.max.y > tempBounds.max.y) ? bounds.max.y : tempBounds.max.y;
+            temp.z = (bounds.max.z > tempBounds.max.z) ? bounds.max.z : tempBounds.max.z;
+            bounds.max = temp;
+        }
+    }
+
+    return bounds;
 }

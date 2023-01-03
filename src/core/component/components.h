@@ -29,3 +29,8 @@ struct DestroyTag
 {
 	// Each system must exclude this tag from views
 };
+
+struct ClickedEntityTag
+{
+    // Used for clicking and selecting entities
+};

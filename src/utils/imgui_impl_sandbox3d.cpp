@@ -206,9 +206,15 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
     // Physics
     if (ImGui::CollapsingHeader("Physics System"))
     {
-        //ImGui::Checkbox("Pause simulation", &ImGui_ImplSandbox3d_Config::pauseSimulation);
-        //ImGui::Checkbox("Draw scene borders", &ImGui_ImplSandbox3d_Config::drawSceneBorders);
-        
+        static bool runPhysics = true;
+        ImGui::PushStyleColor(ImGuiCol_Button, runPhysics ? (ImVec4)ImColor(0.75f, 0.25f, 0.25f) : (ImVec4)ImColor(0.1f, 0.45f, 0.1f));
+        if (ImGui::Button(runPhysics ? "Stop Physics" : "Run Physics", { 100, 20 }))
+        {
+            runPhysics = !runPhysics;
+            SystemDebugger<PhysSystem>().setUpdatePaused(!runPhysics);
+        }
+        ImGui::PopStyleColor();
+
         static bool drawSleepingMarkers = false;
         if (ImGui::Checkbox("Draw sleeping markers", &drawSleepingMarkers))
         {

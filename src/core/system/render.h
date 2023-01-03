@@ -43,6 +43,7 @@ private:
     void drawLightSource(const Light& light);
     void drawText3D();
     void drawDebugGeometry();
+    void drawClicked();
     
     void ImGuiBegin();
     void ImGuiEnd();

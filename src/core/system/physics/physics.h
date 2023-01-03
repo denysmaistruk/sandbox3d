@@ -28,7 +28,8 @@ public:
     };
     
     void update(float dt);
-
+    bool getIsPaused() const { return m_isUpdatePaused; }
+   
     const Params& getParams() const { return m_params; }
     void setParams(const Params& params) { m_params = params; onParamsChanged(); }
 
@@ -60,4 +61,6 @@ private:
     int m_rigidBodiesCount;
     int m_staticBodiesCount;
     int m_sleepingBodiesCount;
+
+    bool m_isUpdatePaused;
 };

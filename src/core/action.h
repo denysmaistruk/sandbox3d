@@ -18,6 +18,6 @@ namespace action
     void moveCameraLeft();
     void moveCameraRight();
 
-    // Simulation
-    void pauseSimulation();
+    // 
+    void clickEntity();
 }
