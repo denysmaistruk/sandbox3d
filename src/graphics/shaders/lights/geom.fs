@@ -13,12 +13,13 @@ uniform vec4 colDiffuse;
 uniform vec3 viewPos;
 uniform float shadowFactor;
 
-#define     MAX_LIGHTS              4
+#define     SANDBOX3D_MAX_LIGHTS    4
 #define     LIGHT_DIRECTIONAL       0
 #define     LIGHT_POINT             1
 #define     LIGHT_SPOT              2
 
-struct Light {
+struct Light 
+{
     int enabled;
     int type;
     vec3 position;
@@ -30,7 +31,7 @@ struct Light {
 };
 
 // Input lighting values
-uniform Light lights[MAX_LIGHTS];
+uniform Light lights[SANDBOX3D_MAX_LIGHTS];
 uniform vec4 ambient;
 
 // Output fragment color
@@ -53,7 +54,8 @@ const vec2 poissonDisk[16] = vec2[] (
     vec2(0.19984126, 0.78641367),    vec2(0.14383161, -0.14100790) 
 );
 
-float random(vec3 seed, int i) {
+float random(vec3 seed, int i) 
+{
     vec4 seed4 = vec4(seed, i);
     float dotSeed4 = dot(seed4, vec4(12.9898, 78.233, 45.164, 94.673));
     return fract(sin(dotSeed4) * 43758.5453);
@@ -68,10 +70,14 @@ float ShadowCalc(vec4 p, float bias)
     float texDepth = texture(shadowMap, projCoords.xy).r;
 
     float shadow = 0.0;
-    if (usePoisondDisk) {
-        for (int x = -1; x <= 1; ++x) {
-            for (int y = -1; y <= 1; ++y) {
-                for (int i = 0; i < 4; ++i) {
+    if (usePoisondDisk) 
+    {
+        for (int x = -1; x <= 1; ++x) 
+        {
+            for (int y = -1; y <= 1; ++y) 
+            {
+                for (int i = 0; i < 4; ++i) 
+                {
                     int index = int(16.0 * random(fragPosition, i)) % 16;
                     float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize + poissonDisk[index] / 5000.0).r; 
                     shadow += depth - bias < pcfDepth ? 0.0 : 0.25;        
@@ -79,9 +85,12 @@ float ShadowCalc(vec4 p, float bias)
             }    
         }
     }
-    else {
-        for (int x = -1; x <= 1; ++x) {
-            for (int y = -1; y <= 1; ++y) {
+    else 
+    {
+        for (int x = -1; x <= 1; ++x) 
+        {
+            for (int y = -1; y <= 1; ++y) 
+            {
                 float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
                 shadow += depth - bias < pcfDepth ? 0.0 : 1.0;        
             }    
@@ -103,8 +112,7 @@ void main()
     vec3 lightDot = vec3(0.0);
     vec3 specular = vec3(0.0);
     
-    bool directionalLightOnly = false;
-    for (int i = 0; i < MAX_LIGHTS; i++)
+    for (int i = 0; i < SANDBOX3D_MAX_LIGHTS; ++i)
     {
         if (lights[i].enabled == 1)
         {
@@ -113,13 +121,11 @@ void main()
             if (lights[i].type == LIGHT_DIRECTIONAL)
             {
                 light = -normalize(lights[i].target - lights[i].position);
-                directionalLightOnly = true;
             }
 
             if (lights[i].type == LIGHT_POINT)
             {
                 light = normalize(lights[i].position - fragPosition);
-                directionalLightOnly = false;
             }
 
             if (lights[i].type == LIGHT_SPOT)
@@ -134,15 +140,16 @@ void main()
                 float theta = dot(-light, normalize(lights[i].target - lights[i].position));
                 float epsilon = lights[i].cutoff - lights[i].spotSoftness;
                 spot = clamp((theta - lights[i].cutoff) / epsilon, 0.0, 1.0);
-                directionalLightOnly = false;
             }
 
             float NdotL = max(dot(normal, light), 0.1);
             lightDot += lights[i].color.rgb * NdotL * spot * attenuation;
 
             float specCo = 0.0;
-            if (lights[i].type != LIGHT_SPOT && NdotL > 0.0) 
+            if (lights[i].type != LIGHT_SPOT && NdotL > 0.0)
+            {
                 specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
+            }
             specular += specCo;
         }
     }
@@ -154,15 +161,13 @@ void main()
     // float bias = 0.00005f * tan(acos(NdotLSum));
     
     float shadow = 0.0;
-    if (directionalLightOnly) 
-    {
-        const float bias = -0.0005;
-        shadow = ShadowCalc(shadowPos, bias);
-    }
+    const float bias = -0.0005;
+    shadow = ShadowCalc(shadowPos, bias);
+    
 
     // HACK: currently shadow casts by one source of directional light, should be changed to account any source
     // Turn off shadows for fragments facing from the light source 
-    // for (int i = 0; i < MAX_LIGHTS; i++)
+    // for (int i = 0; i < SANDBOX3D_MAX_LIGHTS; i++)
     // {    
     //     if (lights[i].type == LIGHT_DIRECTIONAL)
     //     {
