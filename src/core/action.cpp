@@ -124,19 +124,27 @@ void clickEntity()
         }
     }
 
+    auto clearAllClicked = [&registry]() 
+    {
+        for (auto [entity] : registry.view<ClickedEntityTag>().each())
+        {
+            registry.remove<ClickedEntityTag>(entity);
+        }
+    };
+
     if (collision.hit && registry.valid(collEntity))
     {
-        bool wasClicked = registry.remove<ClickedEntityTag>(collEntity);
+        bool clickedBefore = registry.remove<ClickedEntityTag>(collEntity);
         
-        if (!wasClicked)
+        if (!clickedBefore)
         {
-            // Clear all other selections
-            for (auto [entity] : registry.view<ClickedEntityTag>().each())
-            {
-                registry.remove<ClickedEntityTag>(entity);
-            }
+            clearAllClicked();
             registry.emplace<ClickedEntityTag>(collEntity);
         }
+    }
+    else
+    {
+        clearAllClicked();
     }
 }
 

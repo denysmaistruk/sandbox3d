@@ -69,6 +69,6 @@ void ImGuizmo_ImplSandbox3d_EditTransform(const Camera& camera, Matrix& matrix)
     ImGuiIO& io = ImGui::GetIO();
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
     
-    if (ImGuizmo::Manipulate(MatrixToFloat(GetCameraView(camera)), MatrixToFloat(GetCameraProjection(camera)), operation, mode, matrix16, nullptr, nullptr))
+    ImGuizmo::Manipulate(MatrixToFloat(GetCameraView(camera)), MatrixToFloat(GetCameraProjection(camera)), operation, mode, matrix16, nullptr, nullptr);
     matrix = MatrixFromFloat(matrix16);
 }
