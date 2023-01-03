@@ -30,3 +30,14 @@ cyclone::Matrix4 toCyclone(const Matrix& mat)
     mat4.data[8] = mat.m2; mat4.data[9] = mat.m6; mat4.data[10] = mat.m10; mat4.data[11] = mat.m14;
     return mat4;
 }
+
+// Quaternion
+Quaternion toRaylib(const cyclone::Quaternion& q)
+{
+    return { (float)q.i, (float)q.j, (float)q.k, (float)q.r };
+}
+
+cyclone::Quaternion toCyclone(const Quaternion& q)
+{
+    return { q.w, q.x, q.y, q.z };
+}

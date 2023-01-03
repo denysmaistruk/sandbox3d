@@ -9,6 +9,7 @@
 
 #include "core/component/components.h"
 #include "core/system/lightning.h"
+#include "core/system/physics/collision.h"
 #include "core/system/physics/physics.h"
 #include "core/camera/camera_controller.h"
 
@@ -43,13 +44,9 @@ void RenderSystem::update(float dt)
     auto entityView = getRegistry().view<TransformComponent, RenderComponent>(entt::exclude<DestroyTag>);
     
     // Synchronize transform
-
-    if (!PhysSystem::getSystem().getIsPaused())
+    for (auto [entity, transformComponent, renderComponent] : entityView.each())
     {
-        for (auto [entity, transformComponent, renderComponent] : entityView.each())
-        {
-            renderComponent.model.transform = transformComponent.transform;
-        }
+        renderComponent.model.transform = transformComponent.transform;
     }
     
     // Update lightning and get shadow caster
@@ -118,7 +115,8 @@ void RenderSystem::update(float dt)
             // All registered debug geometry
             drawDebugGeometry();
 
-            drawClicked();
+            // Highlight user selection
+            //drawClicked();
 
             // Draw basis vector
             DrawGuizmo(MatrixIdentity());
@@ -316,8 +314,17 @@ void RenderSystem::ImGuizmoWidgets()
 
     ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
 
-    for (auto& [entity, transformComponent] : EntityRegistry::getRegistry().view<TransformComponent, ClickedEntityTag>().each())
+    for (auto& [entity, transformComponent, physComponent] : EntityRegistry::getRegistry().view<TransformComponent, PhysComponent, ClickedEntityTag>().each())
     {
-        ImGuizmo_ImplSandbox3d_EditTransform(CameraController::getCamera(), transformComponent.transform);
+        Matrix& transform = transformComponent.transform;
+
+        ImGuizmo_ImplSandbox3d_EditTransform(CameraController::getCamera(), transform);
+        
+        cyclone::Vector3 position = toCyclone(Vector3Translate(Vector3Zero(), transform));
+        physComponent.collBody->getRigidBody()->setPosition(position.x, position.y, position.z);
+        cyclone::Quaternion orientation = toCyclone(QuaternionFromMatrix(transform));
+        physComponent.collBody->getRigidBody()->setOrientation(orientation);
+        physComponent.collBody->getRigidBody()->calculateDerivedData();
+        //physComponent.collBody->getPrimitive()->calculateInternals();
     }
 }

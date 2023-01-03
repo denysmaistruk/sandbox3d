@@ -1,6 +1,7 @@
 #pragma once
 
 #include "raylib.h"
+#include "raymath.h"
 
 void DrawGuizmo(Matrix transform);
 
@@ -11,3 +12,7 @@ Vector3 Vector3Translate(Vector3 v, Matrix mat);
 BoundingBox GetMeshBoundingBoxTransfomed(Mesh mesh, Matrix transform);
 
 BoundingBox GetModelBoundingBoxTransformed(Model model);
+
+Matrix MatrixFromFloat(float* vec);
+
+Matrix MatrixFromFloat(float16 vec);

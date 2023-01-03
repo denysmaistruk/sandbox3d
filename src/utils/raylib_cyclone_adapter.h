@@ -10,3 +10,7 @@ cyclone::Vector3 toCyclone(const Vector3& vec);
 // Matrix
 Matrix toRaylib(const cyclone::Matrix4& mat);
 cyclone::Matrix4 toCyclone(const Matrix& mat);
+
+// Quaternion
+Quaternion toRaylib(const cyclone::Quaternion& q);
+cyclone::Quaternion toCyclone(const Quaternion& q);

@@ -1,7 +1,5 @@
 #include "raylib_impl_sandbox3d.h"
 
-#include "raymath.h"
-
 Mesh GenMeshPlaneTiled(float width, float length, int resX, int resZ, int tilesX, int tilesZ)
 {
 
@@ -208,4 +206,33 @@ BoundingBox GetModelBoundingBoxTransformed(Model model)
     }
 
     return bounds;
+}
+
+Matrix MatrixFromFloat(float* v)
+{
+    Matrix mat = { 0 };
+
+    mat.m0 = v[0];
+    mat.m1 = v[1];
+    mat.m2 = v[2];
+    mat.m3 = v[3];
+    mat.m4 = v[4];
+    mat.m5 = v[5];
+    mat.m6 = v[6];
+    mat.m7 = v[7];
+    mat.m8 = v[8];
+    mat.m9 = v[9];
+    mat.m10 = v[10];
+    mat.m11 = v[11];
+    mat.m12 = v[12];
+    mat.m13 = v[13];
+    mat.m14 = v[14];
+    mat.m15 = v[15];
+
+    return mat;
+}
+
+Matrix MatrixFromFloat(float16 vec)
+{
+    return MatrixFromFloat(vec.v);
 }

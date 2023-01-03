@@ -6,6 +6,8 @@
 
 #include "graphics/lights.h"
 
+#include "utils/raylib_impl_sandbox3d.h"
+
 static Matrix GetCameraView(const Camera& camera)
 {
     assert(camera.projection == CAMERA_PERSPECTIVE);
@@ -20,6 +22,8 @@ static Matrix GetCameraProjection(const Camera& camera)
 
 void ImGuizmo_ImplSandbox3d_EditTransform(const Camera& camera, Matrix& matrix)
 {
+    float* matrix16 = MatrixToFloat(matrix);
+
     static ImGuizmo::OPERATION operation(ImGuizmo::ROTATE);
     static ImGuizmo::MODE mode(ImGuizmo::MODE::WORLD);
 
@@ -40,14 +44,13 @@ void ImGuizmo_ImplSandbox3d_EditTransform(const Camera& camera, Matrix& matrix)
         operation = ImGuizmo::SCALE;
     }
     
-    float matrixTranslation[3], matrixRotation[3], matrixScale[3];
-    //ImGuizmo::DecomposeMatrixToComponents(matrix.m16, matrixTranslation, matrixRotation, matrixScale);
-    ImGuizmo::DecomposeMatrixToComponents(MatrixToFloat(matrix), matrixTranslation, matrixRotation, matrixScale);
+    /*float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+    ImGuizmo::DecomposeMatrixToComponents(matrix16, matrixTranslation, matrixRotation, matrixScale);
     ImGui::InputFloat3("Tr", matrixTranslation);
     ImGui::InputFloat3("Rt", matrixRotation);
     ImGui::InputFloat3("Sc", matrixScale);
-    
-    ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, MatrixToFloat(matrix));
+
+    ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix16);*/
 
     if (operation != ImGuizmo::SCALE)
     {
@@ -65,11 +68,7 @@ void ImGuizmo_ImplSandbox3d_EditTransform(const Camera& camera, Matrix& matrix)
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-    //ImGuizmo::Manipulate(camera.mView.m16, camera.mProjection.m16, currentGizmoOperation, currentGizmoMode, MatrixToFloat(matrix), NULL, useSnap ? &snap.x : NULL);
     
-    if (ImGuizmo::Manipulate(MatrixToFloat(GetCameraView(camera)), MatrixToFloat(GetCameraProjection(camera)), operation, mode, MatrixToFloat(matrix), nullptr, nullptr))
-    {
-        int i = 42;
-        int j = i;
-    }
+    if (ImGuizmo::Manipulate(MatrixToFloat(GetCameraView(camera)), MatrixToFloat(GetCameraProjection(camera)), operation, mode, matrix16, nullptr, nullptr))
+    matrix = MatrixFromFloat(matrix16);
 }
