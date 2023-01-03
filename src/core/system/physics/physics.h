@@ -40,6 +40,7 @@ protected:
 
 private:
     void updateTransform(float dt);
+    void updateTrasformClicked(float dt);
     void generateContacts();
     void onParamsChanged();
     void resetCounters();

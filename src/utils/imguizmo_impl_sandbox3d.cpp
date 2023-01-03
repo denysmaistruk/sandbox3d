@@ -24,7 +24,7 @@ void ImGuizmo_ImplSandbox3d_EditTransform(const Camera& camera, Matrix& matrix)
 {
     float* matrix16 = MatrixToFloat(matrix);
 
-    static ImGuizmo::OPERATION operation(ImGuizmo::ROTATE);
+    static ImGuizmo::OPERATION operation(ImGuizmo::TRANSLATE);
     static ImGuizmo::MODE mode(ImGuizmo::MODE::WORLD);
 
     if (ImGui::RadioButton("Translate", operation == ImGuizmo::TRANSLATE))
@@ -44,13 +44,13 @@ void ImGuizmo_ImplSandbox3d_EditTransform(const Camera& camera, Matrix& matrix)
         operation = ImGuizmo::SCALE;
     }
     
-    /*float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+    float matrixTranslation[3], matrixRotation[3], matrixScale[3];
     ImGuizmo::DecomposeMatrixToComponents(matrix16, matrixTranslation, matrixRotation, matrixScale);
     ImGui::InputFloat3("Tr", matrixTranslation);
     ImGui::InputFloat3("Rt", matrixRotation);
     ImGui::InputFloat3("Sc", matrixScale);
 
-    ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix16);*/
+    ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix16);
 
     if (operation != ImGuizmo::SCALE)
     {

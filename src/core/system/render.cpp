@@ -306,25 +306,11 @@ void RenderSystem::ImGuizmoBegin()
 
 void RenderSystem::ImGuizmoWidgets()
 {
-    // No manipulations when physics running
-    if (!PhysSystem::getSystem().getIsPaused())
-    {
-        return;
-    }
-
     ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
 
     for (auto& [entity, transformComponent, physComponent] : EntityRegistry::getRegistry().view<TransformComponent, PhysComponent, ClickedEntityTag>().each())
     {
-        Matrix& transform = transformComponent.transform;
-
+        Matrix&  transform = transformComponent.transform;
         ImGuizmo_ImplSandbox3d_EditTransform(CameraController::getCamera(), transform);
-        
-        cyclone::Vector3 position = toCyclone(Vector3Translate(Vector3Zero(), transform));
-        physComponent.collBody->getRigidBody()->setPosition(position.x, position.y, position.z);
-        cyclone::Quaternion orientation = toCyclone(QuaternionFromMatrix(transform));
-        physComponent.collBody->getRigidBody()->setOrientation(orientation);
-        physComponent.collBody->getRigidBody()->calculateDerivedData();
-        //physComponent.collBody->getPrimitive()->calculateInternals();
     }
 }

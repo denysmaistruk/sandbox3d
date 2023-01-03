@@ -4,6 +4,7 @@
 #include "core/component/components.h"
 #include "cyclone/collide_fine.h"
 #include "utils/raylib_cyclone_adapter.h"
+#include "utils/raylib_impl_sandbox3d.h"
 
 PhysSystem::PhysSystem(size_t id)  
     : m_params{ 8, 0.033f, 0.5f, 0.3f, 0.1f }
@@ -21,6 +22,9 @@ PhysSystem::PhysSystem(size_t id)
 
 void PhysSystem::update(float dt) 
 {
+    // Update from used input
+    updateTrasformClicked(dt);
+
     if (dt <= 0.0f || m_isUpdatePaused) 
     {
         return;
@@ -54,7 +58,7 @@ void PhysSystem::updateTransform(float dt)
 {
     resetCounters();
 
-    auto entityView = getRegistry().view<PhysComponent, TransformComponent>(entt::exclude<DestroyTag>);
+    auto entityView = getRegistry().view<PhysComponent, TransformComponent>(entt::exclude<DestroyTag, ClickedEntityTag>);
     
     for (auto entity : entityView) 
     {
@@ -88,12 +92,31 @@ void PhysSystem::updateTransform(float dt)
     }
 }
 
+void PhysSystem::updateTrasformClicked(float dt)
+{
+    auto entityView = getRegistry().view<PhysComponent, TransformComponent, ClickedEntityTag>(entt::exclude<DestroyTag>);
+    for (auto [entity, physComponent, transformComponent] : entityView.each())
+    {
+        if (CollisionBody* body = physComponent.collBody; body->isDynamic())
+        {
+            Matrix transform = transformComponent.transform;
+
+            cyclone::Vector3 position = toCyclone(Vector3Translate(Vector3Zero(), transform));
+            cyclone::Quaternion orientation = toCyclone(QuaternionFromMatrix(transform));
+            body->getRigidBody()->setPosition(position.x, position.y, position.z);
+            body->getRigidBody()->setOrientation(orientation);
+            body->getRigidBody()->setAwake(true);
+            body->getRigidBody()->calculateDerivedData();
+        }
+    }
+}
+
 void PhysSystem::generateContacts() 
 {
     assert(m_collisionData);
     m_collisionData->reset(maxContacts);
 
-    auto entityView = getRegistry().view<PhysComponent>(entt::exclude<DestroyTag>);
+    auto entityView = getRegistry().view<PhysComponent>(entt::exclude<DestroyTag, ClickedEntityTag>);
 
     for (auto ent1 : entityView) 
     {

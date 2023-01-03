@@ -112,7 +112,7 @@ void clickEntity()
     entt::entity collEntity;
 
     auto& registry = EntityRegistry::getRegistry();
-    auto& entityView = registry.view<RenderComponent>(entt::exclude<DestroyTag, ClickedEntityTag>);
+    auto& entityView = registry.view<RenderComponent>(entt::exclude<DestroyTag>);
     
     for (auto [entity, renderComponent] : entityView.each())
     {
@@ -126,12 +126,17 @@ void clickEntity()
 
     if (collision.hit && registry.valid(collEntity))
     {
-        for (auto [entity] : registry.view<ClickedEntityTag>().each())
+        bool wasClicked = registry.remove<ClickedEntityTag>(collEntity);
+        
+        if (!wasClicked)
         {
-            registry.remove<ClickedEntityTag>(entity);
+            // Clear all other selections
+            for (auto [entity] : registry.view<ClickedEntityTag>().each())
+            {
+                registry.remove<ClickedEntityTag>(entity);
+            }
+            registry.emplace<ClickedEntityTag>(collEntity);
         }
-
-        registry.emplace<ClickedEntityTag>(collEntity);
     }
 }
 
