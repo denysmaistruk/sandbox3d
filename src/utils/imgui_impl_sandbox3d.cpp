@@ -25,7 +25,7 @@ static void fetchSleepingEntities(bool enable)
         {
             for (auto [entity, index] : entMsgKeyMap)
             {
-                RenderSystem::getSystem().removeText3dMessage(index);
+                RenderSystem::getSystem().removeTextMessage(index);
             }
             entMsgKeyMap.clear();
         }
@@ -43,19 +43,19 @@ static void fetchSleepingEntities(bool enable)
             if (entMsgKeyMap.find(entity) == entMsgKeyMap.end())
             {
                 // Add new
-                entMsgKeyMap[entity] = RenderSystem::getSystem().addText3dMessage(msg, msgPos);
+                entMsgKeyMap[entity] = RenderSystem::getSystem().addTextMessage(msg, msgPos);
             }
             else
             {
                 // Update existing
-                RenderSystem::getSystem().updateText3dMessage(entMsgKeyMap[entity], msg, msgPos);
+                RenderSystem::getSystem().updateTextMessage(entMsgKeyMap[entity], msg, msgPos);
             }
         }
         else // not sleeping
         {
             if (entMsgKeyMap.find(entity) != entMsgKeyMap.end())
             {
-                RenderSystem::getSystem().removeText3dMessage(entMsgKeyMap[entity]);
+                RenderSystem::getSystem().removeTextMessage(entMsgKeyMap[entity]);
                 entMsgKeyMap.erase(entMsgKeyMap.find(entity));
             }
         }
@@ -93,10 +93,10 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
     {
         SystemDebugger<RenderSystem> renderDebugger;
 
-        static bool text3d = true;
-        if (ImGui::Checkbox("Text 3D", &text3d))
+        static bool drawText = true;
+        if (ImGui::Checkbox("Draw Text", &drawText))
         {
-            renderDebugger.setDrawText3d(text3d);
+            renderDebugger.setDrawText(drawText);
         }
 
         static bool wires = false;

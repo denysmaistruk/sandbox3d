@@ -30,7 +30,7 @@ RenderSystem::RenderSystem(size_t id)
     : m_isWiresMode(false)
     , m_drawShadowMap(false)
     , m_drawLightSource(false)
-    , m_drawText3d(true)
+    , m_drawText(true)
 {
     m_shadowMap = LoadShadowMap(SANDBOX3D_SHADOW_MAP_WIDTH, SANDBOX3D_SHADOW_MAP_WIDTH);
     m_shadowShader = LoadShadowShader();
@@ -119,7 +119,7 @@ void RenderSystem::update(float dt)
                 }
             }
             
-            if (m_drawText3d)
+            if (m_drawText)
             {
                 BeginShaderMode(m_text3dShader);
                 {  
@@ -142,6 +142,11 @@ void RenderSystem::update(float dt)
         }
         EndMode3D();
         
+        if (m_drawText)
+        {
+            drawText();
+        }
+
         if (m_drawShadowMap)
         {
             BeginShaderMode(m_previewShader);
@@ -186,6 +191,25 @@ int RenderSystem::addDebugDrawCallback(const std::function<void()>& callBack)
 void RenderSystem::removeDebugDrawCallback(int key)
 {
     m_debugDrawCallbacks.erase(m_debugDrawCallbacks.find(key));
+}
+
+int RenderSystem::addTextMessage(const char* message, const Vector3& pos)
+{
+    static int key = 0;
+    m_textMessages[key] = std::make_pair(message, pos);
+    return key++;
+}
+
+void RenderSystem::updateTextMessage(int key, const char* newMessage, const Vector3& newPos)
+{
+    assert(m_textMessages.find(key) != m_textMessages.end());
+    m_textMessages[key] = std::make_pair(newMessage, newPos);
+}
+
+void RenderSystem::removeTextMessage(int key)
+{
+    assert(m_textMessages.find(key) != m_textMessages.end());
+    m_textMessages.erase(m_textMessages.find(key));
 }
 
 int RenderSystem::addText3dMessage(const char* message, const Vector3& pos)
@@ -265,6 +289,16 @@ void RenderSystem::drawLightSource(const Light& light)
 {
     DrawCubeWires(light.position, 0.125f, 0.125f, 0.125f, YELLOW);
     DrawLine3D(light.position, light.target, YELLOW);
+}
+
+void RenderSystem::drawText()
+{
+    for (const auto& [key, pair] : m_textMessages)
+    {
+        const char* text = pair.first;
+        Vector2 pos = GetWorldToScreen(pair.second, CameraController::getCamera());
+        DrawText(text, pos.x, pos.y, 20.f, YELLOW);
+    }
 }
 
 void RenderSystem::drawText3D()

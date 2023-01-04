@@ -3,9 +3,9 @@
 template<>
 struct SystemDebugger<RenderSystem>
 {
-    void setDrawText3d(bool drawText3d)
+    void setDrawText(bool drawText)
     {
-        RenderSystem::getSystem().m_drawText3d = drawText3d;
+        RenderSystem::getSystem().m_drawText = drawText;
     }
 
     void setWiresMode(bool wiresMode)
