@@ -12,6 +12,7 @@
 
 #include "utils/raylib_impl_sandbox3d.h"
 
+// TODO: simplify this function
 static void fetchSleepingEntities(bool enable)
 {
     static std::map<entt::entity, int> entMsgKeyMap;
@@ -60,7 +61,6 @@ static void fetchSleepingEntities(bool enable)
         }
     }
 }
-
 
 static void HelpMarker(const char* fmt, ...)
 {
@@ -120,15 +120,17 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
         // Lights
         if (ImGui::TreeNode("Lights"))
         {
-            auto const& lights  = EntityRegistry::getRegistry().view<LightComponent>();
-            static int current  = lights.find(LightningSystem::getSystem().getCurrentLightId()) - lights.begin();
-            char lightStr[32]   = "Light:@\0";
+            auto const& lights = EntityRegistry::getRegistry().view<LightComponent>();
+            static int current = lights.find(LightningSystem::getSystem().getActiveLightEntity()) - lights.begin();
+            char lightStr[32] = "Light:@\0";
             int i = 0;
             for (auto const& entity : lights)
             {
                 lightStr[6] = '0' + i;
                 if (ImGui::RadioButton(lightStr, &current, i))
-                    LightningSystem::getSystem().setCurrentLightId(entity);
+                {
+                    LightningSystem::getSystem().setActiveLightEntity(entity);
+                }
                 ++i;
             }
             ImGui::TreePop();

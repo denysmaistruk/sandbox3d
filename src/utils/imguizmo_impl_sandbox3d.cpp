@@ -27,6 +27,9 @@ void ImGuizmo_ImplSandbox3d_EditTransform(const Camera& camera, Matrix& matrix)
     static ImGuizmo::OPERATION operation(ImGuizmo::TRANSLATE);
     static ImGuizmo::MODE mode(ImGuizmo::MODE::WORLD);
 
+    bool open = true;
+    
+
     if (ImGui::RadioButton("Translate", operation == ImGuizmo::TRANSLATE))
     {
         operation = ImGuizmo::TRANSLATE;
@@ -70,5 +73,5 @@ void ImGuizmo_ImplSandbox3d_EditTransform(const Camera& camera, Matrix& matrix)
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
     
     ImGuizmo::Manipulate(MatrixToFloat(GetCameraView(camera)), MatrixToFloat(GetCameraProjection(camera)), operation, mode, matrix16, nullptr, nullptr);
-    matrix = MatrixFromFloat(matrix16);
+    matrix = MatrixFromFloat(matrix16);    
 }

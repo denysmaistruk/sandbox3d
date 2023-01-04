@@ -24,12 +24,12 @@ struct PhysComponent
     class CollisionBody* collBody;
 };
 
+// Each system must exclude this tag from views
 struct DestroyTag
-{
-	// Each system must exclude this tag from views
+{	
 };
 
+// Used for clicking and selecting entities
 struct ClickedEntityTag
-{
-    // Used for clicking and selecting entities
+{ 
 };

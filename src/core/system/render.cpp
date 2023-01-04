@@ -24,6 +24,8 @@ bool ImGui_ImplRaylib_ProcessEvent();
 void ImGui_ImplRaylib_NewFrame();
 void raylib_render_imgui(ImDrawData* draw_data);
 
+static auto constexpr ambientColor = { 0.4f, 0.4f, 0.4f, 1.0f };
+
 RenderSystem::RenderSystem(size_t id) 
     : m_isWiresMode(false)
     , m_drawShadowMap(false)
@@ -36,7 +38,7 @@ RenderSystem::RenderSystem(size_t id)
     m_previewShader = LoadDepthPreviewShader();
     m_text3dShader = LoadText3DShader();
 
-    addText3dMessage("WELCOME TO SANDBOX 3D!", Vector3{ 0.f, 7.f, 0.f });
+    addText3dMessage("WELCOME TO SANDBOX 3D!", Vector3{ 0.f, 5.f, 0.f });
 }
 
 void RenderSystem::update(float dt)
@@ -51,11 +53,11 @@ void RenderSystem::update(float dt)
     
     // Update lightning and get shadow caster
     auto const& lightSystem = LightningSystem::getSystem();
-    auto const& lightInfo   = lightSystem.getCurrentLight();
-    Camera  caster  = lightInfo.caster;
-    Light   light   = lightInfo.light;
-    light.position  = caster.position;
-    light.target    = caster.target;
+    auto const& lightInfo = lightSystem.getActiveLightComponent();
+    Camera caster = lightInfo.caster;
+    Light light = lightInfo.light;
+    light.position = caster.position;
+    light.target = caster.target;
 
     // Draw/update shadow map (z-buffer)
     ShadowMapBegin(m_shadowMap);
@@ -81,21 +83,18 @@ void RenderSystem::update(float dt)
         BeginMode3D(CameraController::getCamera());
         {
             // Update values for geometry shader
-            UpdateLightValues       (m_geometryShader, light);
-            SetShaderValue          (m_geometryShader, m_geometryShader.locs[SHADER_LOC_VECTOR_VIEW], (float*)&CameraController::getCamera().position, SHADER_UNIFORM_VEC3);
-            SetShaderValue          (m_geometryShader, m_geometryShader.locs[SHADER_LOC_AMBIENT], k_ambientColor.begin(), SHADER_UNIFORM_VEC4);
-            SetShaderValueTexture   (m_geometryShader, m_geometryShader.locs[SHADER_LOC_MAP_SHADOW], m_shadowMap.depth);
+            UpdateLightValues(m_geometryShader, light);
+            SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_VECTOR_VIEW], (float*)&CameraController::getCamera().position, SHADER_UNIFORM_VEC3);
+            SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_AMBIENT], ambientColor.begin(), SHADER_UNIFORM_VEC4);
+            SetShaderValueTexture(m_geometryShader, m_geometryShader.locs[SHADER_LOC_MAP_SHADOW], m_shadowMap.depth);
          
             {
-                auto const caster_world = GetCameraMatrix(caster);
-                auto const caster_proj  = (caster.projection == CAMERA_PERSPECTIVE)
-                                        ? CameraFrustum (caster)
-                                        : CameraOrtho   (caster);
-                auto const caster_mat   = MatrixMultiply(caster_world, caster_proj);
-                SetShaderValueMatrix
-                    ( m_geometryShader
-                    , m_geometryShader.locs[SHADER_LOC_MAT_LIGHT]
-                    , caster_mat);
+                auto const casterWorld = GetCameraMatrix(caster);
+                auto const casterProj = (caster.projection == CAMERA_PERSPECTIVE)
+                                        ? CameraFrustum(caster)
+                                        : CameraOrtho(caster);
+                auto const casterMat = MatrixMultiply(casterWorld, casterProj);
+                SetShaderValueMatrix(m_geometryShader, m_geometryShader.locs[SHADER_LOC_MAT_LIGHT], casterMat);
             }
 
             // Update values for preview shader
@@ -113,8 +112,10 @@ void RenderSystem::update(float dt)
             {
                 for (auto [entity, lightComponent] : getRegistry().view<LightComponent>().each())
                 {
-                    if (lightComponent.light.enabled)
+                    if (entity == lightSystem.getActiveLightEntity())
+                    {
                         drawLightSource(lightComponent.light);
+                    }
                 }
             }
             
@@ -323,9 +324,20 @@ void RenderSystem::ImGuizmoWidgets()
 {
     ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
 
-    for (auto& [entity, transformComponent, physComponent] : EntityRegistry::getRegistry().view<TransformComponent, PhysComponent, ClickedEntityTag>().each())
+    bool open = true;
+    ImGui::Begin("Manipulate", &open);
+    
+    bool clicked = false;
+    for (auto& [entity, transformComponent] : EntityRegistry::getRegistry().view<TransformComponent, ClickedEntityTag>().each())
     {
-        Matrix&  transform = transformComponent.transform;
-        ImGuizmo_ImplSandbox3d_EditTransform(CameraController::getCamera(), transform);
+        clicked = true;
+        ImGuizmo_ImplSandbox3d_EditTransform(CameraController::getCamera(), transformComponent.transform);
     }
+
+    if (!clicked)
+    {
+        ImGui::Text("Click the object to manipulate [Ctrl+MouseL]");
+    }
+
+    ImGui::End();
 }

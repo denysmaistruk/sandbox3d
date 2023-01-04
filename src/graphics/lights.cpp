@@ -9,7 +9,8 @@
 
 #define PB_ORTHOGRAPHIC_CAMERA_CULL_DISTANCE_FAR 100
 
-ShadowMap LoadShadowMap(int width, int height) {
+ShadowMap LoadShadowMap(int width, int height) 
+{
 	ShadowMap shadowMap	= {};
 	shadowMap.id		= rlLoadFramebuffer(width, height);
 	shadowMap.width		= width;
@@ -32,12 +33,14 @@ ShadowMap LoadShadowMap(int width, int height) {
 	return shadowMap;
 }
 
-void UnloadShadowMap(ShadowMap shadowMap) {
+void UnloadShadowMap(ShadowMap shadowMap) 
+{
 	rlUnloadFramebuffer(shadowMap.id);
 	rlUnloadTexture(shadowMap.depth.id);
 }
 
-void ShadowMapBegin(ShadowMap shadowMap) {
+void ShadowMapBegin(ShadowMap shadowMap) 
+{
 	rlDrawRenderBatchActive();
 	rlEnableFramebuffer(shadowMap.id);
 
@@ -62,7 +65,8 @@ void ShadowMapBegin(ShadowMap shadowMap) {
 	glCullFace(GL_FRONT);				// Front faces culling for solving shadow acne problem
 }
 
-void EndShadowCaster() { 
+void EndShadowCaster() 
+{ 
 	glCullFace(GL_BACK);				// Switch back to back faces culling
 	EndMode3D(); 
 }
@@ -129,7 +133,7 @@ Light CreateLight(Shader shader, int type, Vector3 position, Vector3 target, Col
 {
 	Light light = { 0 };
 
-	assert(lightsCount < SANDBOX3D_MAX_LIGHTS);
+	assert(lightsCount <= SANDBOX3D_MAX_LIGHTS);
 	++lightsCount;
 
 	{
