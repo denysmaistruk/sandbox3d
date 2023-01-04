@@ -4,10 +4,10 @@
 
 class CleanupSystem : public SystemBase<CleanupSystem>
 {
-    SANDBOX3D_SYSTEM_CLASS(CleanupSystem);
+    SANDBOX3D_DECLARE_SYSTEM(CleanupSystem);
 public:
     void update(float dt);
 
 protected:
-    CleanupSystem(size_t id);
+    CleanupSystem(size_t id) {};
 };

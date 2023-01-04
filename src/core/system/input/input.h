@@ -7,14 +7,14 @@ struct SystemDebugger;
 
 class InputSystem : public SystemBase<InputSystem>
 {
-    SANDBOX3D_SYSTEM_CLASS(InputSystem);
+    SANDBOX3D_DECLARE_SYSTEM(InputSystem);
 public:
     void update(float dt);
 
     void addInputEventHandler(const InputEvent& event, const std::function<void(const InputEvent&)>& handler);
 
 protected:
-    InputSystem(size_t id);
+    InputSystem(size_t id) {};
 
 private:
     InputEventDispatcher m_dispatcher;

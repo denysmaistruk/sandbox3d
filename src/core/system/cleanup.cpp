@@ -3,10 +3,6 @@
 #include "core/component/components.h"
 #include "core/system/physics/collision.h"
 
-CleanupSystem::CleanupSystem(size_t id)
-{
-}
-
 void CleanupSystem::update(float dt)
 {
     auto entityView = getRegistry().view<PhysComponent, RenderComponent, DestroyTag>();

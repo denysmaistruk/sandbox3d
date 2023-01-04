@@ -7,7 +7,7 @@ struct LightComponent;
 
 class LightningSystem : public SystemBase<LightningSystem>
 {
-    SANDBOX3D_SYSTEM_CLASS(LightningSystem);
+    SANDBOX3D_DECLARE_SYSTEM(LightningSystem);
 public:
     void setActiveLightEntity(entt::entity lightEntity);
     entt::entity getActiveLightEntity() const { return m_activeLightEntity; }

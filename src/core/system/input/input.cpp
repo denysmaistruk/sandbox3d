@@ -1,9 +1,5 @@
 #include "input.h"
 
-InputSystem::InputSystem(size_t id)
-{
-}
-
 void InputSystem::update(float dt) 
 {
     m_dispatcher.checkAndDispatch();

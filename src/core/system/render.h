@@ -12,7 +12,7 @@ struct SystemDebugger;
 
 class RenderSystem : public SystemBase<RenderSystem>
 {
-    SANDBOX3D_SYSTEM_CLASS(RenderSystem);
+    SANDBOX3D_DECLARE_SYSTEM(RenderSystem);
     friend struct SystemDebugger<RenderSystem>;
 public:
     void update(float dt);

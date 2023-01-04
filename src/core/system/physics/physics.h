@@ -13,7 +13,7 @@ struct SystemDebugger;
 
 class PhysSystem : public SystemBase<PhysSystem>
 {
-    SANDBOX3D_SYSTEM_CLASS(PhysSystem);
+    SANDBOX3D_DECLARE_SYSTEM(PhysSystem);
     friend struct SystemDebugger<PhysSystem>;
 public:
     const static unsigned maxContacts = 256;
