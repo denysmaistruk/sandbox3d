@@ -161,9 +161,6 @@ entt::entity EntityFactory::createLight(Shader shader, int type, Vector3 positio
     lightComponent.caster.fovy = 90.9f;
     lightComponent.caster.projection = casterProjType;
  
-    static int lightId = 0;
-    lightComponent.lightId = lightId++;
-
     // Create entity and emplace components
     entt::registry& registry = EntityRegistry::getRegistry();
     entt::entity entity = registry.create();

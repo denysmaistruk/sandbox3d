@@ -2,25 +2,20 @@
 #include "system_base.h"
 #include "raylib.h"
 
+struct LightComponent;
+
 class LightningSystem : public SystemBase<LightningSystem>
 {
     SANDBOX3D_SYSTEM_CLASS(LightningSystem);
 public:
-    const static int maxLights = SANDBOX3D_MAX_LIGHTS;
-
-    void update(float dt);
-
-    void setLightEnable(int lightId, bool enable);
-    void setShader(Shader& shader) { m_shader = shader; }
-
-    Camera getShadowCaster() const { return m_shadowCaster; }
-    Matrix getLightMatrix() const;
+    void                    setCurrentLightId   (entt::entity lightId);
+    entt::entity            getCurrentLightId   () const { return m_currentLight; }
+    LightComponent const&   getCurrentLight     () const;
 
 protected:
-    LightningSystem(size_t id);
+    LightningSystem (size_t _) {}
+    void update     (float dt) {}
 
 private:
-    Shader m_shader;
-    Camera m_shadowCaster;
-    std::map<int, bool> m_lightsMask;
+    entt::entity m_currentLight = entt::entity(-1);
 };
