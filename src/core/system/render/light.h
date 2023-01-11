@@ -9,7 +9,7 @@
 
 class LightingSystem : public SystemBase<LightingSystem>
 {
-    SANDBOX3D_SYSTEM_CLASS(LightingSystem);
+    SANDBOX3D_DECLARE_SYSTEM(LightingSystem);
 public:
     static constexpr uint32_t k_shadowAtlasRowSize          = 4;
     static constexpr uint32_t k_shadowAtlasResolution       = 4096;
