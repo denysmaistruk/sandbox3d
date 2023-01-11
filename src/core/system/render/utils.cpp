@@ -60,10 +60,29 @@ void ShadowMapBegin(ShadowMap shadowMap)
 	rlLoadIdentity();                   // Reset current matrix (modelview)
 }
 
+void ShadowMapEnd() {
+	glDisable(GL_POLYGON_OFFSET_FILL);
+	glCullFace(GL_BACK);				// Switch back to back faces culling
+	rlEnableColorBlend();
+	rlDisableTexture();
+
+	rlDrawRenderBatchActive();
+	rlDisableFramebuffer();
+
+	rlViewport(0, 0, GetScreenWidth(), GetScreenHeight());
+
+	rlMatrixMode(RL_PROJECTION);
+	rlLoadIdentity();
+
+	rlOrtho(0, GetScreenWidth(), GetScreenHeight(), 0, 0, 1);
+
+	rlMatrixMode(RL_MODELVIEW);
+	rlLoadIdentity();
+}
+
 void EndShadowCaster() 
 { 
-	glCullFace(GL_BACK);				// Switch back to back faces culling
-	EndMode3D(); 
+	EndMode3D();
 }
 
 void BeginShadowCaster(Camera3D camera)
@@ -102,24 +121,6 @@ void BeginShadowCaster(Camera3D camera)
 	rlMultMatrixf(MatrixToFloat(matView));      // Multiply modelview matrix by view matrix (camera)
 
 	rlEnableDepthTest();            // Enable DEPTH_TEST for 3D
-}
-
-void ShadowMapEnd() {
-	rlEnableColorBlend();
-	rlDisableTexture();
-
-	rlDrawRenderBatchActive();
-	rlDisableFramebuffer();
-
-	rlViewport(0, 0, GetScreenWidth(), GetScreenHeight());
-
-	rlMatrixMode(RL_PROJECTION);
-	rlLoadIdentity();
-
-	rlOrtho(0, GetScreenWidth(), GetScreenHeight(), 0, 0, 1);
-
-	rlMatrixMode(RL_MODELVIEW);
-	rlLoadIdentity();
 }
 
 Matrix CusterPerspective(Camera3D const& camera) {

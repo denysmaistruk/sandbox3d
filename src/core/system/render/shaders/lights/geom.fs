@@ -40,10 +40,10 @@ const vec4 fogColor = vec4(0.8, 0.8, 0.8, 0.5);
 const float fogDensity = 0.005;
 const vec4 shadowPos = vec4(0.0);
 const vec4 ambient = vec4(0.4, 0.4, 0.4, 1.0) / 10.0;
-const float shadowBias = -0.0005;
+const float shadowBias = -0.00005;
 
 // Shadows
-const bool usePoisondDisk = false;
+const bool usePoisondDisk = true;
 const vec2 poissonDisk[16] = vec2[] (
     vec2(-0.94201624, -0.39906216),  vec2(0.94558609, -0.76890725),
     vec2(-0.094184101, -0.92938870), vec2(0.34495938, 0.29387760),
@@ -194,7 +194,6 @@ void main()
 
         float spot = 1.0;
         float attenuation = 1.0;
-        vec3 lightDot = vec3(0.0);
 
         if (lights[i].type == LIGHT_DIRECTIONAL)
         {
@@ -220,8 +219,8 @@ void main()
             spot = clamp((theta - lights[i].cutoff) / epsilon, 0.0, 1.0);
         }
 
-        float NdotL = max(dot(normal, light), 0.1);
-        lightDot += unpackUnorm4x8(lights[i].color).rgb * NdotL * spot * attenuation;
+        float NdotL = max(dot(normal, light), 0.0);
+        vec3 lightDot = unpackUnorm4x8(lights[i].color).rgb * NdotL * spot * attenuation;
 
         float specular = 0.0;
         if (lights[i].type != LIGHT_SPOT && NdotL > 0.0)
@@ -229,8 +228,8 @@ void main()
             specular = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
         }
 
-        float shadow = 0.0;
-        if (lights[i].shadowId != -1) {
+        float shadow = float(NdotL == 0.0);
+        if (NdotL > 0.0 && lights[i].shadowId != -1) {
             uint x = (lights[i].shadowId / SANDBOX3D_SHADOW_MAP_ROW_SIZE);
             uint y = (lights[i].shadowId % SANDBOX3D_SHADOW_MAP_ROW_SIZE);
             vec2 offset     = vec2(x,y) * SANDBOX3D_SHADOW_MAP_CELL_SIZE;
@@ -239,46 +238,15 @@ void main()
             shadow = ShadowCalc(shadowPos, shadowBias, offset);
         }
 
+        specular *= (1.0 - shadow * 0.5);
+        vec4 specularMasked = vec4(vec3(specular), 1.0);
         vec4 diffuseMasked  = colDiffuse * (1.0 - shadow);
-        vec4 specularMasked = vec4(vec3(specular), 1.0) * (1.0 - shadow * 0.5);
         vec4 colorMasked    = (diffuseMasked + specularMasked) * vec4(lightDot, 1.0);
 
-        finalColor += texelColor * colorMasked;
+        finalColor += colorMasked;
     }
 
-    // Note: alternative bias calculations
-    // vec3 lightSum = normalize(lightDot - fragPosition);
-    // float NdotLSum = max(dot(normal, lightSum), 0.0);
-    // float bias = max(0.0005 * (1.0 - NdotLSum), 0.00005);
-    // float bias = 0.00005f * tan(acos(NdotLSum));
-    
-    // const float bias = -0.0005;
-    // for (int i = 0; i < SANDBOX3D_MAX_LIGHTS; ++i)
-    // {
-    //     int x = (i / SANDBOX3D_SHADOW_MAP_ROW_SIZE);
-    //     int y = (i % SANDBOX3D_SHADOW_MAP_ROW_SIZE);
-    //     vec2 offset = vec2(x,y) * SANDBOX3D_SHADOW_MAP_CELL_SIZE;
-    //     vec4 shadowPos = shadowMat[i] * vec4(fragPosition, 1.0);
-    //     shadow = ShadowCalc(shadowPos, bias, offset);
-    // }
-    // finalColor = vec4(vec3(shadow), 1);
-    // return;
-
-
-    // HACK: currently shadow casts by one source of directional light, should be changed to account any source
-    // Turn off shadows for fragments facing from the light source 
-    // for (int i = 0; i < SANDBOX3D_MAX_LIGHTS; i++)
-    // {    
-    //     if (lights[i].type == LIGHT_DIRECTIONAL)
-    //     {
-    //         vec3 light = -normalize(lights[i].target - lights[i].position);
-    //         if (dot(light, fragNormal) < 0.0)
-    //             shadow = 0.0; 
-    //     }
-    //     continue;
-    // }
-    // finalColor = (texelColor * ((colDiffuse * (1.0 - shadow * shadowFactor) 
-    //     + vec4(specular * (1.0 - shadow * shadowFactor * 0.5), 1.0)) * vec4(lightDot, 1.0)));
+    finalColor *= texelColor;
     finalColor += texelColor * (ambient / 10.0) * colDiffuse;
 
     // Gamma correction
