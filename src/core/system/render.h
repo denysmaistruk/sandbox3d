@@ -3,7 +3,7 @@
 
 #include "raylib.h"
 
-#include "graphics/lights.h"
+#include "graphics/light/utils.h"
 
 struct ImGuiIO;
 
@@ -44,7 +44,6 @@ protected:
 private:
     void drawShadow(const Model& model);
     void drawGeometry(const Model& model, const float shadowFactor);
-    void drawLightSource(const Light& light);
     void drawText();
     void drawText3D();
     void drawDebugGeometry();

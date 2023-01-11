@@ -4,7 +4,7 @@
 #include "imguizmo.h"
 #include "raymath.h"
 
-#include "graphics/lights.h"
+#include "graphics/light/utils.h"
 
 #include "utils/raylib_impl_sandbox3d.h"
 
@@ -17,7 +17,7 @@ static Matrix GetCameraView(const Camera& camera)
 static Matrix GetCameraProjection(const Camera& camera)
 {
     assert(camera.projection == CAMERA_PERSPECTIVE);
-    return CameraFrustum(camera);
+    return CameraPerspective(camera);
 }
 
 void ImGuizmo_ImplSandbox3d_EditTransform(const Camera& camera, Matrix& matrix)

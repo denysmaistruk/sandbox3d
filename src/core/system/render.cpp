@@ -8,7 +8,6 @@
 #include "debug/debugger_physics.h"
 
 #include "core/component/components.h"
-#include "core/system/lightning.h"
 #include "core/system/physics/collision.h"
 #include "core/system/physics/physics.h"
 #include "core/camera/camera_controller.h"
@@ -56,12 +55,15 @@ RenderSystem::RenderSystem(size_t id)
     , m_drawLightSource(false)
     , m_drawText(true)
 {
-    m_shadowMapAtlas = LoadShadowMap(SANDBOX3D_SHADOW_MAP_WIDTH, SANDBOX3D_SHADOW_MAP_WIDTH);
+   /* m_shadowMapAtlas = LoadShadowMap(SANDBOX3D_SHADOW_MAP_WIDTH, SANDBOX3D_SHADOW_MAP_WIDTH);
     m_shadowMatBuffer = rlLoadShaderBuffer(sizeof(Matrix) * SANDBOX3D_SHADOW_MAP_CELL_COUNT, nullptr, RL_DYNAMIC_DRAW);
     m_lightDataBuffer = rlLoadShaderBuffer(sizeof(LightData) * SANDBOX3D_SHADOW_MAP_CELL_COUNT, nullptr, RL_DYNAMIC_DRAW);
     m_shadowShader = LoadShadowShader();
     m_geometryShader = LoadShadedGeometryShader();
-    m_previewShader = LoadDepthPreviewShader();
+    m_previewShader = LoadDepthPreviewShader();*/
+    m_shadowShader = LoadShader(nullptr, nullptr);
+    m_geometryShader = LoadShader(nullptr, nullptr);
+    m_previewShader = LoadShader(nullptr, nullptr);
     m_text3dShader = LoadText3DShader();
 
     addText3dMessage("WELCOME TO SANDBOX 3D!", Vector3{ 0.f, 5.f, 0.f });
@@ -78,12 +80,12 @@ void RenderSystem::update(float dt)
     }
     
     // Update lightning and get shadow caster
-    auto const& lightSystem = LightningSystem::getSystem();
+    /*auto const& lightSystem = LightningSystem::getSystem();
     auto const& lightInfo = lightSystem.getActiveLightComponent();
     Camera caster = lightInfo.caster;
     Light light = lightInfo.light;
     light.position = caster.position;
-    light.target = caster.target;
+    light.target = caster.target;*/
 
     auto const renderShadowCell = [&](Camera const& casterCamera, int const cellIndex) 
     {
@@ -96,11 +98,9 @@ void RenderSystem::update(float dt)
         EndShadowCaster();
     };
 
-    auto const getCasterMatrix = [](Camera const& casterCamera) {
-        auto const casterWorld = GetCameraMatrix(casterCamera);
-        auto const casterProj = (casterCamera.projection == CAMERA_PERSPECTIVE)
-            ? CameraFrustum(casterCamera)
-            : CameraOrtho(casterCamera);
+    auto const getCasterMatrix  = [](Camera const& casterCamera) {
+        auto const casterWorld  = GetCameraMatrix(casterCamera);
+        auto const casterProj   = CameraPerspective(casterCamera);
         return MatrixTranspose(MatrixMultiply(casterWorld, casterProj));
     };
 
@@ -109,7 +109,7 @@ void RenderSystem::update(float dt)
     lightData.resize(SANDBOX3D_SHADOW_MAP_CELL_COUNT);
     shadowCellTransform.resize(SANDBOX3D_SHADOW_MAP_CELL_COUNT);
 
-    {
+    /*{
         int shadowIndex = 0;
         Camera casterCameraProto= {};
         casterCameraProto.up    = faceUpDownVector[0];
@@ -160,7 +160,7 @@ void RenderSystem::update(float dt)
         for (auto [entity, position, lookAt, color] : directional.each())
             lightData[lightIndex++] = LightData{ LIGHT_DIRECTIONAL, position, lookAt, color };
         rlUpdateShaderBufferElements(m_lightDataBuffer, lightData.data(), sizeof(LightData) * lightIndex, 0);
-    }
+    }*/
 
     // Imgui new frame
     ImGuiBegin();
@@ -172,16 +172,16 @@ void RenderSystem::update(float dt)
         BeginMode3D(CameraController::getCamera());
         {
             // Update values for geometry shader
-            UpdateLightValues(m_geometryShader, light);
-            SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_VECTOR_VIEW], (float*)&CameraController::getCamera().position, SHADER_UNIFORM_VEC3);
-            SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_AMBIENT], ambientColor.begin(), SHADER_UNIFORM_VEC4);
-            SetShaderValueTexture(m_geometryShader, m_geometryShader.locs[SHADER_LOC_MAP_SHADOW], m_shadowMapAtlas.depth);
-            
-            rlEnableShader(m_geometryShader.id);
-            // @WARNING: rlBindShaderBuffer bug
-            // slot index and buffer id order flipped
-            rlBindShaderBuffer(m_lightDataBuffer, m_geometryShader.locs[SHADER_LOC_MAT_LIGHT]);
-            rlBindShaderBuffer(m_shadowMatBuffer, m_geometryShader.locs[SHADER_LOC_MAT_SHADOW]);
+            //UpdateLightValues(m_geometryShader, light);
+            //SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_VECTOR_VIEW], (float*)&CameraController::getCamera().position, SHADER_UNIFORM_VEC3);
+            //SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_AMBIENT], ambientColor.begin(), SHADER_UNIFORM_VEC4);
+            //SetShaderValueTexture(m_geometryShader, m_geometryShader.locs[SHADER_LOC_MAP_SHADOW], m_shadowMapAtlas.depth);
+            //
+            //rlEnableShader(m_geometryShader.id);
+            //// @WARNING: rlBindShaderBuffer bug
+            //// slot index and buffer id order flipped
+            //rlBindShaderBuffer(m_lightDataBuffer, m_geometryShader.locs[SHADER_LOC_MAT_LIGHT]);
+            //rlBindShaderBuffer(m_shadowMatBuffer, m_geometryShader.locs[SHADER_LOC_MAT_SHADOW]);
 
             // Draw geometry
             for (auto [entity, transformComponent, renderComponent] : entityView.each())
@@ -190,7 +190,7 @@ void RenderSystem::update(float dt)
             }
 
             // Draw light sources
-            if (m_drawLightSource)
+            /*if (m_drawLightSource)
             {
                 for (auto [entity, lightComponent] : getRegistry().view<LightComponent>().each())
                 {
@@ -199,7 +199,7 @@ void RenderSystem::update(float dt)
                         drawLightSource(lightComponent.light);
                     }
                 }
-            }
+            }*/
             
             if (m_drawText)
             {
@@ -229,14 +229,14 @@ void RenderSystem::update(float dt)
             drawText();
         }
 
-        if (m_drawShadowMap)
+        /*if (m_drawShadowMap)
         {
             BeginShaderMode(m_previewShader);
             {
                 DrawTextureEx(m_shadowMapAtlas.depth, Vector2{ 0, 0 }, 0.0f, 0.125, WHITE);
             }
             EndShaderMode();
-        }
+        }*/
 
         // Imgui set up widgets and draw
         ImGuiWidgets();
@@ -357,20 +357,13 @@ void RenderSystem::drawShadow(const Model& model)
 void RenderSystem::drawGeometry(const Model& model, const float shadowFactor)
 {
     model.materials[0].shader = m_geometryShader;
-    model.materials[0].maps[MATERIAL_MAP_SHADOW].texture = m_shadowMapAtlas.depth;
     if (m_isWiresMode)
         DrawModelWires(model, Vector3Zero(), 1.f, RED);
     else
     {
-        SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_SHADOW_FACTOR], &shadowFactor, SHADER_UNIFORM_FLOAT);
+        //SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_SHADOW_FACTOR], &shadowFactor, SHADER_UNIFORM_FLOAT);
         DrawModel(model, Vector3Zero(), 1.f, WHITE);
     }
-}
-
-void RenderSystem::drawLightSource(const Light& light)
-{
-    DrawCubeWires(light.position, 0.125f, 0.125f, 0.125f, YELLOW);
-    DrawLine3D(light.position, light.target, YELLOW);
 }
 
 void RenderSystem::drawText()

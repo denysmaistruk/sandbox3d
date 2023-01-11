@@ -4,7 +4,6 @@
 
 #include "core/component/components.h"
 #include "core/registry/registry.h"
-#include "core/system/lightning.h"
 #include "core/system/physics/collision.h"
 
 #include "debug/debugger_physics.h"
@@ -118,7 +117,7 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
         }
         
         // Lights
-        if (ImGui::TreeNode("Lights"))
+        /*if (ImGui::TreeNode("Lights"))
         {
             auto const& lights = EntityRegistry::getRegistry().view<LightComponent>();
             static int current = lights.find(LightningSystem::getSystem().getActiveLightEntity()) - lights.begin();
@@ -134,7 +133,7 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
                 ++i;
             }
             ImGui::TreePop();
-        }
+        }*/
     }
     
     // Physics
@@ -234,7 +233,7 @@ void ImGui_ImplSandbox3d_ShowStatsWindow(bool* open)
         ImGui::Text("fps - %.1f; %.3f ms/frame", io.Framerate, 1000.f / io.Framerate);
         auto& registry = EntityRegistry::getRegistry();
         ImGui::Text("systems - %d;", SystemBase<AllSystems>::getSystemsCount());
-        ImGui::Text("entities - %d; [lights - %d]", registry.alive(), registry.view<LightComponent>().size());
+        //ImGui::Text("entities - %d; [lights - %d]", registry.alive(), registry.view<LightComponent>().size());
 
         SystemDebugger<PhysSystem> physDebugger;
         const int rigidBodies = physDebugger.getRigidBodiesCount();

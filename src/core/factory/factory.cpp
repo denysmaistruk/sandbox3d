@@ -146,25 +146,3 @@ entt::entity EntityFactory::createPlane(const Vector3& direction, const float of
 
     return entity;
 }
-
-entt::entity EntityFactory::createLight(Shader shader, int type, Vector3 position, Vector3 target, Color color, int casterProjType /*= CAMERA_ORTHOGRAPHIC*/, float cutoff /*= 0.7f*/, float lightRadius /*= 10.f*/, float spotSoftness /*= 0.65f*/)
-{
-    LightComponent lightComponent;
-
-    // New light
-    lightComponent.light = CreateLight(shader, type, position, target, color, cutoff, lightRadius, spotSoftness);
-    
-    // Set shadow caster
-    lightComponent.caster.position = position;
-    lightComponent.caster.target = target;
-    lightComponent.caster.up = Vector3{ 0.0f, 1.0f, 0.0f };
-    lightComponent.caster.fovy = 90.9f;
-    lightComponent.caster.projection = casterProjType;
- 
-    // Create entity and emplace components
-    entt::registry& registry = EntityRegistry::getRegistry();
-    entt::entity entity = registry.create();
-    registry.emplace<LightComponent>(entity, lightComponent);
-
-    return entity;
-}
