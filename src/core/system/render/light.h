@@ -59,9 +59,13 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
         model.materials[0].shader = m_shadowShader;
         DrawModel(model, Vector3Zero(), 1.f, WHITE);
     };
-    auto const  renderShadowCell = [&](LightData const& light, uint32_t const cellIndex) {
-        if (!(cellIndex < k_shadowAtlasCellCount))
-            return k_invalidShadowCellId;
+    uint32_t    shadowCellId = 0;
+    auto const  renderShadowCell = [&](entt::entity entity, LightData const& light) {
+        bool const isCaster = registry.any_of<ShadowCaster>(entity);
+        bool const isValidId= shadowCellId < k_shadowAtlasCellCount;
+        bool const isValid  = isCaster && isValidId;
+        if (!isValid)       return k_invalidShadowCellId;
+
         Camera  camera      = {};
         camera.fovy         = 90.0f;
         camera.target       = light.target;
@@ -69,18 +73,18 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
         camera.up           = Vector3{ 0.0f, 1.0f, 0.0f };
         camera.projection   = LightType::Directional == light.type
                             ? CAMERA_ORTHOGRAPHIC : CAMERA_PERSPECTIVE;
-        int const offsetX   = (cellIndex / k_shadowAtlasRowSize) * k_shadowAtlasCellResolution;
-        int const offsetY   = (cellIndex % k_shadowAtlasRowSize) * k_shadowAtlasCellResolution;
+        int const offsetX   = (shadowCellId / k_shadowAtlasRowSize) * k_shadowAtlasCellResolution;
+        int const offsetY   = (shadowCellId % k_shadowAtlasRowSize) * k_shadowAtlasCellResolution;
         rlViewport(offsetX, offsetY, k_shadowAtlasCellResolution, k_shadowAtlasCellResolution);
         BeginShadowCaster(camera);
         drawScene(drawObject);
         EndShadowCaster();
-        return cellIndex;
+        return shadowCellId++;
     };
 
-    uint32_t cellId = 0;
+    uint32_t lightCellId = 0;
     SCOPE_EXIT([&] {
-        rlUpdateShaderBufferElements(m_lightDataBuffer, m_lightDataArray, sizeof(LightData) * cellId, 0);
+        rlUpdateShaderBufferElements(m_lightDataBuffer, m_lightDataArray, sizeof(LightData) * lightCellId, 0);
     });
 
     {   // prepare data for lights with shadow mask
@@ -88,68 +92,34 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
         SCOPE_EXIT(ShadowMapEnd);
 
         auto const  inactive    = entt::exclude<Inactive>;
-        auto const  dirLight    = registry.view<Color, Position, LookAt, DirectionalLight, ShadowCaster>   (inactive);
-        auto const  spotLight   = registry.view<Color, Position, LookAt, SpotLight, ShadowCaster>          (inactive);
-        //auto const  pointLight  = registry.view<Color, Position, PointLight, ShadowCaster>                 (inactive);
+        auto const  dirLight    = registry.view<Color, Position, LookAt, DirectionalLight>   (inactive);
+        auto const  spotLight   = registry.view<Color, Position, LookAt, SpotLight>          (inactive);
+        //auto const  pointLight  = registry.view<Color, Position, PointLight>                 (inactive);
 
         LightData light = {};
         light.type = LightType::Directional;
         for (auto [entity, color, position, lookAt] : dirLight.each())
         {
-            if (cellId >= k_lightSourceCount) break;
+            if (lightCellId >= k_lightSourceCount) break;
             light.color     = color;
             light.target    = lookAt;
             light.position  = position;
-            light.shadowId  = renderShadowCell(light, cellId);
-            m_lightDataArray[cellId++] = light;
+            light.shadowId  = renderShadowCell(entity, light);
+            m_lightDataArray[lightCellId++] = light;
         }
 
         light.type = LightType::Spot;
         for (auto [entity, color, position, lookAt, spot] : spotLight.each())
         {
-            if (cellId >= k_lightSourceCount) break;
+            if (lightCellId >= k_lightSourceCount) break;
             light.color     = color;
             light.cutoff    = spot.cutoff;
             light.radius    = spot.radius;
             light.softness  = spot.softness;
             light.target    = lookAt;
             light.position  = position;
-            light.shadowId  = renderShadowCell(light, cellId);
-            m_lightDataArray[cellId++] = light;
+            light.shadowId  = renderShadowCell(entity, light);
+            m_lightDataArray[lightCellId++] = light;
         }
-    }
-
-    {   // prepare data for rest of light sources
-        auto const  inactive    = entt::exclude<Inactive, ShadowCaster>;
-        auto const  dirLight    = registry.view<Color, Position, LookAt, DirectionalLight>  (inactive);
-        auto const  spotLight   = registry.view<Color, Position, LookAt, SpotLight>         (inactive);
-        //auto const  pointLight  = registry.view<Color, Position, PointLight>                (inactive);
-
-        LightData light = {};
-        light.type      = LightType::Directional;
-        light.shadowId  = k_invalidShadowCellId;
-        for (auto [entity, color, position, lookAt] : dirLight.each())
-        {
-            if (cellId >= k_lightSourceCount) break;
-            light.color     = color;
-            light.target    = lookAt;
-            light.position  = position;
-            m_lightDataArray[cellId++] = light;
-        }
-
-        light.type = LightType::Spot;
-        for (auto [entity, color, position, lookAt, spot] : spotLight.each())
-        {
-            if (cellId >= k_lightSourceCount) break;
-            light.cutoff    = spot.cutoff;
-            light.radius    = spot.radius;
-            light.softness  = spot.softness;
-            light.position  = position;
-            light.target    = lookAt;
-            light.color     = color;
-            m_lightDataArray[cellId++] = light;
-        }
-
-        // @TODO: handle point lights
     }
 }
