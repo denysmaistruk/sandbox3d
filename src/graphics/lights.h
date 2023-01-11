@@ -48,8 +48,8 @@ enum {
 
 struct ShadowMap {
     uint32_t    id;
-    uint32_t    width;
-    uint32_t    height;
+    int32_t     width;
+    int32_t     height;
     Texture2D   depth;
 };
 
@@ -62,13 +62,8 @@ Shader LoadShadedGeometryShader();
 
 ShadowMap LoadShadowMap(int width, int height);
 void UnloadShadowMap(ShadowMap shadowMap);
+void ShadowMapBegin(ShadowMap shadowMap);
 void ShadowMapEnd();
-void ShadowMapBegin
-        ( ShadowMap shadowMap
-        , uint32_t  offsetX = 0
-        , uint32_t  offsetY = 0
-        , uint32_t  width   = -1
-        , uint32_t  height  = -1 );
 
 void BeginShadowCaster(Camera3D camera);
 void EndShadowCaster();
