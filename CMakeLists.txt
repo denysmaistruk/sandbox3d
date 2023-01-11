@@ -8,6 +8,8 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT "sandbox3d")
 
+set(GRAPHICS "GRAPHICS_API_OPENGL_43")
+
 add_subdirectory(extern/raylib)
 add_subdirectory(extern/imgui)
 add_subdirectory(extern/cyclone)
