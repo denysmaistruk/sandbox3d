@@ -2,6 +2,7 @@
 
 #include "rlgl.h"
 #include "raymath.h"
+#include <algorithm>
 
 #include "../extern/raylib/src/external/glad.h"
 
@@ -39,8 +40,11 @@ void UnloadShadowMap(ShadowMap shadowMap)
 	rlUnloadTexture(shadowMap.depth.id);
 }
 
-void ShadowMapBegin(ShadowMap shadowMap) 
+void ShadowMapBegin(ShadowMap shadowMap, uint32_t offsetX, uint32_t offsetY, uint32_t width, uint32_t height)
 {
+	width	= std::min(width, shadowMap.width);
+	height	= std::min(height, shadowMap.height);
+	
 	rlDrawRenderBatchActive();
 	rlEnableFramebuffer(shadowMap.id);
 
