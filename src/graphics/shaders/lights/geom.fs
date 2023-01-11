@@ -1,26 +1,31 @@
-#version 330
+#version 430
+
+
 
 // Input vertex attributes (from vertex shader)
 in vec3 fragPosition;
 in vec2 fragTexCoord;
 in vec3 fragNormal;
-in vec4 shadowPos;
 
 // Input uniform values
-uniform sampler2D shadowMap; // Shadowmap
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
 uniform vec3 viewPos;
 uniform float shadowFactor;
 
-#define     SANDBOX3D_MAX_LIGHTS    4
 #define     LIGHT_DIRECTIONAL       0
 #define     LIGHT_POINT             1
 #define     LIGHT_SPOT              2
+#define SANDBOX3D_MAX_LIGHTS 8
+#define SANDBOX3D_SHADOW_MAP_RESOLUTION 4096
+#define SANDBOX3D_SHADOW_MAP_WIDTH  SANDBOX3D_SHADOW_MAP_RESOLUTION
+#define SANDBOX3D_SHADOW_MAP_HEIGTH SANDBOX3D_SHADOW_MAP_RESOLUTION
+#define SANDBOX3D_SHADOW_MAP_CELL_SIZE 1024
+#define SANDBOX3D_SHADOW_MAP_CELL_COUNT ((SANDBOX3D_SHADOW_MAP_RESOLUTION * 2) / SANDBOX3D_SHADOW_MAP_CELL_SIZE)
+#define SANDBOX3D_SHADOW_MAP_ROW_SIZE (SANDBOX3D_SHADOW_MAP_RESOLUTION / SANDBOX3D_SHADOW_MAP_CELL_SIZE)
 
 struct Light 
 {
-    int enabled;
     int type;
     vec3 position;
     vec3 target;
@@ -30,9 +35,16 @@ struct Light
     float spotSoftness;
 };
 
-// Input lighting values
-uniform Light lights[SANDBOX3D_MAX_LIGHTS];
 uniform vec4 ambient;
+layout(std430, binding=0) buffer lightsBlock {
+    Light lights[];
+};
+
+
+uniform sampler2D shadowMapAtlas; // Shadowmap
+layout(std430, binding=1) buffer shadowMatBlock {
+    mat4 shadowMat[];
+};
 
 // Output fragment color
 out vec4 finalColor;
@@ -40,6 +52,8 @@ out vec4 finalColor;
 // Fog 
 const vec4 fogColor = vec4(0.8, 0.8, 0.8, 0.5);
 const float fogDensity = 0.005;
+const vec4 shadowPos = vec4(0.0);
+
 
 // Shadows
 const bool usePoisondDisk = true;
@@ -61,13 +75,14 @@ float random(vec3 seed, int i)
     return fract(sin(dotSeed4) * 43758.5453);
 }
 
-float ShadowCalc(vec4 p, float bias)
+float ShadowCalc(vec4 p, float bias, vec2 atlasOffset)
 {
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    vec3 projCoords = p.xyz / p.w;
-    projCoords = projCoords * 0.5 + 0.5;
-    float depth = projCoords.z;
-    float texDepth = texture(shadowMap, projCoords.xy).r;
+    vec2 texelSize = 1.0 / textureSize(shadowMapAtlas, 0);
+    vec3 projCoords3D = p.xyz / p.w;
+    projCoords3D = projCoords3D * 0.5 + 0.5;
+    float depth = projCoords3D.z;
+    vec2 projCoords = projCoords3D.xy / SANDBOX3D_SHADOW_MAP_ROW_SIZE + atlasOffset * texelSize;
+    float texDepth = texture(shadowMapAtlas, projCoords.xy).r;
 
     float shadow = 0.0;
     if (usePoisondDisk) 
@@ -79,7 +94,7 @@ float ShadowCalc(vec4 p, float bias)
                 for (int i = 0; i < 4; ++i) 
                 {
                     int index = int(16.0 * random(fragPosition, i)) % 16;
-                    float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize + poissonDisk[index] / 5000.0).r; 
+                    float pcfDepth = texture(shadowMapAtlas, projCoords.xy + vec2(x, y) * texelSize + poissonDisk[index] / 5000.0).r; 
                     shadow += depth - bias < pcfDepth ? 0.0 : 0.25;        
                 }
             }    
@@ -91,7 +106,7 @@ float ShadowCalc(vec4 p, float bias)
         {
             for (int y = -1; y <= 1; ++y) 
             {
-                float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+                float pcfDepth = texture(shadowMapAtlas, projCoords.xy + vec2(x, y) * texelSize).r; 
                 shadow += depth - bias < pcfDepth ? 0.0 : 1.0;        
             }    
         }
@@ -114,44 +129,41 @@ void main()
     
     for (int i = 0; i < SANDBOX3D_MAX_LIGHTS; ++i)
     {
-        if (lights[i].enabled == 1)
+        vec3 light = vec3(0.0);
+
+        if (lights[i].type == LIGHT_DIRECTIONAL)
         {
-            vec3 light = vec3(0.0);
-
-            if (lights[i].type == LIGHT_DIRECTIONAL)
-            {
-                light = -normalize(lights[i].target - lights[i].position);
-            }
-
-            if (lights[i].type == LIGHT_POINT)
-            {
-                light = normalize(lights[i].position - fragPosition);
-            }
-
-            if (lights[i].type == LIGHT_SPOT)
-            {
-                vec3 lightRaw = (lights[i].position - fragPosition);
-                float lightDistSqr = dot(lightRaw, lightRaw);
-                light = normalize(lightRaw);
-
-                attenuation = clamp(1.0 - lightDistSqr / (lights[i].lightRadius * lights[i].lightRadius), 0, 1);
-                attenuation *= attenuation;
-
-                float theta = dot(-light, normalize(lights[i].target - lights[i].position));
-                float epsilon = lights[i].cutoff - lights[i].spotSoftness;
-                spot = clamp((theta - lights[i].cutoff) / epsilon, 0.0, 1.0);
-            }
-
-            float NdotL = max(dot(normal, light), 0.1);
-            lightDot += lights[i].color.rgb * NdotL * spot * attenuation;
-
-            float specCo = 0.0;
-            if (lights[i].type != LIGHT_SPOT && NdotL > 0.0)
-            {
-                specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
-            }
-            specular += specCo;
+            light = -normalize(lights[i].target - lights[i].position);
         }
+
+        if (lights[i].type == LIGHT_POINT)
+        {
+            light = normalize(lights[i].position - fragPosition);
+        }
+
+        if (lights[i].type == LIGHT_SPOT)
+        {
+            vec3 lightRaw = (lights[i].position - fragPosition);
+            float lightDistSqr = dot(lightRaw, lightRaw);
+            light = normalize(lightRaw);
+
+            attenuation = clamp(1.0 - lightDistSqr / (lights[i].lightRadius * lights[i].lightRadius), 0, 1);
+            attenuation *= attenuation;
+
+            float theta = dot(-light, normalize(lights[i].target - lights[i].position));
+            float epsilon = lights[i].cutoff - lights[i].spotSoftness;
+            spot = clamp((theta - lights[i].cutoff) / epsilon, 0.0, 1.0);
+        }
+
+        float NdotL = max(dot(normal, light), 0.1);
+        lightDot += lights[i].color.rgb * NdotL * spot * attenuation;
+
+        float specCo = 0.0;
+        if (lights[i].type != LIGHT_SPOT && NdotL > 0.0)
+        {
+            specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
+        }
+        specular += specCo;
     }
 
     // Note: alternative bias calculations
@@ -162,9 +174,16 @@ void main()
     
     float shadow = 0.0;
     const float bias = -0.0005;
-    shadow = ShadowCalc(shadowPos, bias);
-    
-
+    for (int i = 0; i < SANDBOX3D_MAX_LIGHTS; ++i)
+    {
+        int x = (i / SANDBOX3D_SHADOW_MAP_ROW_SIZE);
+        int y = (i % SANDBOX3D_SHADOW_MAP_ROW_SIZE);
+        vec2 offset = vec2(x,y) * SANDBOX3D_SHADOW_MAP_CELL_SIZE;
+        vec4 shadowPos = shadowMat[i] * vec4(fragPosition, 1.0);
+        shadow = ShadowCalc(shadowPos, bias, offset);
+    }
+    finalColor = vec4(vec3(shadow), 1);
+    return;
     // HACK: currently shadow casts by one source of directional light, should be changed to account any source
     // Turn off shadows for fragments facing from the light source 
     // for (int i = 0; i < SANDBOX3D_MAX_LIGHTS; i++)

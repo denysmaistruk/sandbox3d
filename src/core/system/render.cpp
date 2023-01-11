@@ -39,13 +39,26 @@ static constexpr Vector3 faceUpDownVector[] = {
     Vector3{ 0.0f, -1.0f, 0.0f },
 };
 
-RenderSystem::RenderSystem(size_t id) 
+struct LightData
+{
+    int type;
+    Vector3 position;
+    Vector3 target;
+    Color color;
+    float cutoff;
+    float lightRadius;
+    float spotSoftness;
+};
+
+RenderSystem::RenderSystem(size_t id)
     : m_isWiresMode(false)
     , m_drawShadowMap(false)
     , m_drawLightSource(false)
     , m_drawText(true)
 {
-    m_shadowMap = LoadShadowMap(SANDBOX3D_SHADOW_MAP_WIDTH, SANDBOX3D_SHADOW_MAP_WIDTH);
+    m_shadowMapAtlas = LoadShadowMap(SANDBOX3D_SHADOW_MAP_WIDTH, SANDBOX3D_SHADOW_MAP_WIDTH);
+    m_shadowMatBuffer = rlLoadShaderBuffer(sizeof(Matrix) * SANDBOX3D_SHADOW_MAP_CELL_COUNT, nullptr, RL_DYNAMIC_DRAW);
+    m_lightDataBuffer = rlLoadShaderBuffer(sizeof(LightData) * SANDBOX3D_SHADOW_MAP_CELL_COUNT, nullptr, RL_DYNAMIC_DRAW);
     m_shadowShader = LoadShadowShader();
     m_geometryShader = LoadShadedGeometryShader();
     m_previewShader = LoadDepthPreviewShader();
@@ -83,16 +96,29 @@ void RenderSystem::update(float dt)
         EndShadowCaster();
     };
 
+    auto const getCasterMatrix = [](Camera const& casterCamera) {
+        auto const casterWorld = GetCameraMatrix(casterCamera);
+        auto const casterProj = (casterCamera.projection == CAMERA_PERSPECTIVE)
+            ? CameraFrustum(casterCamera)
+            : CameraOrtho(casterCamera);
+        return MatrixTranspose(MatrixMultiply(casterWorld, casterProj));
+    };
+
+    std::vector<Matrix> shadowCellTransform;
+    std::vector<LightData> lightData;
+    lightData.resize(SANDBOX3D_SHADOW_MAP_CELL_COUNT);
+    shadowCellTransform.resize(SANDBOX3D_SHADOW_MAP_CELL_COUNT);
+
     {
         int shadowIndex = 0;
-        Camera casterCameraProto = {};
+        Camera casterCameraProto= {};
         casterCameraProto.up    = faceUpDownVector[0];
         casterCameraProto.fovy  = 90.0f;
-        
+
         auto const  monoShadowCaster = getRegistry().view<Position, LookAt, ShadowCaster>(entt::exclude<Inactive>);
         auto const  omniShadowCaster = getRegistry().view<Position, ShadowCaster>(entt::exclude<Inactive, LookAt>);
 
-        ShadowMapBegin(m_shadowMap);
+        ShadowMapBegin(m_shadowMapAtlas);
         for (auto [entity, position, lookAt, caster] : monoShadowCaster.each())
         {
             if (!(shadowIndex < SANDBOX3D_SHADOW_MAP_CELL_COUNT))
@@ -100,6 +126,7 @@ void RenderSystem::update(float dt)
             casterCameraProto.position  = position;
             casterCameraProto.target    = lookAt;
             casterCameraProto.projection= caster.projection;
+            shadowCellTransform[shadowIndex] = getCasterMatrix(casterCameraProto);
             renderShadowCell(casterCameraProto, shadowIndex++);
         }
         casterCameraProto.projection = CAMERA_PERSPECTIVE;
@@ -112,30 +139,28 @@ void RenderSystem::update(float dt)
             casterCameraProto.up = faceSideVector[0];
             for (int i = 0; i < 2; ++i) {
                 casterCameraProto.target = Vector3Add(position, faceUpDownVector[i]);
+                shadowCellTransform[shadowIndex] = getCasterMatrix(casterCameraProto);
                 renderShadowCell(casterCameraProto, shadowIndex++);
             }
             casterCameraProto.up = faceUpDownVector[0];
             for (int i = 0; i < faceCount - 2; ++i) {
                 casterCameraProto.target= Vector3Add(position, faceSideVector[i]);
+                shadowCellTransform[shadowIndex] = getCasterMatrix(casterCameraProto);
                 renderShadowCell(casterCameraProto, shadowIndex++);
             }
         }
         ShadowMapEnd();
+
+        rlUpdateShaderBufferElements(m_shadowMatBuffer, shadowCellTransform.data(), sizeof(Matrix) * shadowIndex, 0);
     }
 
-    // Draw/update shadow map (z-buffer)
-    /*ShadowMapBegin(m_shadowMap);
     {
-        BeginShadowCaster(caster);
-        {
-            for (auto [entity, transformComponent, renderComponent] : entityView.each())
-            {
-                drawShadow(renderComponent.model);
-            }
-        }
-        EndShadowCaster();
+        int lightIndex = 0;
+        auto const directional = getRegistry().view<Position, LookAt, Color, DirectionalLight>(entt::exclude<Inactive>);
+        for (auto [entity, position, lookAt, color] : directional.each())
+            lightData[lightIndex++] = LightData{ LIGHT_DIRECTIONAL, position, lookAt, color };
+        rlUpdateShaderBufferElements(m_lightDataBuffer, lightData.data(), sizeof(LightData) * lightIndex, 0);
     }
-    ShadowMapEnd();*/
 
     // Imgui new frame
     ImGuiBegin();
@@ -150,20 +175,13 @@ void RenderSystem::update(float dt)
             UpdateLightValues(m_geometryShader, light);
             SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_VECTOR_VIEW], (float*)&CameraController::getCamera().position, SHADER_UNIFORM_VEC3);
             SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_AMBIENT], ambientColor.begin(), SHADER_UNIFORM_VEC4);
-            SetShaderValueTexture(m_geometryShader, m_geometryShader.locs[SHADER_LOC_MAP_SHADOW], m_shadowMap.depth);
-         
-            {
-                auto const casterWorld = GetCameraMatrix(caster);
-                auto const casterProj = (caster.projection == CAMERA_PERSPECTIVE)
-                                        ? CameraFrustum(caster)
-                                        : CameraOrtho(caster);
-                auto const casterMat = MatrixMultiply(casterWorld, casterProj);
-                SetShaderValueMatrix(m_geometryShader, m_geometryShader.locs[SHADER_LOC_MAT_LIGHT], casterMat);
-            }
-
-            // Update values for preview shader
-            int casterPerspective = caster.projection == CAMERA_ORTHOGRAPHIC;
-            SetShaderValue(m_previewShader, m_previewShader.locs[SHADER_LOC_CASTER_PERSPECTIVE], &casterPerspective, SHADER_UNIFORM_INT);
+            SetShaderValueTexture(m_geometryShader, m_geometryShader.locs[SHADER_LOC_MAP_SHADOW], m_shadowMapAtlas.depth);
+            
+            rlEnableShader(m_geometryShader.id);
+            // @WARNING: rlBindShaderBuffer bug
+            // slot index and buffer id order flipped
+            rlBindShaderBuffer(m_lightDataBuffer, m_geometryShader.locs[SHADER_LOC_MAT_LIGHT]);
+            rlBindShaderBuffer(m_shadowMatBuffer, m_geometryShader.locs[SHADER_LOC_MAT_SHADOW]);
 
             // Draw geometry
             for (auto [entity, transformComponent, renderComponent] : entityView.each())
@@ -215,7 +233,7 @@ void RenderSystem::update(float dt)
         {
             BeginShaderMode(m_previewShader);
             {
-                DrawTextureEx(m_shadowMap.depth, Vector2{ 0, 0 }, 0.0f, 0.125, WHITE);
+                DrawTextureEx(m_shadowMapAtlas.depth, Vector2{ 0, 0 }, 0.0f, 0.125, WHITE);
             }
             EndShaderMode();
         }
@@ -339,7 +357,7 @@ void RenderSystem::drawShadow(const Model& model)
 void RenderSystem::drawGeometry(const Model& model, const float shadowFactor)
 {
     model.materials[0].shader = m_geometryShader;
-    model.materials[0].maps[MATERIAL_MAP_SHADOW].texture = m_shadowMap.depth;
+    model.materials[0].maps[MATERIAL_MAP_SHADOW].texture = m_shadowMapAtlas.depth;
     if (m_isWiresMode)
         DrawModelWires(model, Vector3Zero(), 1.f, RED);
     else

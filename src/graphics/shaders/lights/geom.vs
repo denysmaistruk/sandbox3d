@@ -11,14 +11,12 @@ in mat4 instanceTransform;
 uniform mat4 mvp;
 uniform mat4 matModel;
 uniform mat4 matNormal;
-uniform mat4 matLight;
 uniform int instancing;
 
 // Output vertex attributes (to fragment shader)
 out vec3 fragPosition;
 out vec3 fragNormal;
 out vec2 fragTexCoord;
-out vec4 shadowPos;
 out vec4 fragColor;
 
 void main()
@@ -30,7 +28,6 @@ void main()
     
     fragPosition = vec3(mModel * vec4(vertexPosition, 1.0));
     fragNormal = normalize(vec3(matNormal * vec4(vertexNormal, 0.0)));
-    shadowPos = matLight *  vec4(fragPosition, 1.0);
 	fragTexCoord = vertexTexCoord;
     fragColor = vertexColor;
 

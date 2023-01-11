@@ -17,7 +17,7 @@ class RenderSystem : public SystemBase<RenderSystem>
 public:
     void update(float dt);
 
-    const ShadowMap& getShadowMap() { return m_shadowMap; }
+    const ShadowMap& getShadowMap() { return m_shadowMapAtlas; }
     const Shader& getShadowShader() { return m_shadowShader; }
     const Shader& getGeometryShader() { return m_geometryShader; }
     const Shader& getPreviewShader() { return m_previewShader; }
@@ -57,11 +57,13 @@ private:
     void ImGuizmoBegin();
     void ImGuizmoWidgets();
 
-    ShadowMap m_shadowMap;
+    ShadowMap m_shadowMapAtlas;
     Shader m_shadowShader;
     Shader m_geometryShader;
     Shader m_previewShader;
     Shader m_text3dShader;
+    uint32_t m_shadowMatBuffer;
+    uint32_t m_lightDataBuffer;
 
     bool m_isWiresMode;
     bool m_drawShadowMap;

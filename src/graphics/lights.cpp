@@ -43,8 +43,10 @@ void ShadowMapBegin(ShadowMap shadowMap)
 {
 	rlDrawRenderBatchActive();
 	rlEnableFramebuffer(shadowMap.id);
-
-	rlClearScreenBuffers();
+	rlDisableColorBlend();
+	rlClearColor(255, 255, 255, 255);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_FRONT);				// Front faces culling for solving shadow acne problem
 
 	// Set viewport to framebuffer size
 	rlViewport(0, 0, shadowMap.width, shadowMap.height);
@@ -58,11 +60,6 @@ void ShadowMapBegin(ShadowMap shadowMap)
 
 	rlMatrixMode(RL_MODELVIEW);         // Switch back to modelview matrix
 	rlLoadIdentity();                   // Reset current matrix (modelview)
-
-	rlClearColor(255, 255, 255, 255);
-	rlDisableColorBlend();
-
-	glCullFace(GL_FRONT);				// Front faces culling for solving shadow acne problem
 }
 
 void EndShadowCaster() 
@@ -214,10 +211,11 @@ Shader	LoadShadowShader			() { return LoadShader(SHADOW_PATH"shadow.vs", SHADOW_
 Shader	LoadShadedGeometryShader	() {
 	auto shader = LoadShader(SHADOW_PATH"geom.vs", SHADOW_PATH"geom.fs");
 	shader.locs[SHADER_LOC_VECTOR_VIEW]	  = GetShaderLocation(shader, "viewPos");
-	shader.locs[SHADER_LOC_MAP_SHADOW]	  = GetShaderLocation(shader, "shadowMap");
+	shader.locs[SHADER_LOC_MAP_SHADOW]	  = GetShaderLocation(shader, "shadowMapAtlas");
 	shader.locs[SHADER_LOC_SHADOW_FACTOR] = GetShaderLocation(shader, "shadowFactor");
-	shader.locs[SHADER_LOC_MAT_LIGHT]	  = GetShaderLocation(shader, "matLight");
 	shader.locs[SHADER_LOC_AMBIENT]		  = GetShaderLocation(shader, "ambient");
+	shader.locs[SHADER_LOC_MAT_LIGHT] = glGetProgramResourceIndex(shader.id, GL_SHADER_STORAGE_BLOCK, "lightsBlock");
+	shader.locs[SHADER_LOC_MAT_SHADOW] = glGetProgramResourceIndex(shader.id, GL_SHADER_STORAGE_BLOCK, "shadowMatBlock");
 
 	return shader;
 }
