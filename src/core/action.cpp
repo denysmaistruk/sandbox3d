@@ -52,9 +52,9 @@ void createScene()
     constexpr float cutoff  = 0.7f;
     constexpr float radius  = 10.f;
     constexpr float softness= 0.65f;
-    EntityFactory::create(WHITE, Position{ 20.f, 70.f, 0.f }    , LookAt{}  , DirectionalLight{});
-    EntityFactory::create(YELLOW, Position{ 2.f, 1.f, 2.f }     , Inactive{}, PointLight{ radius, softness });
-    EntityFactory::create(WHITE , Position{ -2.f, 2.f, -2.f }   , LookAt{}  , SpotLight { radius, softness, cutoff });
+    EntityFactory::create(WHITE , Position{ 20.f, 70.f, 0.f }    , ShadowCaster{ CAMERA_ORTHOGRAPHIC }  , LookAt{}  , DirectionalLight{});
+    EntityFactory::create(YELLOW, Position{ 2.f, 1.f, 2.f }     , ShadowCaster{ CAMERA_PERSPECTIVE }    , PointLight{ radius, softness });
+    EntityFactory::create(WHITE , Position{ -2.f, 2.f, -2.f }   , ShadowCaster{ CAMERA_PERSPECTIVE }    , LookAt{}  , SpotLight { radius, softness, cutoff });
 }
 
 void throwBallFromCamera()

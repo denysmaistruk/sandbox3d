@@ -26,6 +26,19 @@ void raylib_render_imgui(ImDrawData* draw_data);
 
 static auto constexpr ambientColor = { 0.4f, 0.4f, 0.4f, 1.0f };
 
+static constexpr int faceCount = 6;
+static constexpr Vector3 faceSideVector[] = {
+    Vector3{ 1.0f, 0.0f, 0.0f}, // right
+    Vector3{-1.0f, 0.0f, 0.0f}, // left
+    Vector3{0.0f, 0.0f,  1.0f}, // front
+    Vector3{0.0f, 0.0f, -1.0f}, // back
+};
+
+static constexpr Vector3 faceUpDownVector[] = {
+    Vector3{ 0.0f,  1.0f, 0.0f },
+    Vector3{ 0.0f, -1.0f, 0.0f },
+};
+
 RenderSystem::RenderSystem(size_t id) 
     : m_isWiresMode(false)
     , m_drawShadowMap(false)
@@ -59,8 +72,59 @@ void RenderSystem::update(float dt)
     light.position = caster.position;
     light.target = caster.target;
 
+    auto const renderShadowCell = [&](Camera const& casterCamera, int const cellIndex) 
+    {
+        int const x = (cellIndex / SANDBOX3D_SHADOW_MAP_ROW_SIZE) * SANDBOX3D_SHADOW_MAP_CELL_SIZE;
+        int const y = (cellIndex % SANDBOX3D_SHADOW_MAP_ROW_SIZE) * SANDBOX3D_SHADOW_MAP_CELL_SIZE;
+        rlViewport(x, y, SANDBOX3D_SHADOW_MAP_CELL_SIZE, SANDBOX3D_SHADOW_MAP_CELL_SIZE);
+        BeginShadowCaster(casterCamera);
+        for (auto [entity, transformComponent, renderComponent] : entityView.each())
+            drawShadow(renderComponent.model);
+        EndShadowCaster();
+    };
+
+    {
+        int shadowIndex = 0;
+        Camera casterCameraProto = {};
+        casterCameraProto.up    = faceUpDownVector[0];
+        casterCameraProto.fovy  = 90.0f;
+        
+        auto const  monoShadowCaster = getRegistry().view<Position, LookAt, ShadowCaster>(entt::exclude<Inactive>);
+        auto const  omniShadowCaster = getRegistry().view<Position, ShadowCaster>(entt::exclude<Inactive, LookAt>);
+
+        ShadowMapBegin(m_shadowMap);
+        for (auto [entity, position, lookAt, caster] : monoShadowCaster.each())
+        {
+            if (!(shadowIndex < SANDBOX3D_SHADOW_MAP_CELL_COUNT))
+                break;
+            casterCameraProto.position  = position;
+            casterCameraProto.target    = lookAt;
+            casterCameraProto.projection= caster.projection;
+            renderShadowCell(casterCameraProto, shadowIndex++);
+        }
+        casterCameraProto.projection = CAMERA_PERSPECTIVE;
+        for (auto [entity, position, _] : omniShadowCaster.each())
+        {
+            int const remains = SANDBOX3D_SHADOW_MAP_CELL_COUNT - shadowIndex;
+            if ((remains / faceCount) == 0)
+                break;
+            casterCameraProto.position  = position;
+            casterCameraProto.up = faceSideVector[0];
+            for (int i = 0; i < 2; ++i) {
+                casterCameraProto.target = Vector3Add(position, faceUpDownVector[i]);
+                renderShadowCell(casterCameraProto, shadowIndex++);
+            }
+            casterCameraProto.up = faceUpDownVector[0];
+            for (int i = 0; i < faceCount - 2; ++i) {
+                casterCameraProto.target= Vector3Add(position, faceSideVector[i]);
+                renderShadowCell(casterCameraProto, shadowIndex++);
+            }
+        }
+        ShadowMapEnd();
+    }
+
     // Draw/update shadow map (z-buffer)
-    ShadowMapBegin(m_shadowMap);
+    /*ShadowMapBegin(m_shadowMap);
     {
         BeginShadowCaster(caster);
         {
@@ -71,7 +135,7 @@ void RenderSystem::update(float dt)
         }
         EndShadowCaster();
     }
-    ShadowMapEnd();
+    ShadowMapEnd();*/
 
     // Imgui new frame
     ImGuiBegin();

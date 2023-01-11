@@ -35,10 +35,14 @@ struct LightComponent
 };
 
 struct Inactive     {};
-struct ShadowCaster {};
 struct Position : Vector3 {};
 struct LookAt   : Vector3 {};
 struct DirectionalLight {};
+
+struct ShadowCaster {
+    CameraProjection projection;
+};
+
 
 struct PointLight {
     float lightRadius;
