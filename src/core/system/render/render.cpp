@@ -11,6 +11,7 @@
 #include "core/system/physics/collision.h"
 #include "core/system/physics/physics.h"
 #include "core/camera/camera_controller.h"
+#include "core/system/render/light.h"
 
 #include "text3d.h"
 
@@ -78,92 +79,16 @@ void RenderSystem::update(float dt)
     {
         renderComponent.model.transform = transformComponent.transform;
     }
-    
-    // Update lightning and get shadow caster
-    /*auto const& lightSystem = LightningSystem::getSystem();
-    auto const& lightInfo = lightSystem.getActiveLightComponent();
-    Camera caster = lightInfo.caster;
-    Light light = lightInfo.light;
-    light.position = caster.position;
-    light.target = caster.target;*/
-
-    auto const renderShadowCell = [&](Camera const& casterCamera, int const cellIndex) 
-    {
-        int const x = (cellIndex / SANDBOX3D_SHADOW_MAP_ROW_SIZE) * SANDBOX3D_SHADOW_MAP_CELL_SIZE;
-        int const y = (cellIndex % SANDBOX3D_SHADOW_MAP_ROW_SIZE) * SANDBOX3D_SHADOW_MAP_CELL_SIZE;
-        rlViewport(x, y, SANDBOX3D_SHADOW_MAP_CELL_SIZE, SANDBOX3D_SHADOW_MAP_CELL_SIZE);
-        BeginShadowCaster(casterCamera);
-        for (auto [entity, transformComponent, renderComponent] : entityView.each())
-            drawShadow(renderComponent.model);
-        EndShadowCaster();
-    };
-
-    auto const getCasterMatrix  = [](Camera const& casterCamera) {
-        auto const casterWorld  = GetCameraMatrix(casterCamera);
-        auto const casterProj   = CameraPerspective(casterCamera);
-        return MatrixTranspose(MatrixMultiply(casterWorld, casterProj));
-    };
-
-    std::vector<Matrix> shadowCellTransform;
-    std::vector<LightData> lightData;
-    lightData.resize(SANDBOX3D_SHADOW_MAP_CELL_COUNT);
-    shadowCellTransform.resize(SANDBOX3D_SHADOW_MAP_CELL_COUNT);
-
-    /*{
-        int shadowIndex = 0;
-        Camera casterCameraProto= {};
-        casterCameraProto.up    = faceUpDownVector[0];
-        casterCameraProto.fovy  = 90.0f;
-
-        auto const  monoShadowCaster = getRegistry().view<Position, LookAt, ShadowCaster>(entt::exclude<Inactive>);
-        auto const  omniShadowCaster = getRegistry().view<Position, ShadowCaster>(entt::exclude<Inactive, LookAt>);
-
-        ShadowMapBegin(m_shadowMapAtlas);
-        for (auto [entity, position, lookAt, caster] : monoShadowCaster.each())
-        {
-            if (!(shadowIndex < SANDBOX3D_SHADOW_MAP_CELL_COUNT))
-                break;
-            casterCameraProto.position  = position;
-            casterCameraProto.target    = lookAt;
-            casterCameraProto.projection= caster.projection;
-            shadowCellTransform[shadowIndex] = getCasterMatrix(casterCameraProto);
-            renderShadowCell(casterCameraProto, shadowIndex++);
-        }
-        casterCameraProto.projection = CAMERA_PERSPECTIVE;
-        for (auto [entity, position, _] : omniShadowCaster.each())
-        {
-            int const remains = SANDBOX3D_SHADOW_MAP_CELL_COUNT - shadowIndex;
-            if ((remains / faceCount) == 0)
-                break;
-            casterCameraProto.position  = position;
-            casterCameraProto.up = faceSideVector[0];
-            for (int i = 0; i < 2; ++i) {
-                casterCameraProto.target = Vector3Add(position, faceUpDownVector[i]);
-                shadowCellTransform[shadowIndex] = getCasterMatrix(casterCameraProto);
-                renderShadowCell(casterCameraProto, shadowIndex++);
-            }
-            casterCameraProto.up = faceUpDownVector[0];
-            for (int i = 0; i < faceCount - 2; ++i) {
-                casterCameraProto.target= Vector3Add(position, faceSideVector[i]);
-                shadowCellTransform[shadowIndex] = getCasterMatrix(casterCameraProto);
-                renderShadowCell(casterCameraProto, shadowIndex++);
-            }
-        }
-        ShadowMapEnd();
-
-        rlUpdateShaderBufferElements(m_shadowMatBuffer, shadowCellTransform.data(), sizeof(Matrix) * shadowIndex, 0);
-    }
-
-    {
-        int lightIndex = 0;
-        auto const directional = getRegistry().view<Position, LookAt, Color, DirectionalLight>(entt::exclude<Inactive>);
-        for (auto [entity, position, lookAt, color] : directional.each())
-            lightData[lightIndex++] = LightData{ LIGHT_DIRECTIONAL, position, lookAt, color };
-        rlUpdateShaderBufferElements(m_lightDataBuffer, lightData.data(), sizeof(LightData) * lightIndex, 0);
-    }*/
 
     // Imgui new frame
     ImGuiBegin();
+
+    auto const drawScene = [&](auto draw) {
+        for (auto [entity, transformComponent, renderComponent] : entityView.each())
+            draw(renderComponent.model);
+    };
+
+    LightingSystem::getSystem().renderLightingData(drawScene);
 
     // Draw scene
     BeginDrawing();
@@ -229,14 +154,14 @@ void RenderSystem::update(float dt)
             drawText();
         }
 
-        /*if (m_drawShadowMap)
+        if (m_drawShadowMap)
         {
             BeginShaderMode(m_previewShader);
             {
-                DrawTextureEx(m_shadowMapAtlas.depth, Vector2{ 0, 0 }, 0.0f, 0.125, WHITE);
+                DrawTextureEx(LightingSystem::getSystem().getShadowMapAtlasTexture(), Vector2{0, 0}, 0.0f, 0.125, WHITE);
             }
             EndShaderMode();
-        }*/
+        }
 
         // Imgui set up widgets and draw
         ImGuiWidgets();

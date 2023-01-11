@@ -40,7 +40,7 @@ void UnloadShadowMap(ShadowMap shadowMap)
 void ShadowMapBegin(ShadowMap shadowMap) 
 {
 	rlDrawRenderBatchActive();
-	rlEnableFramebuffer(shadowMap.id);
+	rlEnableFramebuffer(shadowMap.frameBufferId);
 	rlDisableColorBlend();
 	rlClearColor(255, 255, 255, 255);
 	glClear(GL_DEPTH_BUFFER_BIT);
