@@ -2,6 +2,7 @@
 
 #include "raymath.h"
 #include "rlgl.h"
+#include "external/glad.h"
 
 #define SHADER_PATH "../src/core/system/render/shaders/lights"
 
@@ -11,10 +12,12 @@ LightingSystem::LightingSystem(size_t) {
     m_lightDataBuffer   = rlLoadShaderBuffer(sizeof(m_lightDataArray), nullptr, RL_DYNAMIC_DRAW);
 }
 
-void LightingSystem::renderLights(int width, int height)
+void LightingSystem::bindLightingData(Shader const& shader)
 {
-    /*BeginShaderMode(m_lightBlendShader);
-        DrawRectangle(0,0,width, height, WHITE);
-        DrawRectanglePro
-    EndShaderMode();*/
+    int const shadowMapAtlasId = glGetUniformLocation(shader.id, "shadowMapAtlas");
+    int const lightDataCountId = glGetUniformLocation(shader.id, "lightDataCount");
+    int const lightDataBlockId = glGetProgramResourceIndex(shader.id, GL_SHADER_STORAGE_BLOCK, "lightDataBlock");
+    SetShaderValueTexture(shader, shadowMapAtlasId, m_shadowMapAtlas);
+    SetShaderValue(shader, lightDataCountId, &m_lightDataCount, SHADER_UNIFORM_INT);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, lightDataBlockId, m_lightDataBuffer);
 }

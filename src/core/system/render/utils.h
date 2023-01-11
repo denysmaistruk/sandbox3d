@@ -29,3 +29,5 @@ auto makeScopeExit(ToDo&& todo) {
     };
     return ScopeExit{ todo };
 };
+
+#define DEFINE_PADDING(SIZE) uint32_t CONCAT(__pad_,__LINE__)[SIZE]

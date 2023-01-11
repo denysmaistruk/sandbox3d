@@ -24,7 +24,7 @@ bool ImGui_ImplRaylib_ProcessEvent();
 void ImGui_ImplRaylib_NewFrame();
 void raylib_render_imgui(ImDrawData* draw_data);
 
-static auto constexpr ambientColor = { 0.4f, 0.4f, 0.4f, 1.0f };
+#define SHADER_LIGHTS_PATH "../src/core/system/render/shaders/lights"
 
 static constexpr int faceCount = 6;
 static constexpr Vector3 faceSideVector[] = {
@@ -56,16 +56,9 @@ RenderSystem::RenderSystem(size_t id)
     , m_drawLightSource(false)
     , m_drawText(true)
 {
-   /* m_shadowMapAtlas = LoadShadowMap(SANDBOX3D_SHADOW_MAP_WIDTH, SANDBOX3D_SHADOW_MAP_WIDTH);
-    m_shadowMatBuffer = rlLoadShaderBuffer(sizeof(Matrix) * SANDBOX3D_SHADOW_MAP_CELL_COUNT, nullptr, RL_DYNAMIC_DRAW);
-    m_lightDataBuffer = rlLoadShaderBuffer(sizeof(LightData) * SANDBOX3D_SHADOW_MAP_CELL_COUNT, nullptr, RL_DYNAMIC_DRAW);
-    m_shadowShader = LoadShadowShader();
-    m_geometryShader = LoadShadedGeometryShader();
-    m_previewShader = LoadDepthPreviewShader();*/
-    m_shadowShader = LoadShader(nullptr, nullptr);
-    m_geometryShader = LoadShader(nullptr, nullptr);
-    m_previewShader = LoadShader(nullptr, nullptr);
-    m_text3dShader = LoadText3DShader();
+    m_geometryShader    = LoadShader(SHADER_LIGHTS_PATH"/geom.vs", SHADER_LIGHTS_PATH"/geom.fs");
+    m_viewPosId         = GetShaderLocation(m_geometryShader, "viewPos");
+    m_text3dShader      = LoadText3DShader();
 
     addText3dMessage("WELCOME TO SANDBOX 3D!", Vector3{ 0.f, 5.f, 0.f });
 }
@@ -83,7 +76,8 @@ void RenderSystem::update(float dt)
     // Imgui new frame
     ImGuiBegin();
 
-    auto const drawScene = [&](auto draw) {
+    auto const drawFunction = m_isWiresMode ? DrawModelWires : DrawModel;
+    auto const drawScene    = [&](auto draw) {
         for (auto [entity, transformComponent, renderComponent] : entityView.each())
             draw(renderComponent.model);
     };
@@ -97,22 +91,13 @@ void RenderSystem::update(float dt)
         BeginMode3D(CameraController::getCamera());
         {
             // Update values for geometry shader
-            //UpdateLightValues(m_geometryShader, light);
-            //SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_VECTOR_VIEW], (float*)&CameraController::getCamera().position, SHADER_UNIFORM_VEC3);
-            //SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_AMBIENT], ambientColor.begin(), SHADER_UNIFORM_VEC4);
-            //SetShaderValueTexture(m_geometryShader, m_geometryShader.locs[SHADER_LOC_MAP_SHADOW], m_shadowMapAtlas.depth);
-            //
-            //rlEnableShader(m_geometryShader.id);
-            //// @WARNING: rlBindShaderBuffer bug
-            //// slot index and buffer id order flipped
-            //rlBindShaderBuffer(m_lightDataBuffer, m_geometryShader.locs[SHADER_LOC_MAT_LIGHT]);
-            //rlBindShaderBuffer(m_shadowMatBuffer, m_geometryShader.locs[SHADER_LOC_MAT_SHADOW]);
+            LightingSystem::getSystem().bindLightingData(m_geometryShader);
+            SetShaderValue(m_geometryShader, m_viewPosId, (float*)&CameraController::getCamera().position, SHADER_UNIFORM_VEC3);
 
-            // Draw geometry
-            for (auto [entity, transformComponent, renderComponent] : entityView.each())
-            {
-                drawGeometry(renderComponent.model, renderComponent.shadowFactor);
-            }
+            drawScene([&](Model const& model) {
+                model.materials[0].shader = m_geometryShader;
+                drawFunction(model, Vector3Zero(), 1.f, WHITE);
+            });
 
             // Draw light sources
             /*if (m_drawLightSource)
@@ -156,11 +141,7 @@ void RenderSystem::update(float dt)
 
         if (m_drawShadowMap)
         {
-            BeginShaderMode(m_previewShader);
-            {
-                DrawTextureEx(LightingSystem::getSystem().getShadowMapAtlasTexture(), Vector2{0, 0}, 0.0f, 0.125, WHITE);
-            }
-            EndShaderMode();
+            DrawTextureEx(LightingSystem::getSystem().getShadowMapAtlasTexture(), Vector2{0, 0}, 0.0f, 0.125, WHITE);
         }
 
         // Imgui set up widgets and draw
@@ -183,9 +164,7 @@ void RenderSystem::unloadAllModels()
 
 void RenderSystem::unloadAllShaders()
 {
-    UnloadShader(m_shadowShader);
     UnloadShader(m_geometryShader);
-    UnloadShader(m_previewShader);
 }
 
 int RenderSystem::addDebugDrawCallback(const std::function<void()>& callBack)
@@ -271,24 +250,6 @@ ImGuiIO* RenderSystem::ImGuiInit()
     static Texture2D texture = LoadTextureFromImage(image);
     io->Fonts->TexID = (void*)(&texture.id);
     return io;
-}
-
-void RenderSystem::drawShadow(const Model& model)
-{
-    model.materials[0].shader = m_shadowShader;
-    DrawModel(model, Vector3Zero(), 1.f, WHITE);
-}
-
-void RenderSystem::drawGeometry(const Model& model, const float shadowFactor)
-{
-    model.materials[0].shader = m_geometryShader;
-    if (m_isWiresMode)
-        DrawModelWires(model, Vector3Zero(), 1.f, RED);
-    else
-    {
-        //SetShaderValue(m_geometryShader, m_geometryShader.locs[SHADER_LOC_SHADOW_FACTOR], &shadowFactor, SHADER_UNIFORM_FLOAT);
-        DrawModel(model, Vector3Zero(), 1.f, WHITE);
-    }
 }
 
 void RenderSystem::drawText()

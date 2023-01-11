@@ -20,7 +20,7 @@ public:
 
     template <typename Scene>
     void prepareLightingData(Scene& drawScene);
-    void renderLights(int width, int height);
+    void bindLightingData(Shader const& shader);
 
     Texture const& getShadowMapAtlasTexture() const { return m_shadowMapAtlas; }
 
@@ -29,26 +29,27 @@ protected:
     void update(float dt) {};
 
 private:
-    enum class LightType {
+    enum class LightType : uint32_t {
         Directional,
         Spot, Point
     };
 
-    struct LightData
-    {
+    struct LightData {
         LightType   type;
         uint32_t    shadowId;
-        Vector3     position;
-        Vector3     target;
         Color       color;
         float       cutoff;
         float       radius;
         float       softness;
+        DEFINE_PADDING(2);
+        Vector3     position;   DEFINE_PADDING(1);
+        Vector3     target;     DEFINE_PADDING(1);
     };
 
     Shader      m_shadowShader      = {};
     ShadowMap   m_shadowMapAtlas    = {};
     uint32_t    m_lightDataBuffer   = -1;
+    uint32_t    m_lightDataCount    = 0;
     LightData   m_lightDataArray    [k_lightSourceCount] = {};
 };
 
@@ -85,7 +86,12 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
     uint32_t lightCellId = 0;
     memset(m_lightDataArray, 0, sizeof(m_lightDataArray));
     SCOPE_EXIT([&] {
-        rlUpdateShaderBufferElements(m_lightDataBuffer, m_lightDataArray, sizeof(LightData) * lightCellId, 0);
+        m_lightDataCount = lightCellId;
+        rlUpdateShaderBufferElements
+            ( m_lightDataBuffer
+            , m_lightDataArray
+            , m_lightDataCount
+            * sizeof(LightData), 0 );
     });
 
     {   // prepare data for lights with shadow mask

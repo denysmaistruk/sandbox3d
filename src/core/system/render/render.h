@@ -42,8 +42,6 @@ protected:
     RenderSystem(size_t id);
 
 private:
-    void drawShadow(const Model& model);
-    void drawGeometry(const Model& model, const float shadowFactor);
     void drawText();
     void drawText3D();
     void drawDebugGeometry();
@@ -61,8 +59,7 @@ private:
     Shader m_geometryShader;
     Shader m_previewShader;
     Shader m_text3dShader;
-    uint32_t m_shadowMatBuffer;
-    uint32_t m_lightDataBuffer;
+    uint32_t m_viewPosId = 0;
 
     bool m_isWiresMode;
     bool m_drawShadowMap;
