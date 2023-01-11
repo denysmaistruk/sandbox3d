@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "imguizmo.h"
 #include "raymath.h"
+#include "rlgl.h"
 
 #include "core/system/render/utils.h"
 
@@ -14,10 +15,15 @@ static Matrix GetCameraView(const Camera& camera)
     return MatrixLookAt(camera.position, camera.target, camera.up);
 }
 
-static Matrix GetCameraProjection(const Camera& camera)
-{
-    assert(camera.projection == CAMERA_PERSPECTIVE);
-    return CameraPerspective(camera);
+static Matrix GetCameraProjection(const Camera& camera) {
+    double const zfar = RL_CULL_DISTANCE_FAR;
+    double const znear = RL_CULL_DISTANCE_NEAR;
+    double const top = znear * tan(camera.fovy * 0.5 * DEG2RAD);
+    double const right = top * SANDBOX3D_WINDOW_ASPECT;
+    double const left = -right;
+    double const bottom = -top;
+
+    return MatrixFrustum(left, right, bottom, top, znear, zfar);
 }
 
 void ImGuizmo_ImplSandbox3d_EditTransform(const Camera& camera, Matrix& matrix)

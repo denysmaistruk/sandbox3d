@@ -50,10 +50,11 @@ void createScene()
     constexpr float cutoff  = 0.7f;
     constexpr float radius  = 10.f;
     constexpr float softness= 0.65f;
-    EntityFactory::create(LightSource{}, ShadowCaster{} , WHITE , Position{ 20.f, 70.f, 0.f }   , LookAt{}, DirectionalLight{});
-    EntityFactory::create(LightSource{}, ShadowCaster{} , YELLOW, Position{ 2.f, 1.f, 2.f }     , PointLight{ radius, softness });
+    //EntityFactory::create(LightSource{}, ShadowCaster{} , WHITE , Position{ 20.f, 70.f, 0.f }   , LookAt{}, DirectionalLight{});
+    //EntityFactory::create(LightSource{}, ShadowCaster{} , YELLOW, Position{ 2.f, 1.f, 2.f }     , PointLight{ radius, softness });
     EntityFactory::create(LightSource{}, ShadowCaster{} , WHITE , Position{ -2.f, 2.f, -2.f }   , LookAt{}  , SpotLight { radius, softness, cutoff });
-    EntityFactory::create(LightSource{}                 , RED   , Position{ 2.f, 2.f, 2.f }     , LookAt{}  , SpotLight { radius, softness, cutoff });
+    //EntityFactory::create(LightSource{}, ShadowCaster{} , RED   , Position{ 2.f, 2.f, 2.f }     , LookAt{}  , SpotLight { radius, softness, cutoff });
+    //EntityFactory::create(LightSource{}                 , RED   , Position{ 2.f, 2.f, 2.f }     , LookAt{}  , SpotLight { radius, softness, cutoff });
 }
 
 void throwBallFromCamera()

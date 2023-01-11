@@ -16,7 +16,7 @@ void ShadowMapEnd();
 void BeginShadowCaster(Camera3D camera);
 void EndShadowCaster();
 
-Matrix CameraPerspective(Camera3D const& camera);
+Matrix CusterPerspective(Camera3D const& camera);
 
 #define _CONCAT(x, y) x ## y
 #define CONCAT(x, y) _CONCAT(x, y)

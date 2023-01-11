@@ -39,11 +39,11 @@ out vec4 finalColor;
 const vec4 fogColor = vec4(0.8, 0.8, 0.8, 0.5);
 const float fogDensity = 0.005;
 const vec4 shadowPos = vec4(0.0);
-const vec4 ambient = vec4(0.4, 0.4, 0.4, 1.0);
-const float shadowFactor = 1.0;
+const vec4 ambient = vec4(0.4, 0.4, 0.4, 1.0) / 10.0;
+const float shadowBias = -0.0005;
 
 // Shadows
-const bool usePoisondDisk = true;
+const bool usePoisondDisk = false;
 const vec2 poissonDisk[16] = vec2[] (
     vec2(-0.94201624, -0.39906216),  vec2(0.94558609, -0.76890725),
     vec2(-0.094184101, -0.92938870), vec2(0.34495938, 0.29387760),
@@ -62,7 +62,85 @@ float random(vec3 seed, int i)
     return fract(sin(dotSeed4) * 43758.5453);
 }
 
-#if 0
+#define SANDBOX3D_SHADOW_MAP_CELL_SIZE 1024
+#define SANDBOX3D_SHADOW_MAP_ROW_SIZE 4
+
+// Get camera look-at matrix (view matrix)
+mat4 MatrixLookAt(vec3 eye, vec3 target, vec3 up)
+{
+    vec3 vz = normalize(eye - target);
+    vec3 vx = normalize(cross(up, vz));
+    vec3 vy = cross(vz, vx);
+
+    mat4 result = mat4(
+        vec4(vx.x, vy.x, vz.x, 0.0),
+        vec4(vx.y, vy.y, vz.y, 0.0),
+        vec4(vx.z, vy.z, vz.z, 0.0),
+        vec4(-dot(vx, eye), -dot(vy, eye), -dot(vz, eye), 1.0)
+    );
+
+    return (result);
+}
+
+mat4 MatrixFrustum(float left, float right, float bottom, float top, float near, float far)
+{
+    float rl = right - left;
+    float tb = top - bottom;
+    float fn = far - near;
+    mat4 result = mat4(
+        vec4((near*2.0)/rl, 0.0, 0.0, 0.0),
+        vec4(0.0, (near*2.0)/tb, 0.0, 0.0),
+        vec4((right + left)/rl, (top + bottom)/tb, -(far + near)/fn, -1.0),
+        vec4(0.0, 0.0, -(far*near*2.0)/fn, 0.0)
+    );
+    return (result);
+}
+
+// Get orthographic projection matrix
+mat4 MatrixOrtho(float left, float right, float bottom, float top, float near, float far)
+{
+    float rl = right - left;
+    float tb = top - bottom;
+    float fn = far - near;
+    mat4 result = mat4(
+        vec4(2.0/rl, 0.0, 0.0, 0.0),
+        vec4(0.0, 2.0/tb, 0.0, 0.0),
+        vec4(0.0, 0.0, -2.0/fn, 0.0),
+        vec4(-(left + right)/rl, -(top + bottom)/tb, -(far + near)/fn, 1.0)
+    );
+    return (result);
+}
+
+#define RL_CULL_DISTANCE_FAR 1000.0
+#define RL_CULL_DISTANCE_NEAR 0.01
+#define PB_ORTHOGRAPHIC_CAMERA_CULL_DISTANCE_FAR 100.0
+#define CASTER_FOV 90.0
+
+mat4 CasterPerspective(uint type) {
+    float aspect = 1.0;
+	if (type == LIGHT_DIRECTIONAL) {
+		float zfar = PB_ORTHOGRAPHIC_CAMERA_CULL_DISTANCE_FAR;
+		float znear = RL_CULL_DISTANCE_NEAR;
+		float top = CASTER_FOV / 2.0;
+		float right = top * aspect;
+		return MatrixOrtho(-right, right, -top, top, znear, zfar);
+	} else {
+        float zfar = RL_CULL_DISTANCE_FAR;
+		float znear = RL_CULL_DISTANCE_NEAR;
+		float top = znear * tan(radians(CASTER_FOV * 0.5));
+		float right = top * aspect;
+		float left = -right;
+		float bottom = -top;
+		return MatrixFrustum(left, right, bottom, top, znear, zfar);
+    }
+}
+
+mat4 RebuildShadowCasterMatrix(in LightData light) {
+    mat4 proj   = CasterPerspective(light.type);
+    mat4 view   = MatrixLookAt(light.position, light.target, vec3(0.0,1.0,0.0));
+    return (proj * view);
+}
+
 float ShadowCalc(vec4 p, float bias, vec2 atlasOffset)
 {
     vec2 texelSize = 1.0 / textureSize(shadowMapAtlas, 0);
@@ -102,7 +180,6 @@ float ShadowCalc(vec4 p, float bias, vec2 atlasOffset)
     
     return shadow / 9.0;
 }
-#endif
 
 void main()
 {
@@ -110,15 +187,14 @@ void main()
     vec4 texelColor = texture(texture0, fragTexCoord);
     vec3 normal = normalize(fragNormal);
     vec3 viewD = normalize(viewPos - fragPosition);
-    
-    float spot = 1.0;
-    float attenuation = 1.0;
-    vec3 lightDot = vec3(0.0);
-    vec3 specular = vec3(0.0);
-    
+
     for (int i = 0; i < lightDataCount; ++i)
     {
         vec3 light = vec3(0.0);
+
+        float spot = 1.0;
+        float attenuation = 1.0;
+        vec3 lightDot = vec3(0.0);
 
         if (lights[i].type == LIGHT_DIRECTIONAL)
         {
@@ -147,12 +223,27 @@ void main()
         float NdotL = max(dot(normal, light), 0.1);
         lightDot += unpackUnorm4x8(lights[i].color).rgb * NdotL * spot * attenuation;
 
-        float specCo = 0.0;
+        float specular = 0.0;
         if (lights[i].type != LIGHT_SPOT && NdotL > 0.0)
         {
-            specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
+            specular = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
         }
-        specular += specCo;
+
+        float shadow = 0.0;
+        if (lights[i].shadowId != -1) {
+            uint x = (lights[i].shadowId / SANDBOX3D_SHADOW_MAP_ROW_SIZE);
+            uint y = (lights[i].shadowId % SANDBOX3D_SHADOW_MAP_ROW_SIZE);
+            vec2 offset     = vec2(x,y) * SANDBOX3D_SHADOW_MAP_CELL_SIZE;
+            mat4 lightMat   = RebuildShadowCasterMatrix(lights[i]);
+            vec4 shadowPos  = lightMat * vec4(fragPosition, 1.0);
+            shadow = ShadowCalc(shadowPos, shadowBias, offset);
+        }
+
+        vec4 diffuseMasked  = colDiffuse * (1.0 - shadow);
+        vec4 specularMasked = vec4(vec3(specular), 1.0) * (1.0 - shadow * 0.5);
+        vec4 colorMasked    = (diffuseMasked + specularMasked) * vec4(lightDot, 1.0);
+
+        finalColor += texelColor * colorMasked;
     }
 
     // Note: alternative bias calculations
@@ -161,7 +252,6 @@ void main()
     // float bias = max(0.0005 * (1.0 - NdotLSum), 0.00005);
     // float bias = 0.00005f * tan(acos(NdotLSum));
     
-    float shadow = 0.0;
     // const float bias = -0.0005;
     // for (int i = 0; i < SANDBOX3D_MAX_LIGHTS; ++i)
     // {
@@ -187,8 +277,8 @@ void main()
     //     }
     //     continue;
     // }
-    finalColor = (texelColor * ((colDiffuse * (1.0 - shadow * shadowFactor) 
-        + vec4(specular * (1.0 - shadow * shadowFactor * 0.5), 1.0)) * vec4(lightDot, 1.0)));
+    // finalColor = (texelColor * ((colDiffuse * (1.0 - shadow * shadowFactor) 
+    //     + vec4(specular * (1.0 - shadow * shadowFactor * 0.5), 1.0)) * vec4(lightDot, 1.0)));
     finalColor += texelColor * (ambient / 10.0) * colDiffuse;
 
     // Gamma correction
