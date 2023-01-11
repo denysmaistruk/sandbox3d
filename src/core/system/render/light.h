@@ -59,12 +59,19 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
         model.materials[0].shader = m_shadowShader;
         DrawModel(model, Vector3Zero(), 1.f, WHITE);
     };
-    auto const  renderShadowCell = [&](Camera const& camera, uint32_t const cellIndex) {
-        bool    const isShadowMasked = cellIndex < k_shadowAtlasCellCount;
-        int     const x = (cellIndex / k_shadowAtlasRowSize) * k_shadowAtlasCellResolution;
-        int     const y = (cellIndex % k_shadowAtlasRowSize) * k_shadowAtlasCellResolution;
-        if (!isShadowMasked) return k_invalidShadowCellId;
-        rlViewport(x, y, k_shadowAtlasCellResolution, k_shadowAtlasCellResolution);
+    auto const  renderShadowCell = [&](LightData const& light, uint32_t const cellIndex) {
+        if (!(cellIndex < k_shadowAtlasCellCount))
+            return k_invalidShadowCellId;
+        Camera  camera      = {};
+        camera.fovy         = 90.0f;
+        camera.target       = light.target;
+        camera.position     = light.position;
+        camera.up           = Vector3{ 0.0f, 1.0f, 0.0f };
+        camera.projection   = LightType::Directional == light.type
+                            ? CAMERA_ORTHOGRAPHIC : CAMERA_PERSPECTIVE;
+        int const offsetX   = (cellIndex / k_shadowAtlasRowSize) * k_shadowAtlasCellResolution;
+        int const offsetY   = (cellIndex % k_shadowAtlasRowSize) * k_shadowAtlasCellResolution;
+        rlViewport(offsetX, offsetY, k_shadowAtlasCellResolution, k_shadowAtlasCellResolution);
         BeginShadowCaster(camera);
         drawScene(drawObject);
         EndShadowCaster();
@@ -85,25 +92,19 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
         auto const  spotLight   = registry.view<Color, Position, LookAt, SpotLight, ShadowCaster>          (inactive);
         //auto const  pointLight  = registry.view<Color, Position, PointLight, ShadowCaster>                 (inactive);
 
-        Camera camera   = {};
-        camera.fovy     = 90.0f;
-        camera.up       = Vector3{ 0.0f, 1.0f, 0.0f };
-        camera.projection = CAMERA_ORTHOGRAPHIC;
-
         LightData light = {};
         light.type = LightType::Directional;
         for (auto [entity, color, position, lookAt] : dirLight.each())
         {
             if (cellId >= k_lightSourceCount) break;
             light.color     = color;
-            light.target    = camera.target     = lookAt;
-            light.position  = camera.position   = position;
-            light.shadowId  = renderShadowCell(camera, cellId);
+            light.target    = lookAt;
+            light.position  = position;
+            light.shadowId  = renderShadowCell(light, cellId);
             m_lightDataArray[cellId++] = light;
         }
 
         light.type = LightType::Spot;
-        camera.projection = CAMERA_PERSPECTIVE;
         for (auto [entity, color, position, lookAt, spot] : spotLight.each())
         {
             if (cellId >= k_lightSourceCount) break;
@@ -111,9 +112,9 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
             light.cutoff    = spot.cutoff;
             light.radius    = spot.radius;
             light.softness  = spot.softness;
-            light.target    = camera.target     = lookAt;
-            light.position  = camera.position   = position;
-            light.shadowId  = renderShadowCell(camera, cellId);
+            light.target    = lookAt;
+            light.position  = position;
+            light.shadowId  = renderShadowCell(light, cellId);
             m_lightDataArray[cellId++] = light;
         }
     }
