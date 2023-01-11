@@ -8,7 +8,7 @@ struct LightSource  {};
 struct DirectionalLight {};
 
 struct PointLight {
-    float lightRadius;
+    float radius;
     float softness;
 };
 

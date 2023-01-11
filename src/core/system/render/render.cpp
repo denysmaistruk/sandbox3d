@@ -88,7 +88,7 @@ void RenderSystem::update(float dt)
             draw(renderComponent.model);
     };
 
-    LightingSystem::getSystem().renderLightingData(drawScene);
+    LightingSystem::getSystem().prepareLightingData(drawScene);
 
     // Draw scene
     BeginDrawing();

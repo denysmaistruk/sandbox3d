@@ -9,4 +9,5 @@ LightingSystem::LightingSystem(size_t) {
     m_shadowShader      = LoadShader(SHADER_PATH"/shadow.vs", SHADER_PATH"/shadow.fs");
     m_shadowMapAtlas    = LoadShadowMap(k_shadowAtlasResolution, k_shadowAtlasResolution);
     m_shadowDataBuffer  = rlLoadShaderBuffer(sizeof(Matrix) * k_shadowAtlasCellCount, nullptr, RL_DYNAMIC_DRAW);
+    m_lightDataBuffer   = rlLoadShaderBuffer(sizeof(LightData) * k_shadowAtlasCellCount, nullptr, RL_DYNAMIC_DRAW);
 }
