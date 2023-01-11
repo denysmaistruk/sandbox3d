@@ -47,7 +47,14 @@ void createScene()
         EntityFactory::createLight(shader, LIGHT_SPOT, Vector3{ -2.f, 2.f, -2.f }, Vector3Zero(), WHITE, CAMERA_PERSPECTIVE),
         EntityFactory::createLight(shader, LIGHT_POINT, Vector3{ 2.f, 1.f, 2.f }, Vector3Zero(), YELLOW, CAMERA_ORTHOGRAPHIC, 0.f),
     };
-    LightningSystem::getSystem().setActiveLightEntity(*lights.begin());
+    LightningSystem::getSystem().setActiveLightEntity(lights.begin()[0]);
+
+    constexpr float cutoff  = 0.7f;
+    constexpr float radius  = 10.f;
+    constexpr float softness= 0.65f;
+    EntityFactory::createLight2<DirectionalLight>(eActive    , WHITE , Vector3{ 20.f, 70.f, 0.f }, Vector3Zero());
+    EntityFactory::createLight2<PointLight>      (eInactive  , YELLOW, Vector3{ 2.f, 1.f, 2.f }  , cutoff, radius, softness);
+    EntityFactory::createLight2<SpotLight>       (eActive    , WHITE , Vector3{ -2.f, 2.f, -2.f }, Vector3Zero(), cutoff, radius, softness);
 }   
 
 void throwBallFromCamera()

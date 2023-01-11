@@ -13,12 +13,6 @@ struct RenderComponent
     float shadowFactor;
 };
 
-struct LightComponent
-{
-    Light light;
-    Camera caster;
-};
-
 struct PhysComponent
 {
     class CollisionBody* collBody;
@@ -33,3 +27,30 @@ struct DestroyTag
 struct ClickedEntityTag
 { 
 };
+
+struct LightComponent
+{
+    Light light;
+    Camera caster;
+};
+
+struct Position {
+    Vector3 value;
+};
+
+struct Inactive     {};
+struct ShadowCaster {};
+
+struct DirectionalLight {
+    Vector3 target;
+};
+
+struct PointLight {
+    float cutoff;
+    float lightRadius;
+    float softness;
+};
+
+struct SpotLight 
+    : DirectionalLight
+    , PointLight {};
