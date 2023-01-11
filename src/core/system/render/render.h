@@ -59,7 +59,6 @@ private:
     Shader m_geometryShader;
     Shader m_previewShader;
     Shader m_text3dShader;
-    uint32_t m_viewPosId = 0;
 
     bool m_isWiresMode;
     bool m_drawShadowMap;

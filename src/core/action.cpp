@@ -39,14 +39,6 @@ void createScene()
     EntityFactory::createPlane(Vector3{ 0.f, 1.f, 0.f }, 0.f);
 
     // New light entities
-    //const Shader& shader = RenderSystem::getSystem().getGeometryShader();
-    /*auto const lights = {
-        EntityFactory::createLight(shader, LIGHT_DIRECTIONAL, Vector3{ 20.f, 70.f, 0.f }, Vector3Zero(), WHITE),
-        EntityFactory::createLight(shader, LIGHT_SPOT, Vector3{ -2.f, 2.f, -2.f }, Vector3Zero(), WHITE, CAMERA_PERSPECTIVE),
-        EntityFactory::createLight(shader, LIGHT_POINT, Vector3{ 2.f, 1.f, 2.f }, Vector3Zero(), YELLOW, CAMERA_ORTHOGRAPHIC, 0.f),
-    };
-    LightningSystem::getSystem().setActiveLightEntity(lights.begin()[0]);*/
-
     constexpr float cutoff  = 0.7f;
     constexpr float radius  = 10.f;
     constexpr float softness= 0.65f;

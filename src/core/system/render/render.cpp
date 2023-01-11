@@ -57,21 +57,20 @@ RenderSystem::RenderSystem(size_t id)
     , m_drawText(true)
 {
     m_geometryShader    = LoadShader(SHADER_LIGHTS_PATH"/geom.vs", SHADER_LIGHTS_PATH"/geom.fs");
-    m_viewPosId         = GetShaderLocation(m_geometryShader, "viewPos");
     m_text3dShader      = LoadText3DShader();
-
     addText3dMessage("WELCOME TO SANDBOX 3D!", Vector3{ 0.f, 5.f, 0.f });
 }
 
 void RenderSystem::update(float dt)
 {
-    auto entityView = getRegistry().view<TransformComponent, RenderComponent>(entt::exclude<DestroyTag>);
+    auto entityView = getRegistry().view
+        < TransformComponent
+        , RenderComponent >
+        ( entt::exclude<DestroyTag> );
     
     // Synchronize transform
     for (auto [entity, transformComponent, renderComponent] : entityView.each())
-    {
         renderComponent.model.transform = transformComponent.transform;
-    }
 
     // Imgui new frame
     ImGuiBegin();
@@ -82,17 +81,20 @@ void RenderSystem::update(float dt)
             draw(renderComponent.model);
     };
 
-    LightingSystem::getSystem().prepareLightingData(drawScene);
+    auto const  &mainCamera     = CameraController  ::getCamera();
+    auto        &lightingSystem = LightingSystem    ::getSystem();
+    
+    lightingSystem.prepareLightingData(drawScene);
 
     // Draw scene
     BeginDrawing();
     {
         ClearBackground(BLACK);
-        BeginMode3D(CameraController::getCamera());
+        
+        BeginMode3D(mainCamera);
         {
             // Update values for geometry shader
-            LightingSystem::getSystem().bindLightingData(m_geometryShader);
-            SetShaderValue(m_geometryShader, m_viewPosId, (float*)&CameraController::getCamera().position, SHADER_UNIFORM_VEC3);
+            lightingSystem.bindLightingData(m_geometryShader, mainCamera.position);
 
             drawScene([&](Model const& model) {
                 model.materials[0].shader = m_geometryShader;
@@ -100,23 +102,14 @@ void RenderSystem::update(float dt)
             });
 
             // Draw light sources
-            /*if (m_drawLightSource)
-            {
-                for (auto [entity, lightComponent] : getRegistry().view<LightComponent>().each())
-                {
-                    if (entity == lightSystem.getActiveLightEntity())
-                    {
-                        drawLightSource(lightComponent.light);
-                    }
-                }
-            }*/
-            
+            if (m_drawLightSource)
+                for (auto [entity, position, color] : getRegistry().view<Position, Color, LightSource>().each())
+                    DrawCubeWires(position, 0.125f, 0.125f, 0.125f, color);
+
             if (m_drawText)
             {
                 BeginShaderMode(m_text3dShader);
-                {  
-                    drawText3D();  
-                }
+                drawText3D();
                 EndShaderMode();
             }
             
@@ -130,7 +123,7 @@ void RenderSystem::update(float dt)
             DrawGuizmo(MatrixIdentity());
 
             // Draw camera target
-            DrawGuizmo(MatrixTranslate(CameraController::getCamera().target.x, CameraController::getCamera().target.y, CameraController::getCamera().target.z));
+            DrawGuizmo(MatrixTranslate(mainCamera.target.x, mainCamera.target.y, mainCamera.target.z));
         }
         EndMode3D();
         
@@ -141,7 +134,7 @@ void RenderSystem::update(float dt)
 
         if (m_drawShadowMap)
         {
-            DrawTextureEx(LightingSystem::getSystem().getShadowMapAtlasTexture(), Vector2{0, 0}, 0.0f, 0.125, WHITE);
+            DrawTextureEx(lightingSystem.getShadowMapAtlasTexture(), Vector2{0, 0}, 0.0f, 0.125, WHITE);
         }
 
         // Imgui set up widgets and draw

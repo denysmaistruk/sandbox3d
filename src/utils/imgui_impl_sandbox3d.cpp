@@ -3,6 +3,7 @@
 #include "imgui.h"
 
 #include "core/component/components.h"
+#include "core/component/light.h"
 #include "core/registry/registry.h"
 #include "core/system/physics/collision.h"
 
@@ -117,23 +118,23 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
         }
         
         // Lights
-        /*if (ImGui::TreeNode("Lights"))
+        if (ImGui::TreeNode("Lights"))
         {
-            auto const& lights = EntityRegistry::getRegistry().view<LightComponent>();
-            static int current = lights.find(LightningSystem::getSystem().getActiveLightEntity()) - lights.begin();
-            char lightStr[32] = "Light:@\0";
             int i = 0;
-            for (auto const& entity : lights)
+            char lightStr[32] = "Light:@\0";
+            auto& registry = EntityRegistry::getRegistry();
+            for (auto const& entity : registry.view<LightSource>())
             {
-                lightStr[6] = '0' + i;
-                if (ImGui::RadioButton(lightStr, &current, i))
+                lightStr[6] = '0' + i++;
+                bool isActive = !registry.any_of<Inactive>(entity);
+                if (ImGui::Checkbox(lightStr, &isActive))
                 {
-                    LightningSystem::getSystem().setActiveLightEntity(entity);
+                    if (isActive)   registry.remove <Inactive>(entity);
+                    else            registry.emplace<Inactive>(entity);
                 }
-                ++i;
             }
             ImGui::TreePop();
-        }*/
+        }
     }
     
     // Physics

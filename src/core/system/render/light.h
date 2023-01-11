@@ -20,7 +20,7 @@ public:
 
     template <typename Scene>
     void prepareLightingData(Scene& drawScene);
-    void bindLightingData(Shader const& shader);
+    void bindLightingData(Shader const& shader, Vector3 const& cameraPos);
 
     Texture const& getShadowMapAtlasTexture() const { return m_shadowMapAtlas; }
 
