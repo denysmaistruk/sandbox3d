@@ -5,11 +5,10 @@
 
 #include "core/camera/camera_controller.h"
 #include "core/component/components.h"
+#include "core/component/light.h"
 #include "core/factory/factory.h"
-#include "core/system/render.h"
+#include "core/system/render/render.h"
 #include "core/system/input/input.h"
-#include "core/system/render.h"
-
 #include "utils/imgui_impl_sandbox3d.h"
 #include "utils/raylib_impl_sandbox3d.h"
 
@@ -51,9 +50,9 @@ void createScene()
     constexpr float cutoff  = 0.7f;
     constexpr float radius  = 10.f;
     constexpr float softness= 0.65f;
-    /*EntityFactory::create(WHITE , Position{ 20.f, 70.f, 0.f }   , ShadowCaster{ CAMERA_ORTHOGRAPHIC }   , LookAt{}  , DirectionalLight{});
-    EntityFactory::create(YELLOW, Position{ 2.f, 1.f, 2.f }     , ShadowCaster{ CAMERA_PERSPECTIVE }    , PointLight{ radius, softness });
-    EntityFactory::create(WHITE , Position{ -2.f, 2.f, -2.f }   , ShadowCaster{ CAMERA_PERSPECTIVE }    , LookAt{}  , SpotLight { radius, softness, cutoff });*/
+    EntityFactory::create(LightSource{}, ShadowCaster{}, WHITE  , Position{ 20.f, 70.f, 0.f }   , LookAt{}, DirectionalLight{});
+    EntityFactory::create(LightSource{}, ShadowCaster{}, YELLOW , Position{ 2.f, 1.f, 2.f }     , PointLight{ radius, softness });
+    EntityFactory::create(LightSource{}, ShadowCaster{}, WHITE  , Position{ -2.f, 2.f, -2.f }   , LookAt{}  , SpotLight { radius, softness, cutoff });
 }
 
 void throwBallFromCamera()

@@ -12,7 +12,7 @@
 #include "core/system/physics/physics.h"
 #include "core/camera/camera_controller.h"
 
-#include "graphics/text3d.h"
+#include "text3d.h"
 
 #include "utils/raylib_impl_sandbox3d.h"
 #include "utils/imgui_impl_sandbox3d.h"

@@ -2,12 +2,10 @@
 
 #include "raylib.h"
 
+struct ShadowCaster {};
+struct LightSource  {};
+
 struct DirectionalLight {};
-
-struct ShadowCaster {
-    CameraProjection projection;
-};
-
 
 struct PointLight {
     float lightRadius;

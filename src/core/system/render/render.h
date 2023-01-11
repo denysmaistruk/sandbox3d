@@ -1,9 +1,9 @@
 #pragma once
-#include "system_base.h"
+#include "../system_base.h"
 
 #include "raylib.h"
 
-#include "graphics/light/utils.h"
+#include "utils.h"
 
 struct ImGuiIO;
 

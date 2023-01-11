@@ -7,7 +7,7 @@
 #include "core/system/cleanup.h"
 #include "core/system/input/input.h"
 #include "core/system/physics/physics.h"
-#include "core/system/render.h"
+#include "core/system/render/render.h"
 
 int main(int argc, char const** argv)
 {

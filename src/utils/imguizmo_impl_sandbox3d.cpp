@@ -4,7 +4,7 @@
 #include "imguizmo.h"
 #include "raymath.h"
 
-#include "graphics/light/utils.h"
+#include "core/system/render/utils.h"
 
 #include "utils/raylib_impl_sandbox3d.h"
 
