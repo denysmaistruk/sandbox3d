@@ -19,7 +19,7 @@ ShadowMap LoadShadowMap(int width, int height)
 	shadowMap.id = rlLoadTextureDepth(width, height, false);
 	shadowMap.width = width;
 	shadowMap.height = height;
-	shadowMap.format = PIXELFORMAT_COMPRESSED_PVRT_RGBA;
+	shadowMap.format = PIXELFORMAT_COMPRESSED_DXT5_RGBA;
 	shadowMap.mipmaps = 1;
 
 	rlTextureParameters(shadowMap.id, RL_TEXTURE_WRAP_S, RL_TEXTURE_WRAP_CLAMP);

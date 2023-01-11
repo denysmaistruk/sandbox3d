@@ -17,3 +17,15 @@ void BeginShadowCaster(Camera3D camera);
 void EndShadowCaster();
 
 Matrix CameraPerspective(Camera3D const& camera);
+
+#define _CONCAT(x, y) x ## y
+#define CONCAT(x, y) _CONCAT(x, y)
+#define SCOPE_EXIT(TODO) auto const CONCAT(__scopeExit_,__LINE__) = makeScopeExit(TODO)
+
+template <typename ToDo>
+auto makeScopeExit(ToDo&& todo) {
+    struct ScopeExit {
+        ToDo todo; ~ScopeExit() { todo(); }
+    };
+    return ScopeExit{ todo };
+};
