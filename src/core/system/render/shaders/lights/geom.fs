@@ -180,28 +180,26 @@ void main()
     {
         float   spot        = 1.0;
         float   attenuation = 1.0;
+        float   specular    = 0.0;
         vec3    lightDir    = normalize(lights[i].position - lights[i].target);
         vec3    lightRaw    = lights[i].position - fragPosition;
+        float   radiusSqr   = lights[i].radius * lights[i].radius;
+        float   distSqr     = dot(lightRaw, lightRaw);
         vec3    light       = lights[i].type == LIGHT_DIRECTIONAL
                             ? lightDir : normalize(lightRaw);
+        float   NdotL       = max(dot(normal, light), 0.0);
+
+        if (lights[i].type != LIGHT_DIRECTIONAL)
+            attenuation = pow(clamp(1.0 - distSqr / radiusSqr, 0, 1), 2);
+
+        if (lights[i].type != LIGHT_SPOT && NdotL > 0.0)
+            specular = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
 
         if (lights[i].type == LIGHT_SPOT)
         {
-            float distSqr   = dot(lightRaw, lightRaw);
-            float radiusSqr = lights[i].radius * lights[i].radius;
-            attenuation     = pow(clamp(1.0 - distSqr / radiusSqr, 0, 1), 2);
             float theta     = dot(-light, -lightDir);
             float epsilon   = lights[i].cutoff - lights[i].softness;
             spot = clamp((theta - lights[i].cutoff) / epsilon, 0.0, 1.0);
-        }
-
-        float NdotL     = max(dot(normal, light), 0.0);
-        vec3 lightDot   = unpackUnorm4x8(lights[i].color).rgb * NdotL * spot * attenuation;
-
-        float specular  = 0.0;
-        if (lights[i].type != LIGHT_SPOT && NdotL > 0.0)
-        {
-            specular = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
         }
 
         float shadow = float(NdotL == 0.0);
@@ -217,6 +215,7 @@ void main()
         specular *= (1.0 - shadow * 0.5);
         vec4 specularMasked = vec4(vec3(specular), 1.0);
         vec4 diffuseMasked  = colDiffuse * (1.0 - shadow);
+        vec3 lightDot       = unpackUnorm4x8(lights[i].color).rgb * NdotL * spot * attenuation;
         vec4 colorMasked    = (diffuseMasked + specularMasked) * vec4(lightDot, 1.0);
 
         finalColor += colorMasked;

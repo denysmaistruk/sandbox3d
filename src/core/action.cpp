@@ -45,7 +45,7 @@ void createScene()
     EntityFactory::create(LightSource{}, ShadowCaster{} , GRAY  , Position{ 20.f, 70.f, 0.f }   , LookAt{}, DirectionalLight{});
     EntityFactory::create(LightSource{}, ShadowCaster{} , WHITE , Position{ -2.f, 2.f, -2.f }   , LookAt{}  , SpotLight { radius, softness, cutoff });
     EntityFactory::create(LightSource{}, ShadowCaster{} , RED   , Position{ 2.f, 2.f, 2.f }     , LookAt{}  , SpotLight { radius, softness, cutoff });
-    EntityFactory::create(LightSource{}                 , YELLOW, Position{ 4.f, 1.f, 4.f }     , PointLight{ radius, softness });
+    EntityFactory::create(LightSource{}                 , YELLOW, Position{ 4.f, 1.f, 4.f }     , PointLight{ radius * 0.75f });
 }
 
 void throwBallFromCamera()

@@ -137,7 +137,6 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
             light.color     = color;
             light.position  = position;
             light.radius    = point.radius;
-            light.softness  = point.softness;
             light.shadowId  = k_invalidShadowCellId;
             m_lightDataArray[lightCellId++] = light;
         }
