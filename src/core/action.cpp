@@ -52,10 +52,10 @@ void createScene()
     constexpr float cutoff  = 0.7f;
     constexpr float radius  = 10.f;
     constexpr float softness= 0.65f;
-    EntityFactory::createLight2<DirectionalLight>(eActive    , WHITE , Vector3{ 20.f, 70.f, 0.f }, Vector3Zero());
-    EntityFactory::createLight2<PointLight>      (eInactive  , YELLOW, Vector3{ 2.f, 1.f, 2.f }  , cutoff, radius, softness);
-    EntityFactory::createLight2<SpotLight>       (eActive    , WHITE , Vector3{ -2.f, 2.f, -2.f }, Vector3Zero(), cutoff, radius, softness);
-}   
+    EntityFactory::create(WHITE, Position{ 20.f, 70.f, 0.f }    , LookAt{}  , DirectionalLight{});
+    EntityFactory::create(YELLOW, Position{ 2.f, 1.f, 2.f }     , Inactive{}, PointLight{ radius, softness });
+    EntityFactory::create(WHITE , Position{ -2.f, 2.f, -2.f }   , LookAt{}  , SpotLight { radius, softness, cutoff });
+}
 
 void throwBallFromCamera()
 {

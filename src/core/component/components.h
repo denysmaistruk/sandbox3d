@@ -34,23 +34,17 @@ struct LightComponent
     Camera caster;
 };
 
-struct Position {
-    Vector3 value;
-};
-
 struct Inactive     {};
 struct ShadowCaster {};
-
-struct DirectionalLight {
-    Vector3 target;
-};
+struct Position : Vector3 {};
+struct LookAt   : Vector3 {};
+struct DirectionalLight {};
 
 struct PointLight {
-    float cutoff;
     float lightRadius;
     float softness;
 };
 
-struct SpotLight 
-    : DirectionalLight
-    , PointLight {};
+struct SpotLight : PointLight {
+    float cutoff;
+};
