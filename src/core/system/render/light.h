@@ -83,6 +83,7 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
     };
 
     uint32_t lightCellId = 0;
+    memset(m_lightDataArray, 0, sizeof(m_lightDataArray));
     SCOPE_EXIT([&] {
         rlUpdateShaderBufferElements(m_lightDataBuffer, m_lightDataArray, sizeof(LightData) * lightCellId, 0);
     });
@@ -94,7 +95,7 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
         auto const  inactive    = entt::exclude<Inactive>;
         auto const  dirLight    = registry.view<Color, Position, LookAt, DirectionalLight>   (inactive);
         auto const  spotLight   = registry.view<Color, Position, LookAt, SpotLight>          (inactive);
-        //auto const  pointLight  = registry.view<Color, Position, PointLight>                 (inactive);
+        auto const  pointLight  = registry.view<Color, Position, PointLight>                 (inactive);
 
         LightData light = {};
         light.type = LightType::Directional;
@@ -113,12 +114,25 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
         {
             if (lightCellId >= k_lightSourceCount) break;
             light.color     = color;
+            light.target    = lookAt;
+            light.position  = position;
             light.cutoff    = spot.cutoff;
             light.radius    = spot.radius;
             light.softness  = spot.softness;
-            light.target    = lookAt;
-            light.position  = position;
             light.shadowId  = renderShadowCell(entity, light);
+            m_lightDataArray[lightCellId++] = light;
+        }
+
+        // @TODO: no shadows for point lights for now...
+        light.type = LightType::Point;
+        for (auto [entity, color, position, point] : pointLight.each())
+        {
+            if (lightCellId >= k_lightSourceCount) break;
+            light.color     = color;
+            light.position  = position;
+            light.radius    = point.radius;
+            light.softness  = point.softness;
+            light.shadowId  = k_invalidShadowCellId;
             m_lightDataArray[lightCellId++] = light;
         }
     }
