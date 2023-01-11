@@ -25,8 +25,12 @@ struct LightData {
     vec3        target;
 };
 
-uniform sampler2D   shadowMapAtlas; // Shadowmap
-uniform int         lightDataCount;
+#define lightDataCount          lightingInfo.r
+#define shadowMapAtlasRowLen    lightingInfo.g
+#define shadowMapAtlasCellRes   lightingInfo.b
+
+uniform ivec3       lightingInfo;
+uniform sampler2D   shadowMapAtlas; 
 layout(std430, binding=0)
 readonly buffer lightDataBlock {
     LightData lights[];
@@ -36,11 +40,10 @@ readonly buffer lightDataBlock {
 out vec4 finalColor;
 
 // Fog 
-const vec4 fogColor = vec4(0.8, 0.8, 0.8, 0.5);
-const float fogDensity = 0.005;
-const vec4 shadowPos = vec4(0.0);
-const vec4 ambient = vec4(0.4, 0.4, 0.4, 1.0) / 10.0;
-const float shadowBias = -0.00005;
+const vec4  fogColor    = vec4(0.8, 0.8, 0.8, 0.5);
+const vec4  ambient     = vec4(0.4, 0.4, 0.4, 1.0) / 10.0;
+const float shadowBias  = -0.00003;
+const float fogDensity  = 0.005;
 
 // Shadows
 const bool usePoisondDisk = true;
@@ -57,13 +60,10 @@ const vec2 poissonDisk[16] = vec2[] (
 
 float random(vec3 seed, int i)
 {
-    vec4 seed4 = vec4(seed, i);
-    float dotSeed4 = dot(seed4, vec4(12.9898, 78.233, 45.164, 94.673));
-    return fract(sin(dotSeed4) * 43758.5453);
+    vec4    seed4   = vec4(seed, i);
+    float   dotSeed4= dot(seed4, vec4(12.9898, 78.233, 45.164, 94.673));
+    return  fract(sin(dotSeed4) * 43758.5453);
 }
-
-#define SANDBOX3D_SHADOW_MAP_CELL_SIZE 1024
-#define SANDBOX3D_SHADOW_MAP_ROW_SIZE 4
 
 // Get camera look-at matrix (view matrix)
 mat4 MatrixLookAt(vec3 eye, vec3 target, vec3 up)
@@ -71,15 +71,12 @@ mat4 MatrixLookAt(vec3 eye, vec3 target, vec3 up)
     vec3 vz = normalize(eye - target);
     vec3 vx = normalize(cross(up, vz));
     vec3 vy = cross(vz, vx);
-
-    mat4 result = mat4(
+    return mat4(
         vec4(vx.x, vy.x, vz.x, 0.0),
         vec4(vx.y, vy.y, vz.y, 0.0),
         vec4(vx.z, vy.z, vz.z, 0.0),
         vec4(-dot(vx, eye), -dot(vy, eye), -dot(vz, eye), 1.0)
     );
-
-    return (result);
 }
 
 mat4 MatrixFrustum(float left, float right, float bottom, float top, float near, float far)
@@ -87,13 +84,12 @@ mat4 MatrixFrustum(float left, float right, float bottom, float top, float near,
     float rl = right - left;
     float tb = top - bottom;
     float fn = far - near;
-    mat4 result = mat4(
+    return mat4(
         vec4((near*2.0)/rl, 0.0, 0.0, 0.0),
         vec4(0.0, (near*2.0)/tb, 0.0, 0.0),
         vec4((right + left)/rl, (top + bottom)/tb, -(far + near)/fn, -1.0),
         vec4(0.0, 0.0, -(far*near*2.0)/fn, 0.0)
     );
-    return (result);
 }
 
 // Get orthographic projection matrix
@@ -102,13 +98,12 @@ mat4 MatrixOrtho(float left, float right, float bottom, float top, float near, f
     float rl = right - left;
     float tb = top - bottom;
     float fn = far - near;
-    mat4 result = mat4(
+    return mat4(
         vec4(2.0/rl, 0.0, 0.0, 0.0),
         vec4(0.0, 2.0/tb, 0.0, 0.0),
         vec4(0.0, 0.0, -2.0/fn, 0.0),
         vec4(-(left + right)/rl, -(top + bottom)/tb, -(far + near)/fn, 1.0)
     );
-    return (result);
 }
 
 #define RL_CULL_DISTANCE_FAR 1000.0
@@ -119,18 +114,18 @@ mat4 MatrixOrtho(float left, float right, float bottom, float top, float near, f
 mat4 CasterPerspective(uint type) {
     float aspect = 1.0;
 	if (type == LIGHT_DIRECTIONAL) {
-		float zfar = PB_ORTHOGRAPHIC_CAMERA_CULL_DISTANCE_FAR;
+		float zfar  = PB_ORTHOGRAPHIC_CAMERA_CULL_DISTANCE_FAR;
 		float znear = RL_CULL_DISTANCE_NEAR;
-		float top = CASTER_FOV / 2.0;
+		float top   = CASTER_FOV / 2.0;
 		float right = top * aspect;
 		return MatrixOrtho(-right, right, -top, top, znear, zfar);
 	} else {
-        float zfar = RL_CULL_DISTANCE_FAR;
+        float zfar  = RL_CULL_DISTANCE_FAR;
 		float znear = RL_CULL_DISTANCE_NEAR;
-		float top = znear * tan(radians(CASTER_FOV * 0.5));
+		float top   = znear * tan(radians(CASTER_FOV * 0.5));
 		float right = top * aspect;
-		float left = -right;
-		float bottom = -top;
+		float left  = -right;
+		float bottom= -top;
 		return MatrixFrustum(left, right, bottom, top, znear, zfar);
     }
 }
@@ -143,38 +138,31 @@ mat4 RebuildShadowCasterMatrix(in LightData light) {
 
 float ShadowCalc(vec4 p, float bias, vec2 atlasOffset)
 {
-    vec2 texelSize = 1.0 / textureSize(shadowMapAtlas, 0);
-    vec3 projCoords3D = p.xyz / p.w;
-    projCoords3D = projCoords3D * 0.5 + 0.5;
-    float depth = projCoords3D.z;
-    vec2 projCoords = projCoords3D.xy / SANDBOX3D_SHADOW_MAP_ROW_SIZE + atlasOffset * texelSize;
-    float texDepth = texture(shadowMapAtlas, projCoords.xy).r;
-
-    float shadow = 0.0;
-    if (usePoisondDisk) 
-    {
-        for (int x = -1; x <= 1; ++x) 
-        {
-            for (int y = -1; y <= 1; ++y) 
-            {
-                for (int i = 0; i < 4; ++i) 
-                {
-                    int index = int(16.0 * random(fragPosition, i)) % 16;
-                    float pcfDepth = texture(shadowMapAtlas, projCoords.xy + vec2(x, y) * texelSize + poissonDisk[index] / 5000.0).r; 
-                    shadow += depth - bias < pcfDepth ? 0.0 : 0.25;        
-                }
-            }    
+    vec2    texelSize   = 1.0 / textureSize(shadowMapAtlas, 0);
+    vec3    projCoords3D= p.xyz / p.w;
+    projCoords3D        = projCoords3D * 0.5 + 0.5;
+    float   depth       = projCoords3D.z;
+    vec2    projCoords  = projCoords3D.xy / shadowMapAtlasRowLen + atlasOffset * texelSize;
+    float   texDepth    = texture(shadowMapAtlas, projCoords.xy).r;
+    float   shadow      = 0.0;
+    if (usePoisondDisk) {
+        for (int x = -1 ; x <= 1; ++x)
+        for (int y = -1 ; y <= 1; ++y)
+        for (int i = 0  ; i < 4 ; ++i) {
+            int     index       = int(16.0 * random(fragPosition, i)) % 16;
+            vec2    pointOffset = vec2(x, y) * texelSize;
+            vec2    poisson     = poissonDisk[index] / 5000.0;
+            vec2    pointUV     = projCoords.xy + pointOffset + poisson; 
+            float   pcfDepth    = texture(shadowMapAtlas, pointUV).r; 
+            shadow  += float(depth - bias > pcfDepth) * 0.25;
         }
-    }
-    else 
-    {
-        for (int x = -1; x <= 1; ++x) 
-        {
-            for (int y = -1; y <= 1; ++y) 
-            {
-                float pcfDepth = texture(shadowMapAtlas, projCoords.xy + vec2(x, y) * texelSize).r; 
-                shadow += depth - bias < pcfDepth ? 0.0 : 1.0;        
-            }    
+    } else {
+        for (int x = -1; x <= 1; ++x)
+        for (int y = -1; y <= 1; ++y) {
+            vec2    pointOffset = vec2(x, y) * texelSize;
+            vec2    pointUV     = projCoords.xy + pointOffset; 
+            float   pcfDepth    = texture(shadowMapAtlas, pointUV).r; 
+            shadow  += float(depth - bias > pcfDepth);
         }
     }
     
@@ -184,45 +172,33 @@ float ShadowCalc(vec4 p, float bias, vec2 atlasOffset)
 void main()
 {
     // Texel color fetching from texture sampler
+    vec3 normal     = normalize(fragNormal);
+    vec3 viewD      = normalize(viewPos - fragPosition);
     vec4 texelColor = texture(texture0, fragTexCoord);
-    vec3 normal = normalize(fragNormal);
-    vec3 viewD = normalize(viewPos - fragPosition);
 
     for (int i = 0; i < lightDataCount; ++i)
     {
-        vec3 light = vec3(0.0);
-
-        float spot = 1.0;
-        float attenuation = 1.0;
-
-        if (lights[i].type == LIGHT_DIRECTIONAL)
-        {
-            light = -normalize(lights[i].target - lights[i].position);
-        }
-
-        if (lights[i].type == LIGHT_POINT)
-        {
-            light = normalize(lights[i].position - fragPosition);
-        }
+        float   spot        = 1.0;
+        float   attenuation = 1.0;
+        vec3    lightDir    = normalize(lights[i].position - lights[i].target);
+        vec3    lightRaw    = lights[i].position - fragPosition;
+        vec3    light       = lights[i].type == LIGHT_DIRECTIONAL
+                            ? lightDir : normalize(lightRaw);
 
         if (lights[i].type == LIGHT_SPOT)
         {
-            vec3 lightRaw = (lights[i].position - fragPosition);
-            float lightDistSqr = dot(lightRaw, lightRaw);
-            light = normalize(lightRaw);
-
-            attenuation = clamp(1.0 - lightDistSqr / (lights[i].radius * lights[i].radius), 0, 1);
-            attenuation *= attenuation;
-
-            float theta = dot(-light, normalize(lights[i].target - lights[i].position));
-            float epsilon = lights[i].cutoff - lights[i].softness;
+            float distSqr   = dot(lightRaw, lightRaw);
+            float radiusSqr = lights[i].radius * lights[i].radius;
+            attenuation     = pow(clamp(1.0 - distSqr / radiusSqr, 0, 1), 2);
+            float theta     = dot(-light, -lightDir);
+            float epsilon   = lights[i].cutoff - lights[i].softness;
             spot = clamp((theta - lights[i].cutoff) / epsilon, 0.0, 1.0);
         }
 
-        float NdotL = max(dot(normal, light), 0.0);
-        vec3 lightDot = unpackUnorm4x8(lights[i].color).rgb * NdotL * spot * attenuation;
+        float NdotL     = max(dot(normal, light), 0.0);
+        vec3 lightDot   = unpackUnorm4x8(lights[i].color).rgb * NdotL * spot * attenuation;
 
-        float specular = 0.0;
+        float specular  = 0.0;
         if (lights[i].type != LIGHT_SPOT && NdotL > 0.0)
         {
             specular = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
@@ -230,9 +206,9 @@ void main()
 
         float shadow = float(NdotL == 0.0);
         if (NdotL > 0.0 && lights[i].shadowId != -1) {
-            uint x = (lights[i].shadowId / SANDBOX3D_SHADOW_MAP_ROW_SIZE);
-            uint y = (lights[i].shadowId % SANDBOX3D_SHADOW_MAP_ROW_SIZE);
-            vec2 offset     = vec2(x,y) * SANDBOX3D_SHADOW_MAP_CELL_SIZE;
+            uint x = (lights[i].shadowId / shadowMapAtlasRowLen);
+            uint y = (lights[i].shadowId % shadowMapAtlasRowLen);
+            vec2 offset     = vec2(x,y) * shadowMapAtlasCellRes;
             mat4 lightMat   = RebuildShadowCasterMatrix(lights[i]);
             vec4 shadowPos  = lightMat * vec4(fragPosition, 1.0);
             shadow = ShadowCalc(shadowPos, shadowBias, offset);
@@ -246,19 +222,11 @@ void main()
         finalColor += colorMasked;
     }
 
-    finalColor *= texelColor;
-    finalColor += texelColor * (ambient / 10.0) * colDiffuse;
-
-    // Gamma correction
-    finalColor = pow(finalColor, vec4(1.0 / 2.2));
-
-    // Fog calculation
-    float dist = length(viewPos - fragPosition);
-
-    // Exponential fog
-    float fogFactor = 1.0 / exp((dist * fogDensity) * (dist * fogDensity));
-
-    fogFactor = clamp(fogFactor, 0.0, 1.0);
-
-    finalColor = mix(fogColor, finalColor, fogFactor);
+    finalColor  *= texelColor;
+    finalColor  += texelColor * (ambient / 10.0) * colDiffuse;
+    finalColor  = pow(finalColor, vec4(1.0 / 2.2));                     // Gamma correction
+    float dist  = length(viewPos - fragPosition);                       // Fog calculation
+    float factor= 1.0 / exp((dist * fogDensity) * (dist * fogDensity)); // Exponential fog
+    factor      = clamp(factor, 0.0, 1.0);
+    finalColor  = mix(fogColor, finalColor, factor);
 }
