@@ -233,7 +233,7 @@ void ImGui_ImplSandbox3d_ShowStatsWindow(bool* open)
         ImGuiIO& io = ImGui::GetIO();
         ImGui::Text("fps - %.1f; %.3f ms/frame", io.Framerate, 1000.f / io.Framerate);
         auto& registry = EntityRegistry::getRegistry();
-        ImGui::Text("systems - %d;", SystemBase<AllSystems>::getSystemsCount());
+        ImGui::Text("systems - %d;", SYSTEMS_COUNT());
         //ImGui::Text("entities - %d; [lights - %d]", registry.alive(), registry.view<LightComponent>().size());
 
         SystemDebugger<PhysSystem> physDebugger;

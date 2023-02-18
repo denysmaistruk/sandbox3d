@@ -2,23 +2,20 @@
 #include "core/registry/registry.h"
 
 #define SANDBOX3D_DECLARE_SYSTEM(className) friend class SystemBase<className>;
+#define SYSTEMS_COUNT() (SystemID::id)
 
-struct SystemIdentifier
+struct SystemID
 {
-    inline static size_t identifier = 0;
-    static size_t generateSystemId() { return identifier++; }
+    inline static size_t id = 0;
+    static size_t generateSystemId() { return id++; }
 };
-
-struct SystemTrait {};
-struct NullSystem : SystemTrait {};
-struct AllSystems : SystemTrait {};
 
 template<class System>
 class SystemBase
 {
 public:
     static System& getSystem();
-    static size_t getSystemsCount();
+    
     void update(float dt);
 
 protected:
@@ -29,7 +26,7 @@ protected:
 template<class System>
 System& SystemBase<System>::getSystem() 
 {
-    static size_t systemId = SystemIdentifier::generateSystemId();
+    static size_t systemId = SystemID::generateSystemId();
     static System system(systemId);
     return system;
 }
@@ -38,18 +35,6 @@ template<class System>
 void SystemBase<System>::update(float dt) 
 {
     static_cast<System*>(this)->update(dt);
-}
-
-template<>
-inline size_t SystemBase<AllSystems>::getSystemsCount()
-{
-    return SystemIdentifier::identifier;
-}
-
-template<>
-inline size_t SystemBase<NullSystem>::getSystemsCount()
-{
-    return INT_MAX;
 }
 
 template<class System>
