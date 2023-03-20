@@ -1,6 +1,6 @@
 #include "raylib_impl_sandbox3d.h"
 
-Mesh GenMeshPlaneTiled(float width, float length, int resX, int resZ, int tilesX, int tilesZ)
+Mesh genMeshPlaneTiled(float width, float length, int resX, int resZ, int tilesX, int tilesZ)
 {
 
     Mesh mesh = { 0 };
@@ -134,7 +134,7 @@ Mesh GenMeshPlaneTiled(float width, float length, int resX, int resZ, int tilesX
     return mesh;
 }
 
-void DrawGuizmo(Matrix transform)
+void drawGuizmo(Matrix transform)
 {
     Vector3 origin = Vector3Transform(Vector3Zero(), transform);
     DrawLine3D(origin, Vector3Transform(Vector3{ 1.f, 0.f, 0.f }, transform), RED);
@@ -142,13 +142,13 @@ void DrawGuizmo(Matrix transform)
     DrawLine3D(origin, Vector3Transform(Vector3{ 0.f, 0.f, 1.f }, transform), BLUE);
 }
 
-Vector3 Vector3Translate(Vector3 v, Matrix mat)
+Vector3 vector3Translate(Vector3 v, Matrix mat)
 {
     return Vector3{ v.x + mat.m12, v.y + mat.m13, v.z + mat.m14 };
 }
 
 
-BoundingBox GetMeshBoundingBoxTransfomed(Mesh mesh, Matrix transform)
+BoundingBox getMeshBoundingBoxTransfomed(Mesh mesh, Matrix transform)
 {
     // Get min and max vertex to construct bounds (AABB)
     Vector3 minVertex = { 0 };
@@ -180,14 +180,14 @@ BoundingBox GetMeshBoundingBoxTransfomed(Mesh mesh, Matrix transform)
     return box;
 }
 
-BoundingBox GetModelBoundingBoxTransformed(Model model)
+BoundingBox getModelBoundingBoxTransformed(Model model)
 {
     BoundingBox bounds = { 0 };
 
     if (model.meshCount > 0)
     {
         Vector3 temp = { 0 };
-        bounds = GetMeshBoundingBoxTransfomed(model.meshes[0], model.transform);
+        bounds = getMeshBoundingBoxTransfomed(model.meshes[0], model.transform);
 
         for (int i = 1; i < model.meshCount; i++)
         {
@@ -208,7 +208,7 @@ BoundingBox GetModelBoundingBoxTransformed(Model model)
     return bounds;
 }
 
-Matrix MatrixFromFloat(float* v)
+Matrix matrixFromFloat(float* v)
 {
     Matrix mat = { 0 };
 
@@ -232,7 +232,101 @@ Matrix MatrixFromFloat(float* v)
     return mat;
 }
 
-Matrix MatrixFromFloat(float16 vec)
+Matrix matrixFromFloat(float16 vec)
 {
-    return MatrixFromFloat(vec.v);
+    return matrixFromFloat(vec.v);
+}
+
+Model genCapsuleModel(float radius, float height, int rings, int slices)
+{
+    Mesh hemiSphereTop = { 0 };
+    Mesh hemiSphereTopLoc = GenMeshSphere(radius, rings, slices);
+    hemiSphereTop.vertexCount = hemiSphereTopLoc.vertexCount;
+    hemiSphereTop.triangleCount = hemiSphereTopLoc.triangleCount;
+
+    hemiSphereTop.vertices = (float*)RL_MALLOC(hemiSphereTop.vertexCount * 3 * sizeof(float));
+    hemiSphereTop.normals = (float*)RL_MALLOC(hemiSphereTop.vertexCount * 3 * sizeof(float));
+    hemiSphereTop.texcoords = (float*)RL_MALLOC(hemiSphereTop.vertexCount * 2 * sizeof(float));
+
+    for (int k = 0; k < hemiSphereTopLoc.vertexCount; ++k)
+    {
+        hemiSphereTop.vertices[k * 3] = hemiSphereTopLoc.vertices[k * 3];
+        hemiSphereTop.vertices[k * 3 + 1] = hemiSphereTopLoc.vertices[k * 3 + 1] + height * 0.5f;
+        hemiSphereTop.vertices[k * 3 + 2] = hemiSphereTopLoc.vertices[k * 3 + 2];
+
+        hemiSphereTop.normals[k * 3] = hemiSphereTopLoc.normals[k * 3];
+        hemiSphereTop.normals[k * 3 + 1] = hemiSphereTopLoc.normals[k * 3 + 1];
+        hemiSphereTop.normals[k * 3 + 2] = hemiSphereTopLoc.normals[k * 3 + 2];
+
+        hemiSphereTop.texcoords[k * 2] = hemiSphereTopLoc.texcoords[k * 2];
+        hemiSphereTop.texcoords[k * 2 + 1] = hemiSphereTopLoc.texcoords[k * 2 + 1];
+    }
+    UnloadMesh(hemiSphereTopLoc);
+    UploadMesh(&hemiSphereTop, false);
+
+
+    Mesh hemiSphereBottom = { 0 };
+    Mesh hemiSphereBottomLoc = GenMeshSphere(radius, rings, slices);
+    hemiSphereBottom.vertexCount = hemiSphereBottomLoc.vertexCount;
+    hemiSphereBottom.triangleCount = hemiSphereBottomLoc.triangleCount;
+
+    hemiSphereBottom.vertices = (float*)RL_MALLOC(hemiSphereBottom.vertexCount * 3 * sizeof(float));
+    hemiSphereBottom.normals = (float*)RL_MALLOC(hemiSphereBottom.vertexCount * 3 * sizeof(float));
+    hemiSphereBottom.texcoords = (float*)RL_MALLOC(hemiSphereBottom.vertexCount * 2 * sizeof(float));
+
+    for (int k = 0; k < hemiSphereBottomLoc.vertexCount; ++k)
+    {
+        hemiSphereBottom.vertices[k * 3] = hemiSphereBottomLoc.vertices[k * 3];
+        hemiSphereBottom.vertices[k * 3 + 1] = hemiSphereBottomLoc.vertices[k * 3 + 1] - height * 0.5f;
+        hemiSphereBottom.vertices[k * 3 + 2] = hemiSphereBottomLoc.vertices[k * 3 + 2];
+
+        hemiSphereBottom.normals[k * 3] = hemiSphereBottomLoc.normals[k * 3];
+        hemiSphereBottom.normals[k * 3 + 1] = hemiSphereBottomLoc.normals[k * 3 + 1];
+        hemiSphereBottom.normals[k * 3 + 2] = hemiSphereBottomLoc.normals[k * 3 + 2];
+
+        hemiSphereBottom.texcoords[k * 2] = hemiSphereBottomLoc.texcoords[k * 2];
+        hemiSphereBottom.texcoords[k * 2 + 1] = hemiSphereBottomLoc.texcoords[k * 2 + 1];
+    }
+    UnloadMesh(hemiSphereBottomLoc);
+    UploadMesh(&hemiSphereBottom, false);
+
+    Mesh cylinder = { 0 };
+    Mesh cylinderLoc = GenMeshCylinder(radius, height, slices);
+    cylinder.vertexCount = cylinderLoc.vertexCount;
+    cylinder.triangleCount = cylinderLoc.triangleCount;
+
+    cylinder.vertices = (float*)RL_MALLOC(cylinder.vertexCount * 3 * sizeof(float));
+    cylinder.normals = (float*)RL_MALLOC(cylinder.vertexCount * 3 * sizeof(float));
+    cylinder.texcoords = (float*)RL_MALLOC(cylinder.vertexCount * 2 * sizeof(float));
+
+    for (int k = 0; k < cylinderLoc.vertexCount; ++k)
+    {
+        cylinder.vertices[k * 3] = cylinderLoc.vertices[k * 3];
+        cylinder.vertices[k * 3 + 1] = cylinderLoc.vertices[k * 3 + 1] - height * 0.5;
+        cylinder.vertices[k * 3 + 2] = cylinderLoc.vertices[k * 3 + 2];
+
+        cylinder.normals[k * 3] = cylinderLoc.normals[k * 3];
+        cylinder.normals[k * 3 + 1] = cylinderLoc.normals[k * 3 + 1];
+        cylinder.normals[k * 3 + 2] = cylinderLoc.normals[k * 3 + 2];
+
+        cylinder.texcoords[k * 2] = cylinderLoc.texcoords[k * 2];
+        cylinder.texcoords[k * 2 + 1] = cylinderLoc.texcoords[k * 2 + 1];
+    }
+    UnloadMesh(cylinderLoc);
+    UploadMesh(&cylinder, false);
+
+    Model model = { 0 };
+    model.meshCount = 3;
+    model.meshes = (Mesh*)RL_CALLOC(model.meshCount, sizeof(Mesh));
+    model.meshes[0] = hemiSphereTop;
+    model.meshes[1] = hemiSphereBottom;
+    model.meshes[2] = cylinder;
+
+    model.materialCount = 1;
+    model.materials = (Material*)RL_CALLOC(model.materialCount, sizeof(Material));
+    model.materials[0] = LoadMaterialDefault();
+    model.meshMaterial = (int*)RL_CALLOC(model.meshCount, sizeof(int));
+    model.meshMaterial[0] = 0; 
+
+    return model;
 }

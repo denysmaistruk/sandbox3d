@@ -120,10 +120,10 @@ void RenderSystem::update(float dt)
             //drawClicked();
 
             // Draw basis vector
-            DrawGuizmo(MatrixIdentity());
+            drawGuizmo(MatrixIdentity());
 
             // Draw camera target
-            DrawGuizmo(MatrixTranslate(mainCamera.target.x, mainCamera.target.y, mainCamera.target.z));
+            drawGuizmo(MatrixTranslate(mainCamera.target.x, mainCamera.target.y, mainCamera.target.z));
         }
         EndMode3D();
         
@@ -278,7 +278,7 @@ void RenderSystem::drawClicked()
     auto& entityView = EntityRegistry::getRegistry().view<RenderComponent, ClickedEntityTag>(entt::exclude<DestroyTag>);
     for (auto [entity, renderComponent] : entityView.each())
     {
-        DrawBoundingBox(GetModelBoundingBoxTransformed(renderComponent.model), WHITE);
+        DrawBoundingBox(getModelBoundingBoxTransformed(renderComponent.model), WHITE);
     }
 }
 

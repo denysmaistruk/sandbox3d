@@ -101,7 +101,7 @@ void PhysSystem::updateTrasformClicked(float dt)
         {
             Matrix transform = transformComponent.transform;
 
-            cyclone::Vector3 position = toCyclone(Vector3Translate(Vector3Zero(), transform));
+            cyclone::Vector3 position = toCyclone(vector3Translate(Vector3Zero(), transform));
             cyclone::Quaternion orientation = toCyclone(QuaternionFromMatrix(transform));
             body->getRigidBody()->setPosition(position.x, position.y, position.z);
             body->getRigidBody()->setOrientation(orientation);

@@ -36,7 +36,7 @@ static void fetchSleepingEntities(bool enable)
     for (auto& [entity, transformComponent, physComponent] : view.each())
     {
         const char* msg = "Zzz!";
-        const Vector3 msgPos = Vector3Add(Vector3Translate(Vector3Zero(), transformComponent.transform), Vector3{ 0.f, 1.f, 0.f });
+        const Vector3 msgPos = Vector3Add(vector3Translate(Vector3Zero(), transformComponent.transform), Vector3{ 0.f, 1.f, 0.f });
 
         if (physComponent.collBody->isSleeping())
         {

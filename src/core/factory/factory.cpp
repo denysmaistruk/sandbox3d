@@ -6,6 +6,7 @@
 #include "core/system/physics/physics.h"
 #include "cyclone/collide_fine.h"
 #include "utils/raylib_cyclone_adapter.h"
+#include "utils/raylib_impl_sandbox3d.h"
 #include "raymath.h"
 
 entt::entity EntityFactory::createBox(const Vector3& pos, const Vector3& velocity, const Vector3& halfSize, const float mass)
@@ -141,6 +142,30 @@ entt::entity EntityFactory::createPlane(const Vector3& direction, const float of
     entt::entity entity = registry.create();
 
     registry.emplace<PhysComponent>(entity, physComponent);
+    registry.emplace<TransformComponent>(entity, transformComponent);
+    registry.emplace<RenderComponent>(entity, renderComponent);
+
+    return entity;
+}
+
+entt::entity EntityFactory::createCapsule(const Vector3& pos, const Vector3& velocity, const float radius, const float height, const float mass)
+{
+    // Transform component
+    TransformComponent transformComponent{ MatrixTranslate(pos.x, pos.y, pos.z) };
+
+    //Model model = LoadModelFromMesh(genMeshCapsule(radius, height, 32, 32));
+    Model model = genCapsuleModel(radius, height, 32, 32);
+    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
+    model.transform = transformComponent.transform;
+    float shadowFactor = 0.125f;
+
+    // Render component
+    RenderComponent renderComponent{ model, shadowFactor };
+
+    // Create entity and emplace components
+    entt::registry& registry = EntityRegistry::getRegistry();
+    entt::entity entity = registry.create();
+
     registry.emplace<TransformComponent>(entity, transformComponent);
     registry.emplace<RenderComponent>(entity, renderComponent);
 
