@@ -19,7 +19,7 @@ void bindAllActions()
 {
     auto& inputSystem = InputSystem::getSystem();
 
-    inputSystem.addInputEventHandler({ InputEventType::KeyPressed, KEY_E }, [](const InputEvent&) { action::throwBallFromCamera(); });
+    inputSystem.addInputEventHandler({ InputEventType::KeyPressed, KEY_T }, [](const InputEvent&) { action::throwBallFromCamera(); });
     inputSystem.addInputEventHandler({ InputEventType::KeyPressed, KEY_R }, [](const InputEvent&) { action::throwBoxFromCamera(); });
     inputSystem.addInputEventHandler({ InputEventType::KeyDown, KEY_Z }, [](const InputEvent&) { action::moveCameraToCenter(); });
     inputSystem.addInputEventHandler({ InputEventType::KeyDown, KEY_W }, [](const InputEvent&) { action::moveCameraFront(); });
@@ -42,10 +42,10 @@ void createScene()
     constexpr float cutoff  = 0.7f;
     constexpr float radius  = 10.f;
     constexpr float softness= 0.65f;
-    EntityFactory::create(LightSource{}, ShadowCaster{} , GRAY  , Position{ 20.f, 70.f, 0.f }   , LookAt{}, DirectionalLight{});
-    EntityFactory::create(LightSource{}, ShadowCaster{} , WHITE , Position{ -2.f, 2.f, -2.f }   , LookAt{}  , SpotLight { radius, softness, cutoff });
-    EntityFactory::create(LightSource{}, ShadowCaster{} , RED   , Position{ 2.f, 2.f, 2.f }     , LookAt{}  , SpotLight { radius, softness, cutoff });
-    EntityFactory::create(LightSource{}                 , YELLOW, Position{ 4.f, 1.f, 4.f }     , PointLight{ radius * 0.75f });
+    EntityFactory::create(LightSource{}, ShadowCaster{} , WHITE  , Position{ 5.f, 70.f, 0.f }   , LookAt{}, DirectionalLight{});
+    EntityFactory::create(LightSource{}, ShadowCaster{}, GRAY, Position{ -2.f, 2.f, -2.f }, LookAt{}, SpotLight{ radius, softness, cutoff }, Inactive{});
+    EntityFactory::create(LightSource{}, ShadowCaster{} , RED   , Position{ 2.f, 2.f, 2.f }     , LookAt{}  , SpotLight { radius, softness, cutoff }, Inactive{});
+    EntityFactory::create(LightSource{}                 , YELLOW, Position{ 4.f, 1.f, 4.f }     , PointLight{ radius * 0.75f }, Inactive{});
 }
 
 void throwBallFromCamera()

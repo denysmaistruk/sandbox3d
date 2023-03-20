@@ -87,7 +87,7 @@ inline void LightingSystem::prepareLightingData(Scene& drawScene) {
     memset(m_lightDataArray, 0, sizeof(m_lightDataArray));
     SCOPE_EXIT([&] {
         m_lightDataCount = lightCellId;
-        rlUpdateShaderBufferElements
+        rlUpdateShaderBuffer
             ( m_lightDataBuffer
             , m_lightDataArray
             , m_lightDataCount

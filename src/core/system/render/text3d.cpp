@@ -7,19 +7,19 @@
 
 #define CASCADIA_FONT_PATH SANDBOX3D_RESOURCES_PATH"font/cascadia_code/ttf/CascadiaMono.ttf"
 
-Shader LoadText3DShader()
+Shader loadText3DShader()
 {
     return LoadShader(nullptr, SANDBOX3D_SHADER_PATH"alpha_discard.fs");
 }
 
-Font GetFontText3D()
+Font getFontText3D()
 {
     static Font font = LoadFont(CASCADIA_FONT_PATH);
     SetTextureFilter(font.texture, RL_TEXTURE_FILTER_LINEAR);
     return font;
 }
 
-void DrawTextCodepoint3D(Font font, int codepoint, Vector3 position, float fontSize, bool backface, Color tint, bool drawBoundary)
+void drawTextCodepoint3D(Font font, int codepoint, Vector3 position, float fontSize, bool backface, Color tint, bool drawBoundary)
 {
     // Character index position in sprite font
     // NOTE: In case a codepoint is not available in the font, index returned points to '?'
@@ -87,7 +87,7 @@ void DrawTextCodepoint3D(Font font, int codepoint, Vector3 position, float fontS
     }
 }
 
-void DrawText3D(Font font, const char* text, Vector3 position, float fontSize, float fontSpacing, float lineSpacing, bool backface, Color tint, bool drawBoundary)
+void drawText3DImpl(Font font, const char* text, Vector3 position, float fontSize, float fontSpacing, float lineSpacing, bool backface, Color tint, bool drawBoundary)
 {
     int length = TextLength(text);          // Total length in bytes of the text, scanned by codepoints in loop
 
@@ -118,7 +118,7 @@ void DrawText3D(Font font, const char* text, Vector3 position, float fontSize, f
         {
             if ((codepoint != ' ') && (codepoint != '\t'))
             {
-                DrawTextCodepoint3D(font, codepoint, Vector3 { position.x + textOffsetX, position.y, position.z + textOffsetY }, fontSize, backface, tint, drawBoundary);
+                drawTextCodepoint3D(font, codepoint, Vector3 { position.x + textOffsetX, position.y, position.z + textOffsetY }, fontSize, backface, tint, drawBoundary);
             }
 
             if (font.glyphs[index].advanceX == 0) textOffsetX += (float)(font.recs[index].width + fontSpacing) / (float)font.baseSize * scale;
@@ -129,7 +129,7 @@ void DrawText3D(Font font, const char* text, Vector3 position, float fontSize, f
     }
 }
 
-Vector3 MeasureText3D(Font font, const char* text, float fontSize, float fontSpacing, float lineSpacing)
+Vector3 measureText3D(Font font, const char* text, float fontSize, float fontSpacing, float lineSpacing)
 {
     int len = TextLength(text);
     int tempLen = 0;                // Used to count longer text line num chars

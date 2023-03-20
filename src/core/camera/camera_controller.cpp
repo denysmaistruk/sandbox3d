@@ -23,5 +23,5 @@ Camera& CameraController::getCamera()
 
 void CameraController::update(float dt)
 {
-    UpdateCamera(&get().camera);
+    UpdateCamera(&get().camera, CAMERA_FIRST_PERSON/*CAMERA_FREE*/); // TODO: free camera is broken in raylib right now
 }

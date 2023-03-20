@@ -57,7 +57,7 @@ RenderSystem::RenderSystem(size_t id)
     , m_drawText(true)
 {
     m_geometryShader    = LoadShader(SHADER_LIGHTS_PATH"/geom.vs", SHADER_LIGHTS_PATH"/geom.fs");
-    m_text3dShader      = LoadText3DShader();
+    m_text3dShader      = loadText3DShader();
     addText3dMessage("WELCOME TO SANDBOX 3D!", Vector3{ 0.f, 5.f, 0.f });
 }
 
@@ -259,9 +259,9 @@ void RenderSystem::drawText3D()
 {
     for (const auto& [key, pair] : m_text3dMessages)
     {
-        Vector3 textSize = MeasureText3D(GetFontText3D(), pair.first, 10.0f, 4.0f, 0.0f);
+        Vector3 textSize = measureText3D(getFontText3D(), pair.first, 10.0f, 4.0f, 0.0f);
         textSize = Vector3Multiply(textSize, Vector3{ 0.5f, 0.f, 0.5f });
-        DrawText3D(GetFontText3D(), pair.first, Vector3Subtract(pair.second, textSize), 10.0f, 4.0f, 0.0f, true, WHITE, false);
+        drawText3DImpl(getFontText3D(), pair.first, Vector3Subtract(pair.second, textSize), 10.0f, 4.0f, 0.0f, true, WHITE, false);
     }
 }
 
