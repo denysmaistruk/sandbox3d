@@ -1,5 +1,9 @@
 #include "collision.h"
 
+#include "raylib.h"
+#include "raymath.h"
+#include "utils/raylib_cyclone_adapter.h"
+
 static void boxBoxCollisionImpl(CollisionBox& box1, CollisionBox& box2, cyclone::CollisionData* collData) 
 {
     if (&box1 != &box2 && collData->hasMoreContacts())
@@ -37,6 +41,48 @@ static void spherePlaneCollisionImpl(CollisionSphere& sphere, CollisionPlane& pl
     if (collData->hasMoreContacts())
     {
         cyclone::CollisionDetector::sphereAndHalfSpace(*sphere.sphere, *plane.plane, collData);
+    }
+}
+
+static void capsulePlaneCollisionImpl(CollisionCapsule& capsule, CollisionPlane& plane, cyclone::CollisionData* collData)
+{
+    const cyclone::Quaternion capsuleOrient = capsule.capsule->body->getOrientation();
+    const cyclone::Vector3 capsulePos = capsule.capsule->body->getPosition();
+
+    // Upper ball
+    if (collData->hasMoreContacts())
+    {
+        const auto ballPos = toCyclone(Vector3RotateByQuaternion(Vector3{ 0, 0.5f * capsule.capsule->height, 0 }
+            , toRaylib(capsuleOrient))) + capsulePos;
+
+        if (const float ballDist = plane.plane->direction * ballPos - capsule.capsule->radius - plane.plane->offset;
+                ballDist < 0)
+        {
+            cyclone::Contact* contact = collData->contacts;
+            contact->contactNormal = plane.plane->direction;
+            contact->penetration = -ballDist;
+            contact->contactPoint = ballPos - plane.plane->direction * (ballDist + capsule.capsule->radius);
+            contact->setBodyData(capsule.capsule->body, nullptr, collData->friction, collData->restitution);
+            collData->addContacts(1);
+        }
+    }
+
+    // Lower ball
+    if (collData->hasMoreContacts())
+    {
+        const auto ballPos = toCyclone(Vector3RotateByQuaternion(Vector3{ 0, -0.5f * capsule.capsule->height, 0 }
+            , toRaylib(capsuleOrient))) + capsulePos;
+
+        if (const float ballDist = plane.plane->direction * ballPos - capsule.capsule->radius - plane.plane->offset;
+                ballDist < 0)
+        {
+            cyclone::Contact* contact = collData->contacts;
+            contact->contactNormal = plane.plane->direction;
+            contact->penetration = -ballDist;
+            contact->contactPoint = ballPos - plane.plane->direction * (ballDist + capsule.capsule->radius);
+            contact->setBodyData(capsule.capsule->body, nullptr, collData->friction, collData->restitution);
+            collData->addContacts(1);
+        }
     }
 }
 
@@ -86,6 +132,7 @@ void CollisionPlane::collide(CollisionSphere& sphere)
     spherePlaneCollisionImpl(sphere, *this, collData); 
 }
 
-void CollisionPlane::collide(CollisionPlane& plane) 
-{ 
+void CollisionCapsule::collide(CollisionPlane& plane)
+{
+    capsulePlaneCollisionImpl(*this, plane, collData);
 }

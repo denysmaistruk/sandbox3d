@@ -150,6 +150,33 @@ entt::entity EntityFactory::createPlane(const Vector3& direction, const float of
 
 entt::entity EntityFactory::createCapsule(const Vector3& pos, const Vector3& velocity, const float radius, const float height, const float mass)
 {
+    // Create and set the test capsule
+    cyclone::CollisionCapsule* capsule = new cyclone::CollisionCapsule();
+    capsule->radius = radius;
+    capsule->height = height;
+    capsule->body = new cyclone::RigidBody();
+    capsule->body->setPosition(pos.x, pos.y, pos.z);
+    capsule->body->setOrientation(1, 0, 0, 0);
+    capsule->body->setVelocity(velocity.x, velocity.y, velocity.z);
+    capsule->body->setRotation(0.1f, 0, 0);
+    capsule->body->setMass(mass);
+    cyclone::Matrix3 it;
+    it.setDiagonal(5.f, 5.f * height / radius, 5.f);
+    capsule->body->setInertiaTensor(it);
+    capsule->body->setDamping(0.9f, 0.9f);
+    capsule->body->calculateDerivedData();
+    capsule->calculateInternals();
+    capsule->body->setAcceleration(cyclone::Vector3::GRAVITY);
+    capsule->body->setAwake(true);
+    capsule->body->setCanSleep(true);
+
+    CollisionCapsule* collisionCapsule = new CollisionCapsule();
+    collisionCapsule->capsule = capsule;
+    collisionCapsule->collData = PhysSystem::getSystem().getCollisionData();
+
+    // Phys component
+    PhysComponent physComponent{ collisionCapsule };
+
     // Transform component
     TransformComponent transformComponent{ MatrixTranslate(pos.x, pos.y, pos.z) };
 
@@ -166,6 +193,7 @@ entt::entity EntityFactory::createCapsule(const Vector3& pos, const Vector3& vel
     entt::registry& registry = EntityRegistry::getRegistry();
     entt::entity entity = registry.create();
 
+    registry.emplace<PhysComponent>(entity, physComponent);
     registry.emplace<TransformComponent>(entity, transformComponent);
     registry.emplace<RenderComponent>(entity, renderComponent);
 

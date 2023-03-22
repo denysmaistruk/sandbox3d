@@ -9,6 +9,7 @@ public:
     virtual void collide(class CollisionBox& /*box*/) = 0;
     virtual void collide(class CollisionSphere& /*sphere*/) = 0;
     virtual void collide(class CollisionPlane& /*plane*/) = 0;
+    virtual void collide(class CollisionCapsule& /*capsule*/) = 0;
 
     virtual cyclone::CollisionPrimitive* getPrimitive() { return nullptr; }
 
@@ -31,6 +32,7 @@ public:
     void collide(CollisionBox& box) override;
     void collide(CollisionSphere& sphere) override;
     void collide(CollisionPlane& plane) override;
+    void collide(CollisionCapsule& capsule) override {}
     
     cyclone::CollisionPrimitive* getPrimitive() override { return sphere; }
 
@@ -45,6 +47,7 @@ public:
     void collide(CollisionBox& box) override;
     void collide(CollisionSphere& sphere) override;
     void collide(CollisionPlane& plane) override;
+    void collide(CollisionCapsule& capsule) override {}
     
     cyclone::CollisionPrimitive* getPrimitive() override { return box; }
 
@@ -58,7 +61,33 @@ public:
 
     void collide(CollisionBox& box) override;
     void collide(CollisionSphere& sphere) override;
-    void collide(CollisionPlane& plane) override;
+    void collide(CollisionPlane& plane) override {}
+    void collide(CollisionCapsule& capsule) override {};
 
     cyclone::CollisionPlane* plane;
+};
+
+namespace cyclone
+{
+    class CollisionCapsule : public CollisionPrimitive
+    {
+    public:
+        float radius;
+        float height;
+    };
+}
+
+class CollisionCapsule : public CollisionBody
+{
+public:
+    void collide(CollisionBody& body) override { body.collide(*this); }
+
+    void collide(CollisionBox& box) override {}
+    void collide(CollisionSphere& sphere) override {}
+    void collide(CollisionPlane& plane) override;
+    void collide(CollisionCapsule& capsule) override {}
+
+    cyclone::CollisionPrimitive* getPrimitive() override { return capsule; }
+
+    cyclone::CollisionCapsule* capsule;
 };
