@@ -41,7 +41,7 @@ out vec4 finalColor;
 
 // Fog 
 const vec4  fogColor    = vec4(0.8, 0.8, 0.8, 0.5);
-const vec4  ambient     = vec4(0.4, 0.4, 0.4, 1.0) / 10.0;
+const vec4  ambient     = vec4(1.0, 1.0, 1.0, 1.0);
 const float shadowBias  = -0.00003;
 const float fogDensity  = 0.005;
 
@@ -113,7 +113,7 @@ mat4 MatrixOrtho(float left, float right, float bottom, float top, float near, f
 
 mat4 CasterPerspective(uint type) {
     float aspect = 1.0;
-	if (type == LIGHT_DIRECTIONAL) {
+    if (type == LIGHT_DIRECTIONAL) {
 		float zfar  = PB_ORTHOGRAPHIC_CAMERA_CULL_DISTANCE_FAR;
 		float znear = RL_CULL_DISTANCE_NEAR;
 		float top   = CASTER_FOV / 2.0;
@@ -151,7 +151,7 @@ float ShadowCalc(vec4 p, float bias, vec2 atlasOffset)
         for (int i = 0  ; i < 4 ; ++i) {
             int     index       = int(16.0 * random(fragPosition, i)) % 16;
             vec2    pointOffset = vec2(x, y) * texelSize;
-            vec2    poisson     = poissonDisk[index] / 5000.0;
+            vec2    poisson     = poissonDisk[index] / 6000.0;
             vec2    pointUV     = projCoords.xy + pointOffset + poisson; 
             float   pcfDepth    = texture(shadowMapAtlas, pointUV).r; 
             shadow  += float(depth - bias > pcfDepth) * 0.25;

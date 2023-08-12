@@ -63,19 +63,23 @@ void ImGui_ImplRaylib_Shutdown()
 static void ImGui_ImplRaylib_UpdateMouseCursor()
 {
     struct ImGuiIO* io = &ImGui::GetIO();
-    if (io->ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
-        return;
+    if (io->ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange) return;
 
+    static bool hidden_by_imgui = false;
     ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
     if (io->MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None)
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
         HideCursor();
+        hidden_by_imgui = true;
     }
     else
     {
+        if (!hidden_by_imgui) return;
+
         // Show OS mouse cursor
         ShowCursor();
+        hidden_by_imgui = false;
     }
 }
 

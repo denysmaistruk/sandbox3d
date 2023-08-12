@@ -32,13 +32,12 @@ void bindAllActions()
 void createScene()
 {
     // New collision entities
-    //EntityFactory::createBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
-    //EntityFactory::createBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
-    //EntityFactory::createBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
-    //EntityFactory::createSphere(Vector3{ 0.f, 8.f, 0.f }, Vector3{ 0.f, 100.f, 1.f }, 0.25f, 1.0f);
+    EntityFactory::createBox(Vector3{ 0, 4, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
+    EntityFactory::createBox(Vector3{ 0, 5, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
+    EntityFactory::createBox(Vector3{ 0, 6, 0 }, Vector3Zero(), Vector3{ 0.5, 0.5, 0.5 }, 10.f);
+    EntityFactory::createSphere(Vector3{ 0.f, 8.f, 0.f }, Vector3{ 0.f, 100.f, 1.f }, 0.25f, 1.0f);
     EntityFactory::createPlane(Vector3{ 0.f, 1.f, 0.f }, 0.f);
-    EntityFactory::createCapsule(Vector3{ 0.f, 7.f, 0.f }, Vector3Zero(), 0.5f, 2.f, 1.f);
-
+    
     // New light entities
     constexpr float cutoff  = 0.7f;
     constexpr float radius  = 10.f;

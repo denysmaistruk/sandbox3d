@@ -18,6 +18,6 @@ namespace action
     void moveCameraLeft();
     void moveCameraRight();
 
-    // 
+    // Selecting objects
     void clickEntity();
 }

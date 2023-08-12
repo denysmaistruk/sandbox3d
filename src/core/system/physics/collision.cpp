@@ -112,25 +112,16 @@ void CollisionBox::collide(CollisionBox& box)
     boxBoxCollisionImpl(box, *this, collData); 
 }
 
-void CollisionBox::collide(CollisionSphere& sphere) 
-{ 
-    boxSphereCollisionImpl(*this, sphere, collData); 
-}
+void CollisionBox::collide(CollisionSphere&) { }
 
 void CollisionBox::collide(CollisionPlane& plane)
 { 
     boxPlaneCollisionImpl(*this, plane, collData); 
 }
 
-void CollisionPlane::collide(CollisionBox& box) 
-{ 
-    boxPlaneCollisionImpl(box, *this, collData); 
-}
+void CollisionPlane::collide(CollisionBox&) { }
 
-void CollisionPlane::collide(CollisionSphere& sphere) 
-{ 
-    spherePlaneCollisionImpl(sphere, *this, collData); 
-}
+void CollisionPlane::collide(CollisionSphere&) { }
 
 void CollisionCapsule::collide(CollisionPlane& plane)
 {

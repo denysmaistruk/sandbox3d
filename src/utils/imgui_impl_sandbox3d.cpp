@@ -105,11 +105,13 @@ void ImGui_ImplSandbox3d_ShowDebugWindow(bool* open)
             renderDebugger.setWiresMode(wires);
         }
 
+        /*
         static bool shadowTexture = false;
         if (ImGui::Checkbox("Shadow map texture", &shadowTexture))
         {
             renderDebugger.setDrawShadowMap(shadowTexture);
         }
+        */
 
         static bool drawLightSource = false;
         if (ImGui::Checkbox("Light source", &drawLightSource))
@@ -242,6 +244,7 @@ void ImGui_ImplSandbox3d_ShowStatsWindow(bool* open)
         const int sleepingBodies = physDebugger.getSleepingBodiesCount();
         ImGui::Text("phys bodies - %d; [rigid - %d, static - %d, sleeping - %d]", rigidBodies + staticBodies, rigidBodies, staticBodies, sleepingBodies);
         ImGui::Text("contacts - %d;", physDebugger.getContactsCount());
+        ImGui::Text("throw box - 'key_r', throw ball - 'key_t'");
     }
     ImGui::End();
 }
