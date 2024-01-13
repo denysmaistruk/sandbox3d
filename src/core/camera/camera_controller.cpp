@@ -54,4 +54,6 @@ void CameraController::update(float dt)
     if (IsKeyDown(KEY_Q)) CameraMoveUp(&cam, -SANDBOX3D_CAMERA_MOVE_SPEED * dt);
 
     CameraMoveToTarget(&cam, -GetMouseWheelMove() * SANDBOX3D_CAMERA_MOUSE_SCROLL_SENSITIVITY * dt);
+    UpdateCamera(&get().camera, CAMERA_FREE);
+
 }
